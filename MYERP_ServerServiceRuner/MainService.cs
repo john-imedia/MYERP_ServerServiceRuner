@@ -52,6 +52,7 @@ namespace MYERP_ServerServiceRuner
                 if (FirstStart)
                 {
                     FirstStart = false;
+                    ProblemSolving8DReportLoder(); 
                     //SendProduceDiffNumbEmailLoder();
                     //UpdateProduceNoteFnishedNumberLoader();
                     //DateTime xdate = new DateTime(2015, 7, 1);
@@ -92,6 +93,7 @@ namespace MYERP_ServerServiceRuner
                     //    SendProdPlanEmail(xxd1);
                     //    SendProdPlanEmail(xxd2);
                     //}
+                    Thread.Sleep(1000);
                     SendProdPlanEmail(NowTime);  //定時發送排程和達成率。
                 }
                 else if ((h == 11 || h == 23) && m == 55 && s == 0) //保存达成率到月报表
@@ -116,6 +118,7 @@ namespace MYERP_ServerServiceRuner
                     if (w == DayOfWeek.Monday || w == DayOfWeek.Tuesday || w == DayOfWeek.Wednesday || w == DayOfWeek.Thursday || w == DayOfWeek.Friday || w == DayOfWeek.Saturday)
                     {
                         SendProduceDayReportLoder();  ///每天发送未审核工单，每天早7点发送。
+                        Thread.Sleep(1000);
                         SendProduceUnFinishEmailLoder();  ///未结单工作日发送。
                     }
                 }
@@ -127,7 +130,7 @@ namespace MYERP_ServerServiceRuner
                 {
                     if (!PlanRecordCleanRuning) PlanRecordCleanLoder(); ///每天清理排程
                 }
-                else if (h == 23 && m == 45 && s == 27)   ///每天发送8D报告跟踪表
+                else if (h == 7 && m == 17 && s == 27)   ///每天发送8D报告跟踪表
                 {
                     ProblemSolving8DReportLoder();
                 }
@@ -741,6 +744,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
         }
 
         #endregion
+
         #region 计算时使用的类。
 
         List<Plan_Item> Plan_Lists = new List<Plan_Item>();
@@ -1054,6 +1058,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
         }
 
         #endregion
+
         #region 计算达成率
         private List<Plan_GridItem> Plan_LoadFinishedRate(DateTime NowTime, int classtype)
         {
@@ -1371,6 +1376,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                     MyRecord.Say("3.获取并计算达成率");
                     List<Plan_GridItem> _GridData = (Plan_LoadFinishedRate(NowTime, classtype));
                     var vGridDataSource = from a in _GridData
+                                          where a.BDD > DateTime.Parse("2000-01-01") && a.EDD > DateTime.Parse("2000-01-01") && a.PlanCount > 0
                                           orderby a.DepartmentFullSortID, a.ProcessCode, a.MachineCode, a.RdsNo
                                           select a;
                     MyRecord.Say("4.达成率计算完毕，开始生成邮件内容。");
@@ -1443,6 +1449,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                     MyRecord.Say("3.获取并计算达成率");
                     List<Plan_GridItem> _GridData = (Plan_LoadFinishedRate(NowTime, classtype));
                     var vGridDataSource = from a in _GridData
+                                          where a.BDD > DateTime.Parse("2000-01-01") && a.EDD > DateTime.Parse("2000-01-01") && a.PlanCount > 0
                                           orderby a.DepartmentFullSortID, a.ProcessCode, a.MachineCode, a.RdsNo
                                           select a;
                     MyRecord.Say("4.达成率计算完毕，生成保存语句。");
@@ -1712,7 +1719,6 @@ Order by a.ProcessID,a.MachinID
 <HTML>
 <BODY style=""FONT-SIZE: 9pt; FONT-FAMILY: PMingLiU"" leftMargin=5 topMargin=5 bgColor=#ece4f3 #ffffff>
 <DIV><FONT size=3 face=PMingLiU>{3}ERP系统提示您：</FONT></DIV>
-<DIV><FONT size=3 face=PMingLiU>&nbsp;（暂时每周一三五发送。）</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请注意，以下内容为十天前（{0:yy/MM/dd}前）所有未结且交货期小于今日的工单列表。</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; （说明：工单未结是指—工单需要入库且入库完成没有打勾的工单。）</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -2299,7 +2305,7 @@ Drop Table #T
                 #endregion
                 MyRecord.Say("1.设定数据条件，准备开始计算。");
                 DateTime NowTime = DateTime.Now;
-                DateTime beginTime = NowTime.AddMonths(-5).AddDays(-NowTime.Day).Date, endTime = NowTime.AddDays(-10).Date.AddMilliseconds(-10);
+                DateTime beginTime = NowTime.AddMonths(-3).AddDays(-NowTime.Day).Date, endTime = NowTime.AddDays(-10).Date.AddMilliseconds(-10);
                 #region 加载数据源
                 Thread.Sleep(200);
                 MyData.MyParameter[] mps = new MyData.MyParameter[]
@@ -2334,7 +2340,7 @@ Drop Table #T
                 Thread.Sleep(200);
                 bTime = DateTime.Now;
                 SQL = @"EXEC [_PMC_Progress_List_Material] @BTime,@ETime,@ProduceRdsNo,@PCode,@PName,@CUST,@ProdType,@FinishStatus,@StockStatus,@PhoneSubject,@Bond,@BK";
-                MyData.MyDataTable md3 = new MyData.MyDataTable(SQL, 20, mps);
+                MyData.MyDataTable md3 = new MyData.MyDataTable(SQL, mps);
                 MyRecord.Say(string.Format("第三步，工单物料获取耗时：{0}分钟。", (DateTime.Now - bTime).TotalMinutes));
                 Thread.Sleep(200);
 
@@ -3078,7 +3084,7 @@ SET NOCOUNT OFF
                 string SQL = @" 
 Select *,ProductName =(Select Name from pbProduct p Where p.Code=a.Code),
          PropertyName=(Select Name from moProdProperty pp Where pp.Code=a.Property)
- from moProduce a Where isNull(Status,0)<1 And a.InputDate Between @DateBegin And @DateEnd
+ from moProduce a Where isNull(Status,0) = 0 And a.InputDate Between @DateBegin And @DateEnd
 ";
                 DateTime NowTime = DateTime.Now;
                 DateTime BDate = NowTime.AddYears(-1).Date, EDate = NowTime.Date.AddHours(NowTime.Hour);
@@ -3276,12 +3282,13 @@ Select *,ProductName =(Select Name from pbProduct p Where p.Code=a.Code),
             {
                 MyRecord.Say("-----------------昨日未回复8D报告-------------------------");
                 MyRecord.Say("生成内容");
+                #region 邮件体
 
                 string body = MyConvert.ZH_TW(@"
 <HTML>
 <BODY style=""FONT-SIZE: 9pt; FONT-FAMILY: PMingLiU"" leftMargin=5 topMargin=5 bgColor=#ece4f3 #ffffff>
 <DIV><FONT size=3 face=PMingLiU>{5}ERP系统提示您：</FONT></DIV>
-<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请注意，以下内容，为8H前（输入日期在{0:yy/MM/dd HH:mm}之前）未回复/未审核/被退件的8D报告列表。</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请注意，以下内容，为8H前（输入日期在{0:yy/MM/dd HH:mm}之前）未回复/未审核/被退件的8D报告列表。(每日7点更新统计)</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请相关单位主管及时处理，CQE将持续追踪进度。</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <TABLE style=""BORDER-COLLAPSE: collapse"" cellSpacing=0 cellPadding=0 width=""100%"" border=0>
@@ -3416,7 +3423,9 @@ Select *,ProductName =(Select Name from pbProduct p Where p.Code=a.Code),
 <FONT color=#000000 face=PMingLiU>{4:yy/MM/dd HH:mm}，由ERP系统伺服器自动发送。<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;如自動發送功能有問題或者格式内容修改建議，請MailTo:<A href=""mailto:my80@my.imedia.com.tw"">JOHN</A><BR>
 </FONT></FONT></DIV></FONT></BODY></HTML>
-");
+"); 
+                #endregion
+                #region 邮件变体
                 string br = @"
     <TR>
     <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
@@ -3453,7 +3462,8 @@ Select *,ProductName =(Select Name from pbProduct p Where p.Code=a.Code),
     {10}
     </TD>
     </TR>
-";
+"; 
+                #endregion
 
                 string SQL = @" 
 Select *,DepartmentName=(Select Top 1 name from pbDept Where pbDept.Code=a.DepartmentCode),
@@ -3465,7 +3475,7 @@ Select *,DepartmentName=(Select Top 1 name from pbDept Where pbDept.Code=a.Depar
                       When isNull(a.FinishType,0)=2 Then '繼續跟催'
                       When isNull(a.FinishType,0)=3 Then '重擬對策再做跟催' Else '處理中' END),
          StatusName=(Select (Case When a.Status = 0 And Not a.ModifyDate is Null Then '待審核' Else Name End) from [_SY_Status] Where [Type]='8D' And StatusID=isNull(a.Status,0))
-from [_QE_ProblemSolving8D] a Where FinalizDate is Null And InputDate <= @DateEnd Order By a.Status,a.FinishType Desc,a.InputDate
+from [_QE_ProblemSolving8D] a Where a.Status>0 And FinalizDate is Null And InputDate <= @DateEnd Order By a.Status,a.FinishType Desc,a.InputDate
 ";
                 DateTime NowTime = DateTime.Now;
                 DateTime EDate = NowTime.Date.AddHours(8);
@@ -3477,78 +3487,89 @@ from [_QE_ProblemSolving8D] a Where FinalizDate is Null And InputDate <= @DateEn
                     MyRecord.Say("读出8D报告，创建表格内容");
                     if (md != null && md.MyRows.Count > 0)
                     {
+                        MyRecord.Say(string.Format("共：{0}", md.MyRows.Count));
+                        int iCount = 0;
                         foreach (var ri in md.MyRows)
                         {
-                            int statusid = Convert.ToInt32(ri["Status"]), finishtypeid = Convert.ToInt32(ri["FinishType"]);
-                            string statusname = "待回复", overtimeword;
-                            DateTime modifydate = Convert.ToDateTime(ri["ModifyDate"]), checkdate = Convert.ToDateTime(ri["CheckDate"]);
-                            if (statusid <= 0 || (statusid == 1 && finishtypeid == 3))
+                            try
                             {
-                                if (finishtypeid == 3)
-                                    statusname = "被退件！需重新回覆。";
-                                else
+                                int statusid = Convert.ToInt32(ri["Status"]), finishtypeid = Convert.ToInt32(ri["FinishType"]);
+                                string statusname = "待回复", overtimeword;
+                                DateTime modifydate = Convert.ToDateTime(ri["ModifyDate"]), checkdate = Convert.ToDateTime(ri["CheckDate"]);
+                                iCount += 1;
+                                MyRecord.Say(string.Format("第：{0}条，单号：{1}", iCount, ri["RdsNo"]));
+                                if (statusid <= 0 || (statusid == 1 && finishtypeid == 3))
                                 {
-                                    if (modifydate > DateTime.MinValue)
-                                        statusname = "等待主管审核。";
+                                    if (finishtypeid == 3)
+                                        statusname = "被退件！需重新回覆。";
                                     else
-                                        statusname = "未回覆。";
-                                }
-                                //类型，单号,发起人,问题描述,责任部门,指定答辩人,发起日期,回覆日期，审核日期，逾期时间,当前状态
-                                DateTime startdate = Convert.ToDateTime(ri["D1_Date"]);
-                                overtimeword = (NowTime - startdate).TotalHours > 24 ? string.Format("{0:#.#}天", (NowTime - startdate).TotalDays) : string.Format("{0:0}小时", (NowTime - startdate).TotalHours);
-                                brs += string.Format(br, Convert.ToString(ri["TypeName"]).Substring(0, 2),
-                                                         Convert.ToString(ri["RdsNo"]),
-                                                         Convert.ToString(ri["Inputer"]),
-                                                         Convert.ToString(ri["ProjName"]),
-                                                         Convert.ToString(ri["DepartmentName"]),
-                                                         Convert.ToString(ri["UserName"]),
-                                                         startdate.ToString("yy/MM/dd HH:mm"),
-                                                         modifydate > DateTime.MinValue ? modifydate.ToString("yy/MM/dd HH:mm") : "",
-                                                         checkdate > DateTime.MinValue ? checkdate.ToString("yy/MM/dd HH:mm") : "",
-                                                         overtimeword,
-                                                         statusname
-                                                        );
-
-                            }
-                            else
-                            {
-                                DateTime finishdate = Convert.ToDateTime(ri["FinishDate"]), overdate = Convert.ToDateTime(ri["D8_FinishDate"]);
-                                statusname = Convert.ToString(ri["StatusName"]);
-                                if (finishdate <= DateTime.MinValue)
-                                {
+                                    {
+                                        if (modifydate > DateTime.MinValue)
+                                            statusname = "等待主管审核。";
+                                        else
+                                            statusname = "未回覆。";
+                                    }
                                     //类型，单号,发起人,问题描述,责任部门,指定答辩人,发起日期,回覆日期，审核日期，逾期时间,当前状态
-                                    DateTime startdate = checkdate;
+                                    DateTime startdate = Convert.ToDateTime(ri["D1_Date"]);
                                     overtimeword = (NowTime - startdate).TotalHours > 24 ? string.Format("{0:#.#}天", (NowTime - startdate).TotalDays) : string.Format("{0:0}小时", (NowTime - startdate).TotalHours);
-                                    brl += string.Format(br, Convert.ToString(ri["TypeName"]).Substring(0, 2),
+                                    brs += string.Format(br, Convert.ToString(ri["TypeName"]).Substring(0, 2),
                                                              Convert.ToString(ri["RdsNo"]),
                                                              Convert.ToString(ri["Inputer"]),
                                                              Convert.ToString(ri["ProjName"]),
                                                              Convert.ToString(ri["DepartmentName"]),
                                                              Convert.ToString(ri["UserName"]),
-                                                             Convert.ToDateTime(ri["D1_Date"]).ToString("yy/MM/dd HH:mm"),
+                                                             startdate.ToString("yy/MM/dd HH:mm"),
                                                              modifydate > DateTime.MinValue ? modifydate.ToString("yy/MM/dd HH:mm") : "",
                                                              checkdate > DateTime.MinValue ? checkdate.ToString("yy/MM/dd HH:mm") : "",
                                                              overtimeword,
                                                              statusname
                                                             );
+
                                 }
-                                else if (finishdate > DateTime.MinValue && (overdate - NowTime).TotalDays < 3)
+                                else
                                 {
-                                    //类型，单号,发起人,问题描述,责任部门,指定答辩人,审核日期,处理日期，预计结案日期，逾期时间,当前状态
-                                    overtimeword = (overdate - NowTime).TotalHours > 24 ? string.Format("{0:#.#}天", (overdate - NowTime).TotalDays) : string.Format("{0:0}小时", (overdate - NowTime).TotalHours);
-                                    brt += string.Format(br, Convert.ToString(ri["TypeName"]).Substring(0, 2),
-                                                             Convert.ToString(ri["RdsNo"]),
-                                                             Convert.ToString(ri["Inputer"]),
-                                                             Convert.ToString(ri["ProjName"]),
-                                                             Convert.ToString(ri["DepartmentName"]),
-                                                             Convert.ToString(ri["UserName"]),
-                                                             overdate.ToString("yy/MM/dd HH:mm"),
-                                                             Convert.ToDateTime(ri["D7_Date"]) > DateTime.MinValue ? Convert.ToDateTime(ri["D7_Date"]).ToString("yy/MM/dd HH:mm") : "",
-                                                             Convert.ToDateTime(ri["D8_FinishDate"]) > DateTime.MinValue ? Convert.ToDateTime(ri["D8_FinishDate"]).ToString("yy/MM/dd HH:mm") : "",
-                                                             overtimeword,
-                                                             statusname
-                                                            );
+                                    DateTime finishdate = Convert.ToDateTime(ri["FinishDate"]), overdate = Convert.ToDateTime(ri["D8_FinishDate"]);
+                                    statusname = Convert.ToString(ri["StatusName"]);
+                                    if (finishdate <= DateTime.MinValue)
+                                    {
+                                        //类型，单号,发起人,问题描述,责任部门,指定答辩人,发起日期,回覆日期，审核日期，逾期时间,当前状态
+                                        DateTime startdate = checkdate;
+                                        overtimeword = (NowTime - startdate).TotalHours > 24 ? string.Format("{0:#.#}天", (NowTime - startdate).TotalDays) : string.Format("{0:0}小时", (NowTime - startdate).TotalHours);
+                                        brl += string.Format(br, Convert.ToString(ri["TypeName"]).Substring(0, 2),
+                                                                 Convert.ToString(ri["RdsNo"]),
+                                                                 Convert.ToString(ri["Inputer"]),
+                                                                 Convert.ToString(ri["ProjName"]),
+                                                                 Convert.ToString(ri["DepartmentName"]),
+                                                                 Convert.ToString(ri["UserName"]),
+                                                                 Convert.ToDateTime(ri["D1_Date"]).ToString("yy/MM/dd HH:mm"),
+                                                                 modifydate > DateTime.MinValue ? modifydate.ToString("yy/MM/dd HH:mm") : "",
+                                                                 checkdate > DateTime.MinValue ? checkdate.ToString("yy/MM/dd HH:mm") : "",
+                                                                 overtimeword,
+                                                                 statusname
+                                                                );
+                                    }
+                                    else if (finishdate > DateTime.MinValue && (overdate - NowTime).TotalDays < 3)
+                                    {
+                                        //类型，单号,发起人,问题描述,责任部门,指定答辩人,审核日期,处理日期，预计结案日期，逾期时间,当前状态
+                                        overtimeword = (overdate - NowTime).TotalHours > 24 ? string.Format("{0:#.#}天", (overdate - NowTime).TotalDays) : string.Format("{0:0}小时", (overdate - NowTime).TotalHours);
+                                        brt += string.Format(br, Convert.ToString(ri["TypeName"]).Substring(0, 2),
+                                                                 Convert.ToString(ri["RdsNo"]),
+                                                                 Convert.ToString(ri["Inputer"]),
+                                                                 Convert.ToString(ri["ProjName"]),
+                                                                 Convert.ToString(ri["DepartmentName"]),
+                                                                 Convert.ToString(ri["UserName"]),
+                                                                 overdate.ToString("yy/MM/dd HH:mm"),
+                                                                 Convert.ToDateTime(ri["D7_Date"]) > DateTime.MinValue ? Convert.ToDateTime(ri["D7_Date"]).ToString("yy/MM/dd HH:mm") : "",
+                                                                 Convert.ToDateTime(ri["D8_FinishDate"]) > DateTime.MinValue ? Convert.ToDateTime(ri["D8_FinishDate"]).ToString("yy/MM/dd HH:mm") : "",
+                                                                 overtimeword,
+                                                                 statusname
+                                                                );
+                                    }
                                 }
+                            }
+                            catch (Exception ex)
+                            {
+                                MyRecord.Say(ex);
                             }
                         }
                         MyRecord.Say(string.Format("表格一共：{0}行，表格已经生成。", md.Rows.Count));
@@ -3559,9 +3580,9 @@ from [_QE_ProblemSolving8D] a Where FinalizDate is Null And InputDate <= @DateEn
                         sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_8D报告回覆进度追踪统计。", NowTime, MyBase.CompanyTitle));
                         string mailto = ConfigurationManager.AppSettings["8DMailTo"], mailcc = ConfigurationManager.AppSettings["8DMailCC"];
                         MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
-                        sm.MailTo = mailto;
-                        sm.MailCC = mailcc;
-                        //sm.MailTo = "my80@my.imedia.com.tw";
+                        //sm.MailTo = mailto;
+                        //sm.MailCC = mailcc;
+                        sm.MailTo = "my80@my.imedia.com.tw";
                         MyRecord.Say("发送邮件。");
                         sm.SendOut();
                         MyRecord.Say("已经发送。");
@@ -3580,7 +3601,7 @@ from [_QE_ProblemSolving8D] a Where FinalizDate is Null And InputDate <= @DateEn
         }
         #endregion
 
-        #region 整批计算完工数
+        #region 整批计算完工数(暂时没启用)
         void UpdateProduceNoteFnishedNumberLoader()
         {
             MyRecord.Say("开始逐笔计算完工数和领料数。");
