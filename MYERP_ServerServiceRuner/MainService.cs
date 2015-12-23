@@ -22,7 +22,7 @@ namespace MYERP_ServerServiceRuner
             InitializeComponent();
         }
 
-        public DateTime CheckStockStartTime;
+        public DateTime CheckStockStartTime, CalculatePruchaseStartTime;
         /// <summary>
         /// 上一次计算完工数领料数计算时间。
         /// </summary>
@@ -35,7 +35,7 @@ namespace MYERP_ServerServiceRuner
             MainTimer.Interval = 1000;
             MainTimer.Elapsed += MainTimer_Elapsed;
             MyRecord.Say(MyBase.ConnectionString);
-            ProduceFeedBackLastRunTime = CheckStockStartTime = DateTime.Now; 
+            ProduceFeedBackLastRunTime = CheckStockStartTime = CalculatePruchaseStartTime = DateTime.Now;
             MyRecord.Say("服务启动");
             FirstStart = true;
             MainTimer.Start();
@@ -52,7 +52,6 @@ namespace MYERP_ServerServiceRuner
                 if (FirstStart)
                 {
                     FirstStart = false;
-                    ProblemSolving8DReportLoder(); 
                     //SendProduceDiffNumbEmailLoder();
                     //UpdateProduceNoteFnishedNumberLoader();
                     //DateTime xdate = new DateTime(2015, 7, 1);
@@ -67,7 +66,7 @@ namespace MYERP_ServerServiceRuner
 
                 if (h == 0 && m == 0 & s == 0) //计时器归零
                 {   ///每天0点对表，计时器归零。
-                    ProduceFeedBackLastRunTime = CheckStockStartTime = DateTime.Now;
+                    ProduceFeedBackLastRunTime = CheckStockStartTime = CalculatePruchaseStartTime = DateTime.Now;
                 }
 
                 ///每四个小时候审核一次仓库单据
@@ -80,6 +79,13 @@ namespace MYERP_ServerServiceRuner
                         CheckStockRecordLoder();   //定時審核出入庫單。
                         Thread.Sleep(500);
                     }
+                }
+                //每隔六个小时计算一次采购数量。
+                if ((NowTime - CalculatePruchaseStartTime).TotalHours > 6.5)
+                {
+                    CalculatePruchaseStartTime = NowTime;
+                    PurchaseCalculateLoader();
+                    Thread.Sleep(500);
                 }
 
                 if ((h == 10 || h == 22) && m == 35 && s == 0) //审核排程，发达成率
@@ -3084,7 +3090,9 @@ SET NOCOUNT OFF
                 string SQL = @" 
 Select *,ProductName =(Select Name from pbProduct p Where p.Code=a.Code),
          PropertyName=(Select Name from moProdProperty pp Where pp.Code=a.Property)
- from moProduce a Where isNull(Status,0) = 0 And a.InputDate Between @DateBegin And @DateEnd
+ from moProduce a 
+Where isNull(Status,0) = 0 And StockDate is Null And FinishDate is Null
+  And a.InputDate Between @DateBegin And @DateEnd
 ";
                 DateTime NowTime = DateTime.Now;
                 DateTime BDate = NowTime.AddYears(-1).Date, EDate = NowTime.Date.AddHours(NowTime.Hour);
@@ -3332,7 +3340,7 @@ Select *,ProductName =(Select Name from pbProduct p Where p.Code=a.Code),
 </TBODY></TABLE></FONT>
 </DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </FONT></DIV>
-<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请品保注意以下内容，为8H前（输入日期在{0:yy/MM/dd HH:mm}之前）已审核待品保处理的8D报告列表。</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请品保注意以下内容，为8H前（输入日期在{0:yy/MM/dd HH:mm}之前）已审核待品保处理/确认的8D报告列表。</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <TABLE style=""BORDER-COLLAPSE: collapse"" cellSpacing=0 cellPadding=0 width=""100%"" border=0>
   <TBODY>
@@ -3375,7 +3383,7 @@ Select *,ProductName =(Select Name from pbProduct p Where p.Code=a.Code),
 </TBODY></TABLE></FONT>
 </DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </FONT></DIV>
-<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请品保注意以下内容，为即将到预期结案日期的8D报告列表。</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请品保注意以下内容，为即将到预期结案日期的8D报告列表，请尽快追踪结案。</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <TABLE style=""BORDER-COLLAPSE: collapse"" cellSpacing=0 cellPadding=0 width=""100%"" border=0>
   <TBODY>
@@ -3423,7 +3431,7 @@ Select *,ProductName =(Select Name from pbProduct p Where p.Code=a.Code),
 <FONT color=#000000 face=PMingLiU>{4:yy/MM/dd HH:mm}，由ERP系统伺服器自动发送。<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;如自動發送功能有問題或者格式内容修改建議，請MailTo:<A href=""mailto:my80@my.imedia.com.tw"">JOHN</A><BR>
 </FONT></FONT></DIV></FONT></BODY></HTML>
-"); 
+");
                 #endregion
                 #region 邮件变体
                 string br = @"
@@ -3462,7 +3470,7 @@ Select *,ProductName =(Select Name from pbProduct p Where p.Code=a.Code),
     {10}
     </TD>
     </TR>
-"; 
+";
                 #endregion
 
                 string SQL = @" 
@@ -3580,9 +3588,9 @@ from [_QE_ProblemSolving8D] a Where a.Status>0 And FinalizDate is Null And Input
                         sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_8D报告回覆进度追踪统计。", NowTime, MyBase.CompanyTitle));
                         string mailto = ConfigurationManager.AppSettings["8DMailTo"], mailcc = ConfigurationManager.AppSettings["8DMailCC"];
                         MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
-                        //sm.MailTo = mailto;
-                        //sm.MailCC = mailcc;
-                        sm.MailTo = "my80@my.imedia.com.tw";
+                        sm.MailTo = mailto;
+                        sm.MailCC = mailcc;
+                        //sm.MailTo = "my80@my.imedia.com.tw";
                         MyRecord.Say("发送邮件。");
                         sm.SendOut();
                         MyRecord.Say("已经发送。");
@@ -3824,7 +3832,7 @@ Order by a.[_id]
                             string bkColor = "transparent";
                             if (statusid < 2 && (NowTime - RequestFinishDate).TotalHours > 0) bkColor = "yellow";
                             //部门,故障程度,紧急程度,申请人,申请时间,机台名称,故障部位,故障描述,要求完成时间,处理状态,检修时间
-                            brs += string.Format(br,bkColor,
+                            brs += string.Format(br, bkColor,
                                                      Convert.ToString(ri["RdsNo"]),
                                                      Convert.ToString(ri["DepartmentName"]),
                                                      Convert.ToString(ri["LevelName"]),
@@ -3871,6 +3879,65 @@ Order by a.[_id]
         }
         #endregion
 
+        #region 计算采购入库到采购单，和计算采购入库上的请购单号
 
+        void PurchaseCalculateLoader()
+        {
+            MyRecord.Say("开启计算采购单和采购入库单..........");
+            Thread t = new Thread(new ThreadStart(PurchaseCalculate));
+            t.IsBackground = true;
+            t.Start();
+            MyRecord.Say("开启计算采购单和采购入库单成功。");
+        }
+
+        void PurchaseCalculate()
+        {
+            try
+            {
+                MyData.MyCommand mcd = new MyData.MyCommand();
+                string SQL =
+    @"
+Update b Set b.InStockNumb=ISNULL((Select Sum(Numb) from coPurchStocklst c Where PurchNo=a.rdsno And PID = b.id),0) From coPurchase a,coPurchlst b Where a.id=b.zbid And b.InStockNumb is Null And a.status > 0
+";
+                mcd.Add(SQL,"SQL_1");
+                /*
+                string SQL1 =
+    @"
+    Update b Set b.Status=(Case When isNull(b.InStockNumb,0) = 0 Then 1 Else (Case When b.Status > 2 Then b.Status Else 2 End) End),b.CloseDate = (Case When isNull(b.SheetNumb,0) - isNull(b.InStockNumb,0)<=0 Then GetDate() Else Null End) From coPurchase a,coPurchlst b Where a.id=b.zbid And a.status > 0 And a.enddate is Null
+    ";
+                mcd.Add(SQL1);
+                string SQL2 =
+    @"
+    Update a Set a.Status = (Select Max(Status) From coPurchlst b Where b.zbid=a.id) From coPurchase a Where isNull(a.Status,0)>0 And a.CloseDate is Null And a.enddate is Null
+    ";
+                mcd.Add(SQL2);
+                 */
+
+                string SQL3 = @"
+Update a Set a.RequestRdsNo=(Select n.RequestNo From coPurchase m,coPurchLst n Where m.id=n.zbid And m.RdsNo=a.PurchNo And n.id = a.pid)
+From coPurchStockLst a Where a.RequestRdsNo is Null";
+
+                mcd.Add(SQL3, "SQL_3");
+
+                string SQL4 = @"
+
+Update a Set a.ReqID=(Select n.ReqPID From coPurchase m,coPurchLst n Where m.id=n.zbid And m.RdsNo=a.PurchNo And n.id = a.pid)
+From coPurchStockLst a Where a.ReqID is Null
+";
+                mcd.Add(SQL4, "SQL_4");
+                DateTime nowTime = DateTime.Now;
+                MyRecord.Say("开始更新。");
+                if (mcd.Execute())
+                {
+                    MyRecord.Say(string.Format("更新成功，耗时：{0}秒", (DateTime.Now - nowTime).TotalSeconds));
+                }
+            }
+            catch (Exception ex)
+            {
+                MyRecord.Say(ex);
+            }
+        }
+
+        #endregion
     }
 }
