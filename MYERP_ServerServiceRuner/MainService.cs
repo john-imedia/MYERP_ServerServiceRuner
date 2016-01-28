@@ -13,7 +13,6 @@ using MYERP_ServerServiceRuner.Base;
 
 namespace MYERP_ServerServiceRuner
 {
-
     public partial class MainService : ServiceBase
     {
         #region 系统处理
@@ -22,7 +21,7 @@ namespace MYERP_ServerServiceRuner
             InitializeComponent();
         }
 
-        public DateTime CheckStockStartTime, CalculatePruchaseStartTime;
+        public DateTime CheckStockStartTime, CalculatePruchaseStartTime, CalculateOLDPayToNew;
         /// <summary>
         /// 上一次计算完工数领料数计算时间。
         /// </summary>
@@ -52,6 +51,7 @@ namespace MYERP_ServerServiceRuner
                 if (FirstStart)
                 {
                     FirstStart = false;
+                    //ProblemSolving8DReportLoder();
                     //SendProduceDiffNumbEmailLoder();
                     //UpdateProduceNoteFnishedNumberLoader();
                     //DateTime xdate = new DateTime(2015, 7, 1);
@@ -80,8 +80,8 @@ namespace MYERP_ServerServiceRuner
                         Thread.Sleep(500);
                     }
                 }
-                //每隔六个小时计算一次采购数量。
-                if ((NowTime - CalculatePruchaseStartTime).TotalHours > 6.5)
+                //每隔2.5个小时计算一次采购数量。
+                if ((NowTime - CalculatePruchaseStartTime).TotalHours > 2.5)
                 {
                     CalculatePruchaseStartTime = NowTime;
                     PurchaseCalculateLoader();
@@ -128,9 +128,13 @@ namespace MYERP_ServerServiceRuner
                         SendProduceUnFinishEmailLoder();  ///未结单工作日发送。
                     }
                 }
-                else if (h == 0 && m == 5 && s == 07) //发送工单差异数
+                else if (h == 0 && m == 5 && s == 7) //发送工单差异数
                 {
                     SendProduceDiffNumbEmailLoder();   ///每天零点发送昨天工单差异数
+                }
+                else if (h == 6 && m == 2 && s == 1) //自动计算库存的最后出库日期，平均周转天数，反馈入库时间到出库表
+                {
+                    StockCalculateLoader();
                 }
                 else if ((h == 6 && m == 35 && s == 10)) //清理排程
                 {
@@ -154,6 +158,7 @@ namespace MYERP_ServerServiceRuner
                 {
                     MachineRepairReportLoder();
                 }
+
             }
             catch (Exception ex)
             {
@@ -490,6 +495,44 @@ namespace MYERP_ServerServiceRuner
                     MyRecord.Say("没有获取到任何内容");
                 }
                 MyRecord.Say("审核产成品入库单——旧ERP系统审核，完成");
+            }
+            catch (Exception ex)
+            {
+                MyRecord.Say(ex);
+            }
+            #endregion
+
+            #region 審核采购入库----新版
+            try
+            {
+                MyRecord.Say("审核采购入库——新ERP系统审核");
+                SQL = @"Select * from coPurchStock Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO='NEWERP'";
+                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                if (_StopAll) return;
+                if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
+                {
+                    string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOtherInStock.MyRows.Count);
+                    MyRecord.Say(memo);
+                    int mTableOtherInStockCount = 1;
+                    foreach (MyData.MyDataRow r in mTableOtherInStock.MyRows)
+                    {
+                        if (_StopAll) return;
+                        int CurID = Convert.ToInt32(r["_ID"]);
+                        string RdsNo = Convert.ToString(r["RdsNo"]);
+                        memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherInStockCount, RdsNo, CurID, r["InputDate"]);
+                        MyRecord.Say(memo);
+                        if (!RecordCheck("coPurchStock", "_WH_PurchaseEntryWarehouse_StatusRecorder", CurID, RdsNo))
+                        {
+                            MyRecord.Say("审核错误！");
+                        }
+                        mTableOtherInStockCount++;
+                    }
+                }
+                else
+                {
+                    MyRecord.Say("没有获取到任何内容");
+                }
+                MyRecord.Say("审核其他入库单——新ERP系统审核，完成");
             }
             catch (Exception ex)
             {
@@ -2311,7 +2354,12 @@ Drop Table #T
                 #endregion
                 MyRecord.Say("1.设定数据条件，准备开始计算。");
                 DateTime NowTime = DateTime.Now;
-                DateTime beginTime = NowTime.AddMonths(-3).AddDays(-NowTime.Day).Date, endTime = NowTime.AddDays(-10).Date.AddMilliseconds(-10);
+                DateTime beginTime = NowTime.AddMonths(-6).AddDays(1 - NowTime.Day).Date, endTime = NowTime.AddDays(-10).Date.AddMilliseconds(-10);
+                DateTime stTime = new DateTime(2015, 11, 01).Date;
+                if (beginTime < stTime)
+                {
+                    beginTime = stTime;
+                }
                 #region 加载数据源
                 Thread.Sleep(200);
                 MyData.MyParameter[] mps = new MyData.MyParameter[]
@@ -2664,9 +2712,10 @@ Drop Table #T
                     #region 筛选加工
                     MyRecord.Say("对数据进行筛选加工。");
                     List<GridItem> _ThisGridDataSource = new List<GridItem>();
+                    DateTime tmDateTime = new DateTime(1998, 1, 1);
                     _ThisGridDataSource = GridDataSource;
                     var nvk = from a in _ThisGridDataSource
-                              where a.defnumb != 0 && a.FinishDate > Convert.ToDateTime("2000-01-01") && a.InStockNumb > 0 && !a.Finalized
+                              where a.defnumb != 0 && a.FinishDate > tmDateTime && a.InStockNumb > 0 && !a.Finalized
                               group a by a.rdsno into g
                               select g.Key;
                     string[] mm = nvk.ToArray();
@@ -3295,7 +3344,18 @@ Where isNull(Status,0) = 0 And StockDate is Null And FinishDate is Null
                 string body = MyConvert.ZH_TW(@"
 <HTML>
 <BODY style=""FONT-SIZE: 9pt; FONT-FAMILY: PMingLiU"" leftMargin=5 topMargin=5 bgColor=#ece4f3 #ffffff>
-<DIV><FONT size=3 face=PMingLiU>{5}ERP系统提示您：</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>{4}ERP系统提示您：</FONT></DIV>
+{0}
+{1}
+{2}
+<DIV><FONT color=#0000ff size=4 face=PMingLiU><STRONG>&nbsp;&nbsp;此郵件由ERP系統自動發送，请勿在此郵件上直接回復。</STRONG></FONT></DIV>
+<DIV><FONT color=#800080 size=2><STRONG>&nbsp;&nbsp;&nbsp;</STRONG>
+<FONT color=#000000 face=PMingLiU>{3:yy/MM/dd HH:mm}，由ERP系统伺服器自动发送。<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;如自動發送功能有問題或者格式内容修改建議，請MailTo:<A href=""mailto:my80@my.imedia.com.tw"">JOHN</A><BR>
+</FONT></FONT></DIV></FONT></BODY></HTML>
+");
+
+                string body1 = @"
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请注意，以下内容，为8H前（输入日期在{0:yy/MM/dd HH:mm}之前）未回复/未审核/被退件的8D报告列表。(每日7点更新统计)</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请相关单位主管及时处理，CQE将持续追踪进度。</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -3340,6 +3400,8 @@ Where isNull(Status,0) = 0 And StockDate is Null And FinishDate is Null
 </TBODY></TABLE></FONT>
 </DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </FONT></DIV>
+";
+                string body2 = @"
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请品保注意以下内容，为8H前（输入日期在{0:yy/MM/dd HH:mm}之前）已审核待品保处理/确认的8D报告列表。</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <TABLE style=""BORDER-COLLAPSE: collapse"" cellSpacing=0 cellPadding=0 width=""100%"" border=0>
@@ -3379,10 +3441,12 @@ Where isNull(Status,0) = 0 And StockDate is Null And FinishDate is Null
     当前状态
     </TD>
     </TR>
-    {2}
+    {1}
 </TBODY></TABLE></FONT>
 </DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </FONT></DIV>
+                ";
+                string body3 = @"
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请品保注意以下内容，为即将到预期结案日期的8D报告列表，请尽快追踪结案。</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <TABLE style=""BORDER-COLLAPSE: collapse"" cellSpacing=0 cellPadding=0 width=""100%"" border=0>
@@ -3422,16 +3486,11 @@ Where isNull(Status,0) = 0 And StockDate is Null And FinishDate is Null
     当前状态
     </TD>
     </TR>
-    {3}
+    {0}
 </TBODY></TABLE></FONT>
 </DIV>
 <DIV><FONT face=PMingLiU><FONT size=2></FONT>&nbsp;</DIV>
-<DIV><FONT color=#0000ff size=4 face=PMingLiU><STRONG>&nbsp;&nbsp;此郵件由ERP系統自動發送，请勿在此郵件上直接回復。</STRONG></FONT></DIV>
-<DIV><FONT color=#800080 size=2><STRONG>&nbsp;&nbsp;&nbsp;</STRONG>
-<FONT color=#000000 face=PMingLiU>{4:yy/MM/dd HH:mm}，由ERP系统伺服器自动发送。<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;如自動發送功能有問題或者格式内容修改建議，請MailTo:<A href=""mailto:my80@my.imedia.com.tw"">JOHN</A><BR>
-</FONT></FONT></DIV></FONT></BODY></HTML>
-");
+";
                 #endregion
                 #region 邮件变体
                 string br = @"
@@ -3483,7 +3542,7 @@ Select *,DepartmentName=(Select Top 1 name from pbDept Where pbDept.Code=a.Depar
                       When isNull(a.FinishType,0)=2 Then '繼續跟催'
                       When isNull(a.FinishType,0)=3 Then '重擬對策再做跟催' Else '處理中' END),
          StatusName=(Select (Case When a.Status = 0 And Not a.ModifyDate is Null Then '待審核' Else Name End) from [_SY_Status] Where [Type]='8D' And StatusID=isNull(a.Status,0))
-from [_QE_ProblemSolving8D] a Where a.Status>0 And FinalizDate is Null And InputDate <= @DateEnd Order By a.Status,a.FinishType Desc,a.InputDate
+from [_QE_ProblemSolving8D] a Where FinalizDate is Null And InputDate <= @DateEnd Order By a.Status,a.FinishType Desc,a.InputDate
 ";
                 DateTime NowTime = DateTime.Now;
                 DateTime EDate = NowTime.Date.AddHours(8);
@@ -3518,7 +3577,7 @@ from [_QE_ProblemSolving8D] a Where a.Status>0 And FinalizDate is Null And Input
                                             statusname = "未回覆。";
                                     }
                                     //类型，单号,发起人,问题描述,责任部门,指定答辩人,发起日期,回覆日期，审核日期，逾期时间,当前状态
-                                    DateTime startdate = Convert.ToDateTime(ri["D1_Date"]);
+                                    DateTime startdate = Convert.ToDateTime(ri["InputDate"]);
                                     overtimeword = (NowTime - startdate).TotalHours > 24 ? string.Format("{0:#.#}天", (NowTime - startdate).TotalDays) : string.Format("{0:0}小时", (NowTime - startdate).TotalHours);
                                     brs += string.Format(br, Convert.ToString(ri["TypeName"]).Substring(0, 2),
                                                              Convert.ToString(ri["RdsNo"]),
@@ -3584,7 +3643,10 @@ from [_QE_ProblemSolving8D] a Where a.Status>0 And FinalizDate is Null And Input
                         MyRecord.Say("创建SendMail。");
                         MyBase.SendMail sm = new MyBase.SendMail();
                         MyRecord.Say("加载邮件内容。");
-                        sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, EDate, brs, brl, brt, NowTime, MyBase.CompanyTitle));
+                        string sb1 = brs != null && brs.Length > 0 ? string.Format(body1, EDate, brs) : string.Empty;
+                        string sb2 = brs != null && brl.Length > 0 ? string.Format(body2, EDate, brl) : string.Empty;
+                        string sb3 = brs != null && brt.Length > 0 ? string.Format(body3, brt) : string.Empty;
+                        sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, sb1, sb2, sb3, NowTime, MyBase.CompanyTitle));
                         sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_8D报告回覆进度追踪统计。", NowTime, MyBase.CompanyTitle));
                         string mailto = ConfigurationManager.AppSettings["8DMailTo"], mailcc = ConfigurationManager.AppSettings["8DMailCC"];
                         MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
@@ -3899,7 +3961,7 @@ Order by a.[_id]
     @"
 Update b Set b.InStockNumb=ISNULL((Select Sum(Numb) from coPurchStocklst c Where PurchNo=a.rdsno And PID = b.id),0) From coPurchase a,coPurchlst b Where a.id=b.zbid And b.InStockNumb is Null And a.status > 0
 ";
-                mcd.Add(SQL,"SQL_1");
+                mcd.Add(SQL, "SQL_1");
                 /*
                 string SQL1 =
     @"
@@ -3923,6 +3985,103 @@ From coPurchStockLst a Where a.RequestRdsNo is Null";
 
 Update a Set a.ReqID=(Select n.ReqPID From coPurchase m,coPurchLst n Where m.id=n.zbid And m.RdsNo=a.PurchNo And n.id = a.pid)
 From coPurchStockLst a Where a.ReqID is Null
+";
+                mcd.Add(SQL4, "SQL_4");
+                DateTime nowTime = DateTime.Now;
+                MyRecord.Say("开始更新。");
+                if (mcd.Execute())
+                {
+                    MyRecord.Say(string.Format("更新成功，耗时：{0}秒", (DateTime.Now - nowTime).TotalSeconds));
+                }
+            }
+            catch (Exception ex)
+            {
+                MyRecord.Say(ex);
+            }
+        }
+
+        #endregion
+
+        #region 计算库存的平均周转天数和最后出入库时间，价格，反馈入库日期入库信息到出库
+
+        void StockCalculateLoader()
+        {
+            MyRecord.Say("开启库存后台计算..........");
+            Thread t = new Thread(new ThreadStart(StockCalculate));
+            t.IsBackground = true;
+            t.Start();
+            MyRecord.Say("开启库存后台计算成功。");
+        }
+
+        void StockCalculate()
+        {
+            try
+            {
+                MyData.MyCommand mcd = new MyData.MyCommand();
+                ///计算最后出入库时间
+                string SQL =
+    @"
+Set  NoCount ON
+
+Select Code,Max(StockDate) StkDate Into #T From [_WH_OutStockLotNo_View] Group by Code
+
+Update pbMaterial Set LastOutStockDate = (Select StkDate From #T Where Code=pbMaterial.Code)
+
+Update pbKzmsg Set LastOutStockDate = (Select StkDate From #T Where Code=pbKzmsg.Code)
+
+Update pbProduct Set LastOutStockDate = (Select StkDate From #T Where Code=pbProduct.Code)
+
+Drop Table #T
+
+Set NoCount Off
+";
+                mcd.Add(SQL, "SQL_1");
+                ///计算平均库存周转天数
+                string SQL3 = @"
+Set NoCount ON
+Declare @LastDate DateTime
+
+Set @LastDate =(Select Max(SumDate) From stSumStock)
+
+Select b.Code,b.LotNo,a.InStockDate,b.StockDate as OutStockDate,a.numb as InNumb,b.Numb as OutNumb Into #S
+  from [_WH_OutStockLotNo_View] b Inner Join [_WH_InStockLotNo_View] a ON b.LotNo=a.LotNo 
+ Where b.StockDate > @LastDate
+
+Select Code,LotNo,Ceiling(Sum(DateDiff(DD,InStockDate,OutStockDate) * OutNumb) / Sum(OutNumb)) as StkDate,InNumb=Max(InNumb),OutNumb=Sum(OutNumb),StkNumb=Max(InNumb)-Sum(OutNumb),
+       Case When Max(InNumb)-Sum(OutNumb) >0 Then DateDiff(DD,Max(InStockDate),GetDate()) Else 0 End as StkDate2
+  Into #T
+  From #S Group by Code,LotNo
+
+Select Code,Ceiling(((Ceiling(Sum(StkDate * InNumb) / Sum(InNumb)) * Sum(OutNumb)) +  (Case When Sum(StkNumb)=0 Then 0 Else Ceiling(Sum(StkNumb * StkDate2) / Sum(StkNumb)) End * Sum(StkNumb))) / Sum(InNumb)) as StkDate,Sum(InNumb) as InNumb,Sum(OutNumb) as OutNumb,StkNumb=Sum(StkNumb) 
+Into #X
+From #T Group by Code
+
+Update pbMaterial Set InventoryTurnOverDays = (Select StkDate From #X Where Code=pbMaterial.Code)
+
+Update pbKzmsg Set InventoryTurnOverDays = (Select StkDate From #X Where Code=pbKzmsg.Code)
+
+Update pbProduct Set InventoryTurnOverDays = (Select StkDate From #X Where Code=pbProduct.Code)
+
+Drop Table #S
+Drop Table #T
+Drop Table #X
+
+Set NoCount Off
+";
+                mcd.Add(SQL3, "SQL_3");
+                ///修改出库的入库时间
+                string SQL4 = @"
+Set NoCount ON
+
+Update stOutProdlst Set InStockDate = (Select InStockDate From [_WH_InStockLotNo_View] b Where b.LotNo=stOutProdlst.BatchNo) Where InStockDate is Null
+
+Update stOtherOutlst Set InStockDate = (Select InStockDate From [_WH_InStockLotNo_View] b Where b.LotNo=stOtherOutlst.BatchNo) Where InStockDate is Null
+
+Update stAdjustStocklst Set InStockDate = (Select InStockDate From [_WH_InStockLotNo_View] b Where b.LotNo=stAdjustStocklst.BatchNo) Where InStockDate is Null
+
+Update coShiplst Set InStockDate = (Select InStockDate From [_WH_InStockLotNo_View] b Where b.LotNo=coShiplst.BatchNo) Where InStockDate is Null
+
+Set NoCount Off
 ";
                 mcd.Add(SQL4, "SQL_4");
                 DateTime nowTime = DateTime.Now;
