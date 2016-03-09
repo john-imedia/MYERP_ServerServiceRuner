@@ -288,11 +288,16 @@ namespace MYERP_ServerServiceRuner.Base
 
             public SendMail()
             {
+                mail = new MailMessage();
+                Attachments = mail.Attachments;
             }
+
+            public MailMessage mail { get; set; }
+
+            public AttachmentCollection Attachments { get; set; }
 
             public void SendOut()
             {
-                MailMessage mail = new MailMessage();
                 mail.From = MailFrom;
                 mail.Subject = MyConvert.ZH_TW(Subject);
                 mail.Sender = MailFrom;
@@ -307,6 +312,7 @@ namespace MYERP_ServerServiceRuner.Base
                 mail.Headers.Add("Sender", MyConvert.ZHLC("ERP自动化伺服器"));
                 mail.DeliveryNotificationOptions = DeliveryNotificationOptions.OnFailure | DeliveryNotificationOptions.Delay;
                 mail.Priority = MailPriority.Normal;
+
                 SmtpClient Sender = new SmtpClient("59.125.179.177");
                 Sender.DeliveryMethod = SmtpDeliveryMethod.Network;
                 Sender.EnableSsl = false;
@@ -314,6 +320,7 @@ namespace MYERP_ServerServiceRuner.Base
                 Sender.UseDefaultCredentials = false;
                 Sender.Timeout = 120 * 1000;
                 Sender.Credentials = new NetworkCredential("AutoMessage", "HWGV1z86");
+
                 try
                 {
                     Sender.Send(mail);

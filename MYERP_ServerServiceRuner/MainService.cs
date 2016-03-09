@@ -10,6 +10,7 @@ using System.Threading;
 using System.ServiceProcess;
 using System.Text;
 using MYERP_ServerServiceRuner.Base;
+using C1.Win.C1FlexGrid;
 
 namespace MYERP_ServerServiceRuner
 {
@@ -51,6 +52,7 @@ namespace MYERP_ServerServiceRuner
                 if (FirstStart)
                 {
                     FirstStart = false;
+                    //ProdPlanForSaveLoader(NowTime);
                     //ProblemSolving8DReportLoder();
                     //SendProduceDiffNumbEmailLoder();
                     //UpdateProduceNoteFnishedNumberLoader();
@@ -102,18 +104,11 @@ namespace MYERP_ServerServiceRuner
                     Thread.Sleep(1000);
                     SendProdPlanEmail(NowTime);  //定時發送排程和達成率。
                 }
-                else if ((h == 11 || h == 23) && m == 55 && s == 0) //保存达成率到月报表
+                else if ((h == 11 || h == 23) && m == 55 && s == 0) //保存达成率到月报表，审核纪律单。
                 {
-                    //每天中午11点和夜里23点保存达成率
-                    //DateTime xdate = new DateTime(2015, 3, 29);
-                    //for (int i = 0; i < 18; i++)
-                    //{
-                    //    DateTime xxd1 = xdate.AddDays(i).Date.AddHours(11).AddMinutes(55);
-                    //    DateTime xxd2 = xdate.AddDays(i).Date.AddHours(23).AddMinutes(55);
-                    //    ProdPlanForSave(xxd1);
-                    //    ProdPlanForSave(xxd2);
-                    //}
-                    ProdPlanForSave(NowTime);
+                    MyRecord.Say("开启保存达成率线程");
+                    ProdPlanForSaveLoader(NowTime);
+
                 }
                 else if (h == 6 && m == 17 && s == 12) //发送不良超100%
                 {
@@ -157,6 +152,10 @@ namespace MYERP_ServerServiceRuner
                 else if (h == 12 && m == 35 && s == 55)  //自动发送未结束维修申请
                 {
                     MachineRepairReportLoder();
+                }
+                else if (h == 11 && m == 51 && s == 51) //自动计算“三日出货计划异常”异常项目发送邮件。
+                {
+                    DeliverPlanFinishStatisticErrorSender();
                 }
 
             }
@@ -265,7 +264,7 @@ namespace MYERP_ServerServiceRuner
             string SQL = "";
             MyRecord.Say("---------------------启动定时审核出入库单据。------------------------------");
             DateTime NowTime = DateTime.Now;
-            DateTime StopTime = NowTime.AddHours(-3);
+            DateTime StopTime = NowTime.AddHours(-3.75);
             MyRecord.Say(string.Format("审核截止时间：{0:yy/MM/dd HH:mm}", StopTime));
             CheckStockRecordRunning = true;
             #region 審核產成品入庫----新版
@@ -738,6 +737,7 @@ Select a.RdsNo,
 	   b.Side,
        b.AutoDuplexPrint,
        MachineName = (Select Name From moMachine Where Code=b.MachineCode),
+       FinishMeasurement = (Select FinishMeasurement From moMachine Where Code = b.MachineCode),
        ProcessName = (Select Name from moProcedure where code = a.Process),
        ProductName = (Select Name from pbProduct Where Code= b.ProdCode),
        DepartmentName = (Select Name from pbDept Where [_id]=a.Department),
@@ -825,7 +825,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                     {
                         BDD = vd.Min(x => x.Bdd);
                         EDD = vd.Max(x => x.Edd);
-                        if (curItem.ProcessCode == "2000")
+                        if (curItem.ProcessCode == "2000" || curItem.FinishMeasurement == 1)
                         {
                             var vf = from a in g
                                      where a.FinishSheetNumb > 0
@@ -834,11 +834,11 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                             FinishCount = vf.Count();
 
                             PlanSheetNumb = vd.Sum(x => x.ReqNumb);
-                            PlanProdNumb = vd.Sum(m => m.ReqNumb * m.ColNumb);
+                            PlanProdNumb = vd.Sum(x => x.ReqNumb); // vd.Sum(m => m.ReqNumb * m.ColNumb);
                             if (vf != null && vf.Count() > 0)
                             {
                                 FinishSheetNumb = vf.Sum(x => x.FinishSheetNumb);
-                                FinishProdNumb = vf.Sum(m => m.FinishProdNumb);
+                                FinishProdNumb = vf.Sum(x => x.FinishSheetNumb); //vf.Sum(m => m.FinishProdNumb);
                             }
                         }
                         else
@@ -964,10 +964,8 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                 ProcessName = Convert.ToString(r["ProcessName"]);
                 MachineName = Convert.ToString(r["MachineName"]);
             }
-
             public string RdsNo { get; set; }
             public string ProduceRdsNo { get; set; }
-
             public string ProductCode { get; set; }
             public string ProcessCode { get; set; }
             public string ProcessName { get; set; }
@@ -999,6 +997,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
             public double FinishProdNumb { get; set; }
             public bool AutoDuplexPrint { get; set; }
             public string Type { get; set; }
+            public int FinishMeasurement { get; set; }
         }
 
         class Plan_FinishItem
@@ -1161,7 +1160,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                     if (vbkp != null && vbkp.Count() > 0)
                     {
                         ProcessSumItemBkp psp = vbkp.FirstOrDefault();
-                        if ((finishProdNumb - psp.FinishProdNumb) <= (item.ReqNumb * item.ColNumb) || psp.SumTime >= vppt.Count())
+                        if ((finishProdNumb - psp.FinishProdNumb) <= (item.ReqNumb * item.ColNumb) || psp.SumTime >= (vppt.Count() - 1))
                         {
                             finishProdNumb = finishProdNumb - psp.FinishProdNumb;
                             finishNumb = finishNumb - psp.FinishSheetNumb;
@@ -1197,8 +1196,16 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                 }
                 if (finishProdNumb <= 0) finishProdNumb = 0;
                 if (finishNumb <= 0) finishNumb = 0;
-                item.FinishProdNumb = finishProdNumb;
-                item.FinishSheetNumb = finishNumb;
+                if (finishNumb > (item.ReqNumb * 1.10) && item.ReqNumb <= 500)   //印刷超数量，要按照需求数计算，不可以超出110%
+                {
+                    item.FinishProdNumb = item.ReqNumb * item.ColNumb * 1.10;
+                    item.FinishSheetNumb = item.ReqNumb * 1.10;
+                }
+                else
+                {
+                    item.FinishProdNumb = finishProdNumb;
+                    item.FinishSheetNumb = finishNumb;
+                }
                 item.Type = ((item.Bdd - item.PlanBegin).TotalMinutes > -5 && (item.Edd - item.PlanEnd).TotalMinutes < 5) ? MyConvert.ZHLC("正常") : MyConvert.ZHLC("超出");
                 if (finishProdNumb > 0) foreach (var iv in vf) iv.iCalItem = true;
             }
@@ -1231,7 +1238,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                          select a;
                 double finishProdNumb = vf.Sum(x => x.FinishProdNumb), finishNumb = vf.Sum(x => x.FinishNumb);
                 var vppt = from a in vProduceSource
-                           where a.RdsNo == item.RdsNo && a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID && a.Side == item.Side
+                           where a.RdsNo == item.RdsNo && a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID && a.Side == item.Side && a.MachineCode == item.MachineCode
                            select a;
                 if (vppt != null && vppt.Count() > 1)
                 {
@@ -1241,7 +1248,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                     if (vbkp != null && vbkp.Count() > 0)
                     {
                         ProcessSumItemBkp psp = vbkp.FirstOrDefault();
-                        if (((finishProdNumb - psp.FinishProdNumb) <= (item.ReqNumb * item.ColNumb)) || (psp.SumTime >= vppt.Count()))
+                        if (((finishProdNumb - psp.FinishProdNumb) <= (item.ReqNumb * item.ColNumb)) || (psp.SumTime >= (vppt.Count() - 1)))
                         {
                             finishProdNumb = finishProdNumb - psp.FinishProdNumb;
                             finishNumb = finishNumb - psp.FinishSheetNumb;
@@ -1472,26 +1479,66 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
             MyRecord.Say("-------------------------------------------计算排程达成率完成-------------------------------------------");
         }
 
-        void ProdPlanForSave(DateTime NowTime)
+
+        Thread tProdPlanForSaveing;
+
+        bool _StopProdPlanForSaved = false;
+
+        void ProdPlanForSaveLoader(DateTime NowTime)
+        {
+            if (tProdPlanForSaveing != null && tProdPlanForSaveing.IsAlive)
+            {
+                _StopProdPlanForSaved = true;
+                DateTime xTime = DateTime.Now;
+                do
+                {
+                    _StopProdPlanForSaved = true;
+                } while (tProdPlanForSaveing.IsAlive && (DateTime.Now - xTime).TotalSeconds > 10);
+            }
+            _StopProdPlanForSaved = false;
+            tProdPlanForSaveing = new Thread(new ParameterizedThreadStart(ProdPlanForSaveRunner));
+            tProdPlanForSaveing.IsBackground = true;
+            tProdPlanForSaveing.Start(NowTime);
+        }
+
+        void ProdPlanForSaveRunner(object NowTime)
+        {
+            DateTime xDate = ((DateTime)NowTime).AddDays(-3).Date;
+            MyRecord.Say(string.Format("当前时间：{0}，计算开始时间：{1}", NowTime, xDate));
+            for (int i = 0; i < 3; i++)
+            {
+                if (_StopProdPlanForSaved) return;
+                DateTime iDate = xDate.AddDays(i).Date;
+                MyRecord.Say(string.Format("计算时间：{0}，白班", iDate));
+                ProdPlanForSave(iDate, 1);
+                if (_StopProdPlanForSaved) return;
+                MyRecord.Say(string.Format("计算时间：{0}，夜班", iDate));
+                ProdPlanForSave(iDate, 2);
+            }
+        }
+
+        void ProdPlanForSave(DateTime NowTime, int classtype)
         {
             try
             {
                 MyRecord.Say("-----------开始计算排程达成率For保存------------");
-                int classtype = 1;
                 string byb = "";
                 MyData.MyCommand xmcd = new MyData.MyCommand();
-                if (NowTime.Hour == 11) //12点保存3日前夜班排程
-                {
-                    classtype = 2;
-                    NowTime = NowTime.AddDays(-3);
-                    byb = "夜班";
-                }
-                else if (NowTime.Hour == 23) //23点50保存2日前白天排程
-                {
-                    NowTime = NowTime.AddDays(-2);
-                    classtype = 1;
-                    byb = "白班";
-                }
+                //if (NowTime.Hour == 11) //12点保存3日前夜班排程
+                //{
+                //    classtype = 2;
+                //    NowTime = NowTime.AddDays(-3);
+                //    byb = "夜班";
+                //}
+                //else if (NowTime.Hour == 23) //23点50保存2日前白天排程
+                //{
+                //    NowTime = NowTime.AddDays(-2);
+                //    classtype = 1;
+                //    byb = "白班";
+                //}
+                if (classtype == 1) byb = "白班";
+                else if (classtype == 2) byb = "夜班";
+
                 MyRecord.Say(string.Format("1.处理条件，NowTime={0}，班次：{1}，班次ID：{2}，开始计算数据源。", NowTime, byb, classtype));
                 if (NowTime > DateTime.MinValue && classtype > 0)
                 {
@@ -1505,6 +1552,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                     string xLine = string.Empty; int iRow = 0; DateTime t1 = DateTime.Now;
                     foreach (var item in vGridDataSource)
                     {
+                        if (_StopProdPlanForSaved) return;
                         double y1 = item.PlanCount != 0 ? Convert.ToDouble(item.FinishCount) / Convert.ToDouble(item.PlanCount) : 0;
                         double y2 = item.FinishProdNumb != 0 ? Convert.ToDouble(item.FinishProdNumb) / Convert.ToDouble(item.PlanProdNumb) : 0;
                         string SQLSave = @"
@@ -1537,6 +1585,7 @@ Values(@PlanRdsNo,@PlanType,@PlanBegin,@PlanEnd,@Inputer,@Checker,@DeaprtmentID,
 
                     MyRecord.Say(string.Format("一共：{0}行，已经生成。总耗时：{1}秒。", iRow, (DateTime.Now - t1).TotalSeconds));
                     MyRecord.Say("开始提交");
+                    if (_StopProdPlanForSaved) return;
                     if (xmcd.Execute())
                         MyRecord.Say("保存完毕！");
                     else
@@ -3234,8 +3283,15 @@ Where isNull(Status,0) = 0 And StockDate is Null And FinishDate is Null
                 string SQL = "";
                 MyRecord.Say("---------------------定时清理生产排程记录------------------------------");
                 DateTime NowTime = DateTime.Now;
-                MyRecord.Say("1.定时清理10天之前，所有未审核/未确认的生产排程。");
-                SQL = @"Select [_ID],RdsNo from _PMC_ProdPlan Where IsNull([Status],0) < 2 And InputDate < DateAdd([dd],-10,Convert(DateTime,Convert(VarChar(10),GetDate(),121)))";
+                MyRecord.Say("1.定时清理3天之前，所有未审核/未确认的生产排程。");
+
+                SQL = @"
+Declare @NowDate DateTime,@LastDate DateTime
+Declare @WeekDay int
+Set @NowDate = GetDate()
+Set @WeekDay=DatePart(DW,@NowDate)
+Select @LastDate = (Case When @WeekDay <= 4 Then DateAdd([dd],-4,@NowDate) Else DateAdd([dd],-3,@NowDate) End)
+Select [_ID],RdsNo from _PMC_ProdPlan Where IsNull([Status],0) < 2 And PlanBegin < @LastDate";
                 MyData.MyDataTable mTableUnCheckPlan = new MyData.MyDataTable(SQL);
                 if (_StopAll) return;
                 if (mTableUnCheckPlan != null && mTableUnCheckPlan.MyRows.Count > 0)
@@ -3271,8 +3327,13 @@ Where isNull(Status,0) = 0 And StockDate is Null And FinishDate is Null
                 }
                 MyRecord.Say(string.Format("清理完毕，下面进行第二项，一共耗时：{0:#,##0.00}分钟，下次启动于：{1:HH:mm}", (DateTime.Now - NowTime).TotalMinutes, NowTime.AddHours(3)));
 
-                MyRecord.Say("2.定时清理2天之前，所有未审核/未确认的生产排程。");
-                SQL = @"Select [_ID],RdsNo,PlanEnd from _PMC_ProdPlan Where IsNull([Status],0) = 2 And InputDate < DateAdd([dd],-5,Convert(DateTime,Convert(VarChar(10),GetDate(),121)))";
+                MyRecord.Say("2.定时清理3天之前，所有已审核的生产排程。进行关闭。");
+                SQL = @"Declare @NowDate DateTime,@LastDate DateTime
+Declare @WeekDay int
+Set @NowDate = GetDate()
+Set @WeekDay=DatePart(DW,@NowDate)
+Select @LastDate = (Case When @WeekDay <= 4 Then DateAdd([dd],-4,@NowDate) Else DateAdd([dd],-3,@NowDate) End)
+Select [_ID],RdsNo from _PMC_ProdPlan Where IsNull([Status],0) = 2 And PlanBegin < @LastDate";
                 MyData.MyDataTable mTableCheckedPlan = new MyData.MyDataTable(SQL);
                 if (_StopAll) return;
                 if (mTableCheckedPlan != null && mTableCheckedPlan.MyRows.Count > 0)
@@ -3288,13 +3349,19 @@ Where isNull(Status,0) = 0 And StockDate is Null And FinishDate is Null
                         MyData.MyParameter mpRdsNo = new MyData.MyParameter("@rdsno", RdsNo);
                         MyData.MyParameter mpid = new MyData.MyParameter("@ID", r["_ID"], MyData.MyParameter.MyDataType.Int);
                         MyData.MyParameter mpEndDate = new MyData.MyParameter("@PlanEnd", r["PlanEnd"], MyData.MyParameter.MyDataType.DateTime);
-                        string SQLDetial = @"Delete from [_PMC_ProdPlan_List] Where zbid = @ID And Bdd > @PlanEnd";
+                        string SQLDetial = @"Delete from [_PMC_ProdPlan_List] Where zbid = @ID And Bdd > DateAdd(HH,3,@PlanEnd)";
                         string SQLMain = @"Update [_PMC_ProdPlan] Set Status=3 Where [_ID]=@ID";
-                        string SQLStatus = @"Insert Into [_PMC_ProdPlan_StatusRecorder](zbid,Author,[state],memo,rdsno,type,typeid,CheckIn,CheckOut) Values(@ID,'自動審核',1,'關閉排程',@rdsno,'關閉',2,1,1)";
+                        string SQLStatus = @"Insert Into [_PMC_ProdPlan_StatusRecorder](zbid,Author,[state],memo,rdsno,type,typeid,CheckIn,CheckOut) Values(@ID,'自動審核',1,'關閉排程，到 ' + Convert(VarChar(100),DateAdd(HH,3,@PlanEnd),120),@rdsno,'關閉',2,1,1)";
+                        MyData.MyParameter[] mpss = new MyData.MyParameter[]
+                        {
+                            mpRdsNo,
+                            mpid,
+                            mpEndDate
+                        };
                         MyData.MyCommand doCMD = new MyData.MyCommand();
-                        doCMD.Add(SQLDetial, "Delete", mpid, mpEndDate);
-                        doCMD.Add(SQLMain, "UpdateMain", mpid);
-                        doCMD.Add(SQLStatus, "Status", mpid, mpRdsNo);
+                        doCMD.Add(SQLDetial, "Delete", mpss);
+                        doCMD.Add(SQLMain, "UpdateMain", mpss);
+                        doCMD.Add(SQLStatus, "Status", mpss);
                         if (doCMD.Execute())
                         {
                             memo = string.Format("設置第{0}条，排程单号：{1}，成功，耗时：{2:#,#0.00}秒。", mTableProduceFinishedCount, RdsNo, (DateTime.Now - mStartTime).TotalSeconds);
@@ -4023,7 +4090,46 @@ From coPurchStockLst a Where a.ReqID is Null
     @"
 Set  NoCount ON
 
-Select Code,Max(StockDate) StkDate Into #T From [_WH_OutStockLotNo_View] Group by Code
+Select Code,LastOutStockDate = Convert(DateTime,Null),
+            LastInStockDate = Convert(DateTime,Null),
+			StockDate = Convert(DateTime,Null),
+            AdjustStockDate = Convert(DateTime,Null),
+            StkDate = Convert(DateTime,Null) Into #T From AllMaterialView
+
+Select Code,Max(StockDate) StkDate Into #S From [_WH_OutStockLotNo_View] Group by Code
+
+Select Code,Max(InStockDate) StkDate Into #U from [_WH_InStockLotNo_View] Group by Code
+
+Select a.Code,Min(b.InStockDate) StkDate Into #ST From [_ST_StockListByLotNoView] a Inner Join [_WH_InStockLotNo_View] b ON a.LotNo = b.LotNo Group by a.Code
+
+Select xa.Code,Min(xi.InStockDate) StkDate Into #SA from stAdjustStocklst xa Inner Join [_WH_InStockLotNo_View] xi ON xa.LotNo = xi.LotNo Where xa.Numb >0 Group by xa.Code
+
+Update a Set a.StockDate = s.StkDate From #T a,#ST s Where a.Code= s.Code
+
+Update a Set a.LastOutStockDate = s.StkDate From #T a,#S s Where a.Code= s.Code
+
+Update a Set a.LastInStockDate = s.StkDate From #T a,#U s Where a.Code= s.Code
+
+Update a Set a.AdjustStockDate = s.StkDate From #T a,#SA s Where a.Code= s.Code
+
+Update a Set a.StkDate = Case When a.StockDate is Null Then 
+						      Case When a.LastOutStockDate is Null Then 
+								   IsNull(a.LastInStockDate,a.AdjustStockDate)
+							  Else 
+								   a.LastOutStockDate
+							  End
+                         Else 
+							  Case When a.LastOutStockDate is Null Then 
+								   a.StockDate
+							  Else 
+								   Case When a.LastOutStockDate > a.StockDate Then 
+									    a.LastOutStockDate 
+								   Else 
+								        a.StockDate
+								   End
+							  End
+						 End
+        From #T a
 
 Update pbMaterial Set LastOutStockDate = (Select StkDate From #T Where Code=pbMaterial.Code)
 
@@ -4031,7 +4137,12 @@ Update pbKzmsg Set LastOutStockDate = (Select StkDate From #T Where Code=pbKzmsg
 
 Update pbProduct Set LastOutStockDate = (Select StkDate From #T Where Code=pbProduct.Code)
 
+
 Drop Table #T
+Drop Table #ST
+Drop Table #S
+Drop Table #U
+Drop Table #SA
 
 Set NoCount Off
 ";
