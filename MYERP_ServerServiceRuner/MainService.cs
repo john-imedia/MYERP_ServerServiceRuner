@@ -52,18 +52,6 @@ namespace MYERP_ServerServiceRuner
                 if (FirstStart)
                 {
                     FirstStart = false;
-                    //ProdPlanForSaveLoader(NowTime);
-                    //ProblemSolving8DReportLoder();
-                    //SendProduceDiffNumbEmailLoder();
-                    //UpdateProduceNoteFnishedNumberLoader();
-                    //DateTime xdate = new DateTime(2015, 7, 1);
-                    //for (int i = 0; i < 18; i++)
-                    //{
-                    //    DateTime xxd1 = xdate.AddDays(i).Date.AddHours(11).AddMinutes(55);
-                    //    DateTime xxd2 = xdate.AddDays(i).Date.AddHours(23).AddMinutes(55);
-                    //    ProdPlanForSave(xxd1);
-                    //    ProdPlanForSave(xxd2);
-                    //}
                 }
 
                 if (h == 0 && m == 0 & s == 0) //计时器归零
@@ -107,8 +95,9 @@ namespace MYERP_ServerServiceRuner
                 else if ((h == 11 || h == 23) && m == 55 && s == 0) //保存达成率到月报表，审核纪律单。
                 {
                     MyRecord.Say("开启保存达成率线程");
-                    ProdPlanForSaveLoader(NowTime);
-
+                    ProdPlanForSaveLoader(NowTime);//保存达成率到月报表。
+                    MyRecord.Say("开启审核纪律单线程");
+                    WorkspaceInspectCheckLoader(); //审核纪律单。
                 }
                 else if (h == 6 && m == 17 && s == 12) //发送不良超100%
                 {
@@ -139,7 +128,15 @@ namespace MYERP_ServerServiceRuner
                 {
                     ProblemSolving8DReportLoder();
                 }
-                else if ((h == 11 && h == 23) && m == 59 && s == 57) //自动计算完工数
+                else if (h == 12 && m == 35 && s == 55)  //自动发送未结束维修申请//2周未审核的作废
+                {
+                    MachineRepairReportLoder();
+                }
+                else if (h == 11 && m == 51 && s == 51) //自动计算“三日出货计划异常”异常项目发送邮件。
+                {
+                    DeliverPlanFinishStatisticErrorSender();
+                }
+                else if ((h == 12 || h == 0) && m == 5 && s == 57) //自动计算完工数
                 {
                     ProduceFeedBackLastRunTime = NowTime;
                     if (!ProduceFeedBackRuning)
@@ -149,15 +146,6 @@ namespace MYERP_ServerServiceRuner
                         Thread.Sleep(500);
                     }
                 }
-                else if (h == 12 && m == 35 && s == 55)  //自动发送未结束维修申请
-                {
-                    MachineRepairReportLoder();
-                }
-                else if (h == 11 && m == 51 && s == 51) //自动计算“三日出货计划异常”异常项目发送邮件。
-                {
-                    DeliverPlanFinishStatisticErrorSender();
-                }
-
             }
             catch (Exception ex)
             {
@@ -3830,10 +3818,19 @@ from [_QE_ProblemSolving8D] a Where FinalizDate is Null And InputDate <= @DateEn
         {
             try
             {
+                MachineRepairReportChecker();
+            }
+            catch (Exception ex)
+            {
+                MyRecord.Say(ex);
+            }
+
+            try
+            {
                 MyRecord.Say("-----------------未结束维修申请-------------------------");
                 MyRecord.Say("生成内容");
 
-                string body = MyConvert.ZH_TW(@"
+                string body = LCStr(@"
 <HTML>
 <BODY style=""FONT-SIZE: 9pt; FONT-FAMILY: PMingLiU"" leftMargin=5 topMargin=5 bgColor=#ece4f3 #ffffff>
 <DIV><FONT size=3 face=PMingLiU>{3}ERP系统提示您：</FONT></DIV>
@@ -4006,6 +4003,67 @@ Order by a.[_id]
                 MyRecord.Say(e);
             }
         }
+
+        void MachineRepairReportChecker()
+        {
+            DateTime rxtime = DateTime.Now;
+            string SQL = "";
+            MyRecord.Say("---------------------启动核销维修单。------------------------------");
+            DateTime NowTime = DateTime.Now;
+            DateTime StopTime = NowTime.Date.AddDays(-14);
+            MyRecord.Say(string.Format("核销截止时间：{0:yy/MM/dd HH:mm}", StopTime));
+            #region 审核纪律单
+            try
+            {
+                MyRecord.Say("核销维修单");
+                SQL = @"Select * from _GS_EquipmentRepair Where a.InputDate < @InputEnd And isNull(a.Status,0)=0  ";
+                MyData.MyDataTable mTableEquipmentRepair = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                if (_StopAll) return;
+                if (mTableEquipmentRepair != null && mTableEquipmentRepair.MyRows.Count > 0)
+                {
+                    string memo = string.Format("读取了{0}条记录，下面开始核销....", mTableEquipmentRepair.MyRows.Count);
+                    MyRecord.Say(memo);
+                    int mTableEquipmentRepairCount = 1;
+                    MyData.MyCommand mcd = new MyData.MyCommand();
+                    foreach (MyData.MyDataRow r in mTableEquipmentRepair.MyRows)
+                    {
+                        if (_StopAll) return;
+                        int CurID = Convert.ToInt32(r["_ID"]);
+                        string RdsNo = Convert.ToString(r["RdsNo"]);
+                        memo = string.Format("核销第{0}条，维修单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableEquipmentRepairCount, RdsNo, CurID, r["InputDate"]);
+                        MyRecord.Say(memo);
+                        MyData.MyParameter[] mps = new MyData.MyParameter[]
+                        {
+                            new MyData.MyParameter("@memo","超出15日没有审核，被系统自动核销。"),
+                            new MyData.MyParameter("@id", CurID, MyData.MyParameter.MyDataType.Int),
+                            new MyData.MyParameter("@RdsNo",RdsNo),
+                            new MyData.MyParameter("@Status",Convert.ToInt32(r["Status"]),MyData.MyParameter.MyDataType.Int)
+                        };
+                        string CheckSQL = "Update [_GS_EquipmentRepair] Set Status =-1,FinishMemo=,FinishTime=GetDate() Where [_ID]=@id";
+                        string CheckLogSQL = @"Insert Into [_GS_EquipmentRepair_StatusRecorder](zbid,Author,[state],memo,rdsno,type,typeid,CheckIn,CheckOut)
+                                                                                         Values(@id,'系統核銷',0-(@Status+1),@memo,@RdsNo,'核销',2,1,1)";
+                        mcd.Add(CheckSQL, string.Format("Update{0}",mTableEquipmentRepairCount), mps);
+                        mcd.Add(CheckLogSQL, string.Format("Insert{0}", mTableEquipmentRepairCount), mps);
+                        mTableEquipmentRepairCount++;
+                    }
+                    if (!mcd.Execute())
+                    {
+                        MyRecord.Say("核销出错。");
+                    }
+                }
+                else
+                {
+                    MyRecord.Say("没有获取到任何内容");
+                }
+                MyRecord.Say("核销设备维修单，完成");
+            }
+            catch (Exception ex)
+            {
+                MyRecord.Say(ex);
+            }
+            #endregion
+        }
+
         #endregion
 
         #region 计算采购入库到采购单，和计算采购入库上的请购单号

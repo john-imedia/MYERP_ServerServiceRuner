@@ -20,7 +20,7 @@ namespace MYERP_ServerServiceRuner
 {
     public partial class MainService
     {
-        #region 不良率100发邮件
+        #region 發送3天排期異常
         void DeliverPlanFinishStatisticErrorSender()
         {
             MyRecord.Say("开启计算3日出货计划异常..........");
@@ -39,45 +39,87 @@ namespace MYERP_ServerServiceRuner
         {
             try
             {
-                MyRecord.Say("------------------开始定时发送不良率100%报表----------------------------");
+                MyRecord.Say("------------------开始定时发送3日异常报表----------------------------");
                 MyRecord.Say("从数据库搜寻内容");
                 DateTime NowTime = DateTime.Now;
-                string body = MyConvert.ZH_TW(@"
+                string body = @"
 <HTML>
 <BODY style=""FONT-SIZE: 9pt; FONT-FAMILY: PMingLiU"" leftMargin=5 topMargin=5 bgColor=#e6f3af #ffffff>
 <DIV><FONT size=3 face=PMingLiU>{3}ERP系统提示您：</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;</FONT></DIV>
-<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {0:yy/MM/dd}{1}</FONT></DIV>
+<DIV><FONT color=#ff0000 size=5 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <B>{0:yy/MM/dd HH:mm} {1}</B></FONT></DIV>
+{4}
 <DIV><FONT face=PMingLiU><FONT size=2></FONT>&nbsp;</DIV>
-<DIV><FONT color=#0000ff size=4 face=PMingLiU><STRONG>&nbsp;&nbsp;此郵件由ERP系統自動發送，切勿在此郵件上直接回復。</STRONG></FONT></DIV>
+<DIV><FONT color=#0000ff size=2 face=PMingLiU><STRONG>&nbsp;&nbsp;此郵件由ERP系統自動發送，切勿在此郵件上直接回復。</STRONG></FONT></DIV>
 <DIV><FONT color=#800080 size=2><STRONG>&nbsp;&nbsp;&nbsp;</STRONG>
 <FONT color=#000000 face=PMingLiU>{2:yy/MM/dd HH:mm}，由ERP系统伺服器自动发送。<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;如自動發送功能有問題或者格式内容修改建議，請MailTo:<A href=""mailto:my80@my.imedia.com.tw"">JOHN</A><BR>
 </FONT></FONT></DIV></FONT></BODY></HTML>
-");
+";
+                string gridTitle = @"
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<TABLE style=""BORDER-COLLAPSE: collapse"" cellSpacing=0 cellPadding=0 width=""100%"" border=0>
+  <TBODY>
+    <TR>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    工单号    
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    料号
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    工序
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    问题描述
+    </TD>
+    </TR>
+    {0}
+</TBODY></TABLE></FONT>
+</DIV>";
+                string br = @"
+    <TR>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {0}   
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {1}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {2}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {3}
+    </TD>
+    </TR>";
+
+                string mailBodyMainSentence = string.Empty;
                 string brs = string.Empty;
                 vsMain = new C1FlexGrid();
-                LoadGridSchame();
+                IssuesProduceList = null;
+                IssuesProduceList = new List<FaceGridItem>();
+                DateTime DBegin = DateTime.Now.AddDays(-1).Date.AddHours(23), DEnd = DateTime.Now.Date.AddDays(3).Date.AddHours(8);
+                LoadGridSchame(DBegin, DEnd);
                 SetError();
-                int xSumIndex =SetGridTitleID();
+                int xSumIndex = SetGridTitleID();
                 MyRecord.Say("创建SendMail。");
                 MyBase.SendMail sm = new MyBase.SendMail();
                 MyRecord.Say(string.Format("表格一共：{0}行，表格已经生成。", vsMain.Rows.Count));
                 string fname = string.Empty;
-                if (vsMain.Rows.Count > 0)
+                if (xSumIndex > 0)
                 {
-                    brs = string.Format("发现{0}条工单出货计划和排程异常。请查看附档。", xSumIndex);
+                    mailBodyMainSentence = string.Format("发现工单交期在{1:yy/MM/dd HH:mm}-{2:yy/MM/dd HH:mm}，有{0}条工单排程有问题。详情请查看附档。", xSumIndex, DBegin, DEnd);
                     string tmpFileName = Path.GetTempFileName();
                     MyRecord.Say(string.Format("tmpFileName = {0}", tmpFileName));
                     Regex rgx = new System.Text.RegularExpressions.Regex(@"(?<=tmp)(.+)(?=\.tmp)");
                     string tmpFileNameLast = rgx.Match(tmpFileName).Value;
                     MyRecord.Say(string.Format("tmpFileNameLast = {0}", tmpFileNameLast));
-                    string dName=string.Format("{0}\\TMPExcel", Application.StartupPath);
+                    string dName = string.Format("{0}\\TMPExcel", Application.StartupPath);
                     if (!Directory.Exists(dName))
                     {
                         Directory.CreateDirectory(dName);
                     }
-                    fname = string.Format("{0}\\{1}", dName, string.Format("NOTE{0:yyyyMMdd}TMP{1}.xlsx", NowTime.Date, tmpFileNameLast));
+                    fname = string.Format("{0}\\{1}", dName, string.Format("NOTICE{0:yyyyMMdd}TMP{1}.xlsx", NowTime.Date, tmpFileNameLast));
                     MyRecord.Say(string.Format("fname = {0}", fname));
                     vsMain.AutoSizeCols();
                     vsMain.SaveExcel(fname, LCStr("出货计划和排程表"), FileFlags.NoFreezing | FileFlags.IncludeFixedCells | FileFlags.IncludeMergedRanges | FileFlags.VisibleOnly | FileFlags.SaveMergedRanges | FileFlags.OpenXml);
@@ -86,25 +128,32 @@ namespace MYERP_ServerServiceRuner
                     vsMain.Dispose();
                     vsMain = null;
                     MyRecord.Say("加载到附件");
+                    foreach (var item in IssuesProduceList)
+                    {
+                        brs += string.Format(br, item.ProduceRdsNo, item.ProductName, item.ProcessName, item.IssuesMemo);
+                    }
+                    brs = string.Format(gridTitle, brs);
                 }
                 else
                 {
-                    brs = "，没有发现3日出货计划和排程异常情况。";
+                    mailBodyMainSentence = "，没有发现3日出货计划和排程异常情况。";
+                    brs = string.Empty;
                 }
 
                 MyRecord.Say("加载邮件内容。");
 
-                sm.MailBodyText = string.Format(body, NowTime.Date, brs, DateTime.Now, MyBase.CompanyTitle);
+                sm.MailBodyText = string.Format(body, NowTime, mailBodyMainSentence, DateTime.Now, MyBase.CompanyTitle, brs);
                 sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}三日出货计划和排程异常表", NowTime.AddDays(-1).Date, MyBase.CompanyTitle));
                 string mailto = ConfigurationManager.AppSettings["DeliveryPlanMailTo"], mailcc = ConfigurationManager.AppSettings["DeliveryPlanMailCC"];
-                MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+                MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mailto, mailcc));
                 sm.MailTo = mailto;
-                sm.MailCC = mailcc; 
+                sm.MailCC = mailcc;
                 //sm.MailTo = "my80@my.imedia.com.tw";
                 MyRecord.Say("发送邮件。");
                 sm.SendOut();
                 sm.mail.Dispose();
                 sm = null;
+                IssuesProduceList = null;
                 MyRecord.Say("已经发送。");
                 if (File.Exists(fname))
                 {
@@ -122,18 +171,34 @@ namespace MYERP_ServerServiceRuner
 
         private C1FlexGrid vsMain;
 
-        private void LoadGridSchame()
+
+        private class FaceGridItem
+        {
+            public string ProduceRdsNo { get; set; }
+            public string ProductName { get; set; }
+
+            public string ProcessName { get; set; }
+            public string IssuesMemo { get; set; }
+            public DateTime SendDate { get; set; }
+            public DateTime PlanDate { get; set; }
+        }
+
+        private List<FaceGridItem> IssuesProduceList = new List<FaceGridItem>();
+
+        private void LoadGridSchame(DateTime sDBegin, DateTime sDEnd)
         {
 
             try
             {
-                DateTime sDBegin = DateTime.Now.AddDays(-1).Date.AddHours(23), sDEnd = DateTime.Now.Date.AddDays(3).Date.AddHours(8);
+                #region 读取数据
                 MyRecord.Say("开始计算。");
                 MyRecord.Say(string.Format("开始时间：{0}，结束时间：{1}", sDBegin, sDEnd));
                 MyRecord.Say("1，读取数据。");
                 LoadDataSource(sDBegin, sDEnd);
                 MyRecord.Say("2，处理数据。");
                 MyRecord.Say("2.1，处理数据-v1");
+                #endregion
+                #region 处理数据
                 var v = from a in maindata
                         orderby a.ProduceNote, a.SendDate, a.SortID, a.PartID
                         where a.SendDate >= sDBegin && a.SendDate <= sDEnd
@@ -162,6 +227,7 @@ namespace MYERP_ServerServiceRuner
                              ProcessCode = g.Key,
                              ProcessName = g.FirstOrDefault().ProcessName
                          };
+                #endregion
                 MyRecord.Say("3，生成表格。");
                 if (v.Count() <= 0)
                 {
@@ -177,15 +243,15 @@ namespace MYERP_ServerServiceRuner
                 string[] titlewords = new string[] { "序号", "工单号", "产品号", "料号", "订单数", "交期", "需求数", "台号", "库存数", "有问题", "内容" };
                 for (int i = 0; i < titlewords.Length; i++)
                 {
-                    vsMain[0, i] = MyConvert.ZHLC(titlewords[i]);
+                    vsMain[0, i] = LCStr(titlewords[i]);
                 }
                 vsMain.Cols[8].Name = "stocknumb";
                 vsMain.Cols[8].Visible = false;
                 vsMain.Cols[9].Name = "isError";
+                vsMain.Cols[9].Visible = false;
 
                 MyRecord.Say("3.2 开始加载表格数据。");
                 int j = 1, u = 10;
-                vsMain.Cols["isError"].Visible = true;
                 vsMain.Cols["isError"].DataType = typeof(int);
 
                 CellStyle cstNoPlan = vsMain.Styles.Add("NoPlan", vsMain.Styles.Normal);
@@ -200,10 +266,10 @@ namespace MYERP_ServerServiceRuner
                 CellStyle cstErrorPlan = vsMain.Styles.Add("ErrorPlan", vsMain.Styles.Normal);
                 cstErrorPlan.BackColor = Color.FromArgb(255, 255, 0, 225);
 
-                int bIndex=1;
+                int bIndex = 1;
                 foreach (var vitem in v)
                 {
-                    MyRecord.Say(string.Format("3.{0} 工单号： {1}", bIndex,vitem.ProduceNote));
+                    MyRecord.Say(string.Format("3.{0} 工单号： {1}", bIndex, vitem.ProduceNote));
                     for (int i = 0; i < 4; i++)
                     {
                         int jj = j + i;
@@ -241,7 +307,6 @@ namespace MYERP_ServerServiceRuner
                                      CloseDate = a.CloseDate,
                                      Closer = a.Closer
                                  };
-
                         var vp = from a in MainPlanData
                                  where a.ProduceNote == vitem.ProduceNote && a.ProcessCode == v2Item.ProcessCode && a.PartID == vitem.PartID
                                  select new
@@ -272,10 +337,19 @@ namespace MYERP_ServerServiceRuner
                                     {
                                         if (vpc.Count() <= 0)
                                         {
-                                            vsMain[j + 1, u] = vp.OrderBy(a => a.BDD).FirstOrDefault().Numb1.ToString("F0");
+                                            vsMain[j + 1, u] = vp.OrderBy(a => a.BDD).FirstOrDefault().Numb1.ToString("f0");
                                             xDate = vp.Min(a => a.BDD);
                                             if (xDate > DateTime.Parse("2000-01-01"))
                                             {
+                                                IssuesProduceList.Add(new FaceGridItem()
+                                                {
+                                                    ProduceRdsNo = vitem.ProduceNote,
+                                                    ProductName = vitem.ProdName,
+                                                    ProcessName = v2Item.ProcessName,
+                                                    SendDate = vitem.SendDate,
+                                                    PlanDate = xDate,
+                                                    IssuesMemo = LCStr("排程时间有错误。")
+                                                });
                                                 for (int xi = 0; xi < 4; xi++)
                                                 {
                                                     vsMain.SetCellStyle(j + xi, u, cstErrorPlan);
@@ -289,6 +363,16 @@ namespace MYERP_ServerServiceRuner
                                                 {
                                                     vsMain[j + 1, u] = LCStr("未排期");
                                                     vsMain[j + 2, u] = LCStr("未排期");
+                                                    IssuesProduceList.Add(new FaceGridItem()
+                                                        {
+                                                            ProduceRdsNo = vitem.ProduceNote,
+                                                            ProductName = vitem.ProdName,
+                                                            ProcessName = v2Item.ProcessName,
+                                                            SendDate = vitem.SendDate,
+                                                            PlanDate = xDate,
+                                                            IssuesMemo = LCStr("未排期")
+                                                        });
+                                                    
                                                     for (int xi = 0; xi < 4; xi++)
                                                     {
                                                         vsMain.SetCellStyle(j + xi, u, cstNoPlan);
@@ -299,7 +383,7 @@ namespace MYERP_ServerServiceRuner
                                         }
                                         else
                                         {
-                                            vsMain[j + 1, u] = vpc.OrderBy(a => a.BDD).FirstOrDefault().Numb1.ToString("F0");
+                                            vsMain[j + 1, u] = vpc.OrderBy(a => a.BDD).FirstOrDefault().Numb1.ToString("f0");
                                             xDate = vpc.Min(a => a.BDD);
                                             vsMain[j + 2, u] = string.Format("{0:MM/dd HH:mm}", xDate);
                                         }
@@ -310,6 +394,15 @@ namespace MYERP_ServerServiceRuner
                                         {
                                             vsMain[j + 1, u] = LCStr("未排期");
                                             vsMain[j + 2, u] = LCStr("未排期");
+                                            IssuesProduceList.Add(new FaceGridItem()
+                                            {
+                                                ProduceRdsNo = vitem.ProduceNote,
+                                                ProductName = vitem.ProdName,
+                                                ProcessName = v2Item.ProcessName,
+                                                SendDate = vitem.SendDate,
+                                                PlanDate = xDate,
+                                                IssuesMemo = LCStr("未排期")
+                                            });
                                             for (int xi = 0; xi < 4; xi++)
                                             {
                                                 vsMain.SetCellStyle(j + xi, u, cstNoPlan);
@@ -408,16 +501,22 @@ namespace MYERP_ServerServiceRuner
         {
             try
             {
-                /*
-                vsMain.Cols["isError"].Filter = null;
-                ColumnFilter cf = new ColumnFilter();
-                cf.ConditionFilter.Condition1.Operator = ConditionOperator.Equals;
-                cf.ConditionFilter.Condition1.Parameter = 1;
-                vsMain.Cols["isError"].Filter = cf;
-                */
+                for (int j = 11; j < vsMain.Cols.Count; j++)
+                {
+                    vsMain.Cols[j].Visible = false;
+                }
                 for (int i = vsMain.Rows.Fixed; i < vsMain.Rows.Count; i++)
                 {
-                    vsMain.Rows[i].Visible = (Convert.ToInt32(vsMain[i, "isError"]) == 1);
+                    bool v = (Convert.ToInt32(vsMain[i, "isError"]) == 1);
+                    vsMain.Rows[i].Visible = v;
+                    if (v)
+                    {
+                        for (int j = 11; j < vsMain.Cols.Count; j++)
+                        {
+                            bool cv = (vsMain[i, j] != null);
+                            if ((!vsMain.Cols[j].Visible) && cv) vsMain.Cols[j].Visible = cv;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -435,7 +534,9 @@ Set NoCount On
 select a.ProdNo as ProdRdsNo,a.ProdID as ProductID,a.SendDate,a.pNumb,a.Inputer
 Into #SendList
 from _PMC_DeliverPlan_SendList a,moProduce b,pbProduct c
-Where a.ProdId=b.id And b.Code=c.Code And (Not c.Type in ('115','116','1117')) And a.SendDate Between @ProdBegin And @ProdEnd And b.CloseDate is Null And
+Where a.ProdId=b.id And b.Code=c.Code And (Not c.Type in ('115','116','1117')) 
+      And a.SendDate Between @ProdBegin And @ProdEnd And b.InputDate < @ProdBegin
+      And b.CloseDate is Null And b.CheckDate is Not Null And
       (c.Type=@ProdType or isNull(@ProdType,'')='') And
       (a.ProdNo= @ProductRdsNo or isNull(@ProductRdsNo,'')='') And
       (charindex(@ProdName,c.Name)>0 or isNull(@ProdName,'')='') And
