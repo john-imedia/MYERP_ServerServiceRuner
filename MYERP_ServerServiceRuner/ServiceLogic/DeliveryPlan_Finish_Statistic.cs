@@ -49,7 +49,7 @@ namespace MYERP_ServerServiceRuner
 <DIV><FONT size=3 face=PMingLiU>&nbsp;</FONT></DIV>
 <DIV><FONT color=#ff0000 size=5 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <B>{0:yy/MM/dd HH:mm} {1}</B></FONT></DIV>
 {4}
-<DIV><FONT face=PMingLiU><FONT size=2></FONT>&nbsp;</DIV>
+<DIV><FONT face=PMingLiU><FONT size=2></FONT>&nbsp;每日中午11点55发送，当前手工加发一次，提醒各位生管检查排程正确性。</DIV>
 <DIV><FONT color=#0000ff size=2 face=PMingLiU><STRONG>&nbsp;&nbsp;此郵件由ERP系統自動發送，切勿在此郵件上直接回復。</STRONG></FONT></DIV>
 <DIV><FONT color=#800080 size=2><STRONG>&nbsp;&nbsp;&nbsp;</STRONG>
 <FONT color=#000000 face=PMingLiU>{2:yy/MM/dd HH:mm}，由ERP系统伺服器自动发送。<BR>
@@ -534,14 +534,14 @@ Set NoCount On
 select a.ProdNo as ProdRdsNo,a.ProdID as ProductID,a.SendDate,a.pNumb,a.Inputer
 Into #SendList
 from _PMC_DeliverPlan_SendList a,moProduce b,pbProduct c
-Where a.ProdId=b.id And b.Code=c.Code And (Not c.Type in ('115','116','1117')) 
-      And a.SendDate Between @ProdBegin And @ProdEnd And b.InputDate < @ProdBegin
-      And b.CloseDate is Null And b.CheckDate is Not Null And
+Where a.ProdId=b.id And b.Code=c.Code And (Not c.Type in ('109','110','112','114')) 
+      And isNull(b.Status,0) >0 And b.CloseDate is Null And b.Finalized is Null And b.StockDate is Null And b.FinishDate is Null
+	  And a.SendDate Between @ProdBegin And @ProdEnd And b.InputDate < @ProdBegin And
       (c.Type=@ProdType or isNull(@ProdType,'')='') And
       (a.ProdNo= @ProductRdsNo or isNull(@ProductRdsNo,'')='') And
       (charindex(@ProdName,c.Name)>0 or isNull(@ProdName,'')='') And
       (b.CustID= @CustID or isNull(@CustID,'')='')
-
+Create Index _Ix_SendList_ProdRdsNo on #SendList (ProdRdsNo)
 Select a.*,b.CustID as CustCode,b.Code as ProdCode,ProdName=Convert(nVarchar(100),Null),
        PartID=(Case When c.PartID='' Then '--' Else c.PartID End),
        c.ProcNo as ProcessCode,b.pNumb as ProductNumb,
@@ -554,10 +554,10 @@ Select a.*,b.CustID as CustCode,b.Code as ProdCode,ProdName=Convert(nVarchar(100
        b.FinishRemark,c.CloseDate,c.Closer
 Into #ProdList
 from #SendList a,moProduce b,moProdProcedure c
-Where a.ProductID=b.id And b.id=c.zbid And
+Where a.ProductID=b.id And b.id=c.zbid And isNull(b.Status,0) >0 And b.CloseDate is Null And b.Finalized is Null And b.StockDate is Null And b.FinishDate is Null And 
       (c.ProcNo = @Process or isNull(@Process,'')='') And
       (c.Machinid in (select code from moMachine Where DepartmentID = @DeptID) or isNull(@DeptID,0)=0)
-
+Create Index _Ix_ProdList_ProdRdsNo on #ProdList (ProdRdsNo,SortID)
 update a set a.ProcessName=x.Name from #ProdList a,moProcedure x Where a.ProcessCode=x.Code and SortID between 100 and 110
 
 Insert Into #ProdList(ProdRdsNo,ProcessCode,ProcessName,FinishNumb,SendDate,SortID,PartID,CustCode,ProdCode,ProductNumb,SName,FinishRemark,pNumb)
@@ -569,7 +569,7 @@ Select  a.ProdRdsNo,'9999','成品入库',0,a.SendDate,500,'--' as PartID,b.Cust
         b.FinishRemark,a.pNumb
 From #SendList a,moProduce b Where a.ProductID=b.id And a.ProdRdsNo in (Select ProdRdsNo from #ProdList)
 
-Update a set FinishNumb=(Select Sum(Numb) From stprdstocklst b Where b.ProductNo=a.ProdRdsNo) from #ProdList a where a.SortID=500
+Update a set FinishNumb=T.Numb from #ProdList a,(Select Sum(Numb) as Numb,b.ProductNo From stprdstocklst b Group by b.ProductNo) T where T.ProductNo=a.ProdRdsNo and a.SortID=500
 Update a Set a.ProdName=x.Name From #ProdList a,pbProduct x Where a.ProdCode=x.Code
 Select *,b.Name as ProdName From #ProdList a Left Outer Join AllMaterialView b ON a.ProdCode=b.Code
 

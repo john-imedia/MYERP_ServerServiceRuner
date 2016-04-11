@@ -314,6 +314,7 @@ namespace MYERP_ServerServiceRuner.Base
                 mail.Priority = MailPriority.Normal;
 
                 SmtpClient Sender = new SmtpClient("59.125.179.177");
+                //SmtpClient Sender = new SmtpClient("my.imedia.com.tw");
                 Sender.DeliveryMethod = SmtpDeliveryMethod.Network;
                 Sender.EnableSsl = false;
                 Sender.Port = 25;
