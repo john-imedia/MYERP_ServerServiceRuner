@@ -158,7 +158,7 @@ namespace MYERP_ServerServiceRuner
     </TR>
 ";
 
-                string SQLRS = @"Exec [_WH_IPQC_ReturnScrap_View] @BTime,@ETime,Null,Null,0,Null,Null,Null";
+                string SQLRS = @"Exec [_WH_IPQC_Return] -1";
                 string SQLQC = @"Exec [_QC_IPQC_Confirm_View] 0,@BTime,@ETime,0,Null,Null";
                 DateTime NowTime = DateTime.Now, BeginTime = DateTime.Parse("2016-01-01 00:00:05");
                 MyData.MyParameter[] mps = new MyData.MyParameter[]

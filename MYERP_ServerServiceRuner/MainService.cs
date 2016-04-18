@@ -53,7 +53,27 @@ namespace MYERP_ServerServiceRuner
                 {
                     FirstStart = false;
 
-                    ProdPlanForSaveLoader(NowTime);
+                    DateTime xDate = ((DateTime)NowTime).AddDays(-15).Date;
+                    MyRecord.Say(string.Format("当前时间：{0:yyyy/MM/dd}，计算开始时间：{1:yyyy/MM/dd}", NowTime, xDate));
+                    for (int i = 0; i <= 15; i++)
+                    {
+                        if (_StopProdPlanForSaved) return;
+                        DateTime iDate = xDate.AddDays(i).Date;
+                        MyRecord.Say("--------------------------------------------------------");
+                        MyRecord.Say(string.Format("计算：{0:yyyy/MM/dd}，开始。", iDate));
+                        MyRecord.Say(string.Format("计算时间：{0:yyyy/MM/dd}，白班", iDate));
+                        ProdPlanForSave(iDate, 1);
+                        Thread.Sleep(5000);
+                        if (_StopProdPlanForSaved) return;
+                        MyRecord.Say(string.Format("计算时间：{0:yyyy/MM/dd}，夜班", iDate));
+                        ProdPlanForSave(iDate, 2);
+                        MyRecord.Say(string.Format("计算：{0:yyyy/MM/dd}，完成。", iDate));
+                        MyRecord.Say("--------------------------------------------------------");
+                        Thread.Sleep(5000);
+                    }
+
+
+
                     #region 暂停
                     //int u = 23;
                     //DateTime xDate = ((DateTime)NowTime).AddDays(-u).Date;
@@ -1618,7 +1638,7 @@ Values(@PlanRdsNo,@PlanType,@PlanBegin,@PlanEnd,@Inputer,@Checker,@DeaprtmentID,
                             new MyData.MyParameter("@FinishProdNumb",item.FinishProdNumb, MyData.MyParameter.MyDataType.Numeric)
                         };
                         xmcd.Add(SQLSave, string.Format("X_Insert{0}", iRow), amps);
-                        MyRecord.Say(string.Format("4.3-第{0}行，部门：{1}，工序：{2}，机台：{3}", iRow, item.DepartmentName, item.ProcessName, item.MachineName));
+                        MyRecord.Say(string.Format("4.3-第{0}行，部门：{1}，工序：{2}，机台：{3}，笔数达成率：{4:0.00%}，产量达成率：{5:0.00%}", iRow, item.DepartmentName, item.ProcessName, item.MachineName, item.FinishCount / item.PlanCount, item.FinishSheetNumb / item.PlanSheetNumb));
                         iRow++;
                     }
 
