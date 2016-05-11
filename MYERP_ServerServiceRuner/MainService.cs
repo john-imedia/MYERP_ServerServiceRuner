@@ -52,28 +52,26 @@ namespace MYERP_ServerServiceRuner
                 if (FirstStart)
                 {
                     FirstStart = false;
-
-                    DateTime xDate = ((DateTime)NowTime).AddDays(-15).Date;
-                    MyRecord.Say(string.Format("当前时间：{0:yyyy/MM/dd}，计算开始时间：{1:yyyy/MM/dd}", NowTime, xDate));
-                    for (int i = 0; i <= 15; i++)
-                    {
-                        if (_StopProdPlanForSaved) return;
-                        DateTime iDate = xDate.AddDays(i).Date;
-                        MyRecord.Say("--------------------------------------------------------");
-                        MyRecord.Say(string.Format("计算：{0:yyyy/MM/dd}，开始。", iDate));
-                        MyRecord.Say(string.Format("计算时间：{0:yyyy/MM/dd}，白班", iDate));
-                        ProdPlanForSave(iDate, 1);
-                        Thread.Sleep(5000);
-                        if (_StopProdPlanForSaved) return;
-                        MyRecord.Say(string.Format("计算时间：{0:yyyy/MM/dd}，夜班", iDate));
-                        ProdPlanForSave(iDate, 2);
-                        MyRecord.Say(string.Format("计算：{0:yyyy/MM/dd}，完成。", iDate));
-                        MyRecord.Say("--------------------------------------------------------");
-                        Thread.Sleep(5000);
-                    }
-
-
-
+                    MyRecord.Say("首次启动，时间循环已经开启。");
+                    //DeliverPlanFinishStatisticErrorSender();
+                    //DateTime xDate = ((DateTime)NowTime).AddDays(-42).Date;
+                    //MyRecord.Say(string.Format("当前时间：{0:yyyy/MM/dd}，计算开始时间：{1:yyyy/MM/dd}", NowTime, xDate));
+                    //for (int i = 0; i <= 42; i++)
+                    //{
+                    //    if (_StopProdPlanForSaved) return;
+                    //    DateTime iDate = xDate.AddDays(i).Date;
+                    //    MyRecord.Say("--------------------------------------------------------");
+                    //    MyRecord.Say(string.Format("计算：{0:yyyy/MM/dd}，开始。", iDate));
+                    //    MyRecord.Say(string.Format("计算时间：{0:yyyy/MM/dd}，白班", iDate));
+                    //    ProdPlanForSave(iDate, 1);
+                    //    Thread.Sleep(5000);
+                    //    if (_StopProdPlanForSaved) return;
+                    //    MyRecord.Say(string.Format("计算时间：{0:yyyy/MM/dd}，夜班", iDate));
+                    //    ProdPlanForSave(iDate, 2);
+                    //    MyRecord.Say(string.Format("计算：{0:yyyy/MM/dd}，完成。", iDate));
+                    //    MyRecord.Say("--------------------------------------------------------");
+                    //    Thread.Sleep(5000);
+                    //}
                     #region 暂停
                     //int u = 23;
                     //DateTime xDate = ((DateTime)NowTime).AddDays(-u).Date;
@@ -93,7 +91,7 @@ namespace MYERP_ServerServiceRuner
                     //} 
                     #endregion
                 }
-
+                
                 if (h == 0 && m == 0 & s == 0) //计时器归零
                 {   ///每天0点对表，计时器归零。
                     ProduceFeedBackLastRunTime = CheckStockStartTime = CalculatePruchaseStartTime = DateTime.Now;
@@ -110,6 +108,7 @@ namespace MYERP_ServerServiceRuner
                         Thread.Sleep(500);
                     }
                 }
+
                 //每隔2.5个小时计算一次采购数量。
                 if ((NowTime - CalculatePruchaseStartTime).TotalHours > 2.5)
                 {
@@ -118,7 +117,7 @@ namespace MYERP_ServerServiceRuner
                     Thread.Sleep(500);
                 }
 
-                if ((h == 10 || h == 22) && m == 35 && s == 0) //审核排程，发达成率
+                if ((h == 10 || h == 22) && m == 55 && s == 0) //审核排程，发达成率
                 {
                     ConfirmProcessPlan(); //每天10点定时审核单据，先审核单据。
                     MyRecord.Say("等五秒");
@@ -126,18 +125,14 @@ namespace MYERP_ServerServiceRuner
                     SendProdPlanEmail(NowTime);  //定時發送排程和達成率。
                     MyRecord.Say("发送排程完成。");
                 }
-                else if ((h == 11 || h == 23) && m == 55 && s == 0) //保存达成率到月报表，审核纪律单。
+                else if ((h == 6 || h == 11 || h == 23) && m == 55 && s == 0) //保存达成率到月报表，审核纪律单。
                 {
                     MyRecord.Say("开启保存达成率线程");
                     ProdPlanForSaveLoader(NowTime);//保存达成率到月报表。
                     MyRecord.Say("开启审核纪律单线程");
                     WorkspaceInspectCheckLoader(); //审核纪律单。
                 }
-                else if (h == 6 && m == 17 && s == 12) //发送不良超100%
-                {
-                    RejectSendMailLoader();  ///发送不良率超过100%的列表，每天早6点发送。
-                }
-                else if (h == 6 && m == 2 && s == 1) //自动计算库存的最后出库日期，平均周转天数，反馈入库时间到出库表
+                else if (h == 4 && m == 2 && s == 1) //自动计算库存的最后出库日期，平均周转天数，反馈入库时间到出库表
                 {
                     StockCalculateLoader();
                 }
@@ -164,6 +159,10 @@ namespace MYERP_ServerServiceRuner
                         Thread.Sleep(1000);
                         SendProduceUnFinishEmailLoder();  ///未结单工作日发送。
                     }
+                    else if (h == 6 && m == 17 && s == 12) //发送不良超100%
+                    {
+                        RejectSendMailLoader();  ///发送不良率超过100%的列表，每天早6点发送。
+                    }
                     else if (h == 7 && m == 17 && s == 27)   ///每天发送8D报告跟踪表
                     {
                         ProblemSolving8DReportLoder();
@@ -176,7 +175,7 @@ namespace MYERP_ServerServiceRuner
                     {
                         MachineRepairReportLoder();
                     }
-                    else if (h == 0 && m == 5 && s == 7) //发送工单差异数
+                    else if (h == 3 && m == 5 && s == 7) //发送工单差异数
                     {
                         SendProduceDiffNumbEmailLoder();   ///每天零点发送昨天工单差异数
                     }
@@ -763,14 +762,17 @@ Select a.RdsNo,
        b.PN as ColNumb,
 	   b.Side,
        b.AutoDuplexPrint,
-       MachineName = (Select Name From moMachine Where Code=b.MachineCode),
-       FinishMeasurement = (Select FinishMeasurement From moMachine Where Code = b.MachineCode),
-       ProcessName = (Select Name from moProcedure where code = a.Process),
-       ProductName = (Select Name from pbProduct Where Code= b.ProdCode),
-       DepartmentName = (Select Name from pbDept Where [_id]=a.Department),
-       FullSortID = (Select FullSortID from pbDept Where [_id]=a.Department),
+       MachineName = m.Name,
+       m.FinishMeasurement,m.StaticMeasurement,
+       ProcessName = mp.name,
+       ProductName = d.name,
+       DepartmentName = p.name,p.FullSortID,
 	   ProdSide=(Case When b.ProcNo='2000' Then (Select Case When (ca1+ca2)>0 And (Cb1+Cb2)>0 Then 2 Else 1 End from moProdProcedure mp Where mp.zbid=b.PRODID And mp.ID=b.ProcID) Else 1 END)
 from _PMC_ProdPlan a Inner Join _PMC_ProdPlan_List b ON a.[_ID]=b.zbid 
+                    Left Outer Join moMachine m ON b.MachineCode = m.Code
+					Left Outer Join pbProduct d On b.ProdCode = d.Code
+					Left Outer Join moProcedure mp On a.Process = mp.Code
+					Left Outer Join pbDept p On a.[Department] = p.[_id]
 Where a.[Status] >=2 And isNull(b.YieldOff,0)=0 
   And a.PlanBegin > @DateBegin And a.PlanEnd < @DateEnd And b.Edd< DateAdd(mi,@PlanExtendTime,a.PlanEnd) And b.Bdd > '2000-01-01 00:00:00' 
 Order by a.Department,a.Process,b.MachineCode,b.[_id]
@@ -852,7 +854,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                     {
                         BDD = vd.Min(x => x.Bdd);
                         EDD = vd.Max(x => x.Edd);
-                        if (curItem.ProcessCode == "2000" || curItem.FinishMeasurement == 1)
+                        if (curItem.ProcessCode == "2000")
                         {
                             var vf = from a in g
                                      where a.FinishSheetNumb > 0
@@ -877,11 +879,18 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                             FinishCount = vf.Count();
 
                             PlanSheetNumb = vd.Sum(x => x.ReqNumb);
-                            PlanProdNumb = vd.Sum(m => m.ReqNumb * m.ColNumb);
+                            if (curItem.FinishMeasurement == 1)
+                                PlanProdNumb = vd.Sum(m => m.ReqNumb);
+                            else
+                                PlanProdNumb = vd.Sum(m => m.ReqNumb * m.ColNumb);
+
                             if (vf != null && vf.Count() > 0)
                             {
                                 FinishSheetNumb = vf.Sum(x => x.FinishSheetNumb);
-                                FinishProdNumb = vf.Sum(m => m.FinishProdNumb);
+                                if (curItem.FinishMeasurement == 1)
+                                    FinishProdNumb = Math.Ceiling(vf.Sum(x => (x.FinishProdNumb / x.ColNumb)));
+                                else
+                                    FinishProdNumb = vf.Sum(m => m.FinishProdNumb);
                             }
                         }
                     }
@@ -990,6 +999,8 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                 DepartmentFullSortID = Convert.ToString(r["FullSortID"]);
                 ProcessName = Convert.ToString(r["ProcessName"]);
                 MachineName = Convert.ToString(r["MachineName"]);
+                FinishMeasurement = Convert.ToInt32(r["FinishMeasurement"]);
+                StaticMeasurement = Convert.ToInt32(r["StaticMeasurement"]);
             }
             public string RdsNo { get; set; }
             public string ProduceRdsNo { get; set; }
@@ -1025,6 +1036,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
             public bool AutoDuplexPrint { get; set; }
             public string Type { get; set; }
             public int FinishMeasurement { get; set; }
+            public int StaticMeasurement { get; set; }
         }
 
         class Plan_FinishItem
@@ -1092,6 +1104,21 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                 }
             }
 
+            public int LossNumb
+            {
+                get
+                {
+                    return AdjustNumb + SampleNumb;
+                }
+            }
+
+            public int LossProdNumb
+            {
+                get
+                {
+                    return (AdjustNumb + SampleNumb) * PaperColNumb;
+                }
+            }
             public string OP { get; set; }
             public string Remark { get; set; }
             public string PartID { get; set; }
@@ -1178,6 +1205,12 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                              && a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID && a.Side == item.Side
                          select a;
                 double finishProdNumb = vf.Sum(x => x.FinishProdNumb), finishNumb = vf.Sum(x => x.FinishNumb);
+                if (item.StaticMeasurement == 1)
+                {
+                    finishProdNumb = vf.Sum(x => (x.FinishProdNumb + x.RejectProdNumb + x.LossProdNumb));
+                    finishNumb = vf.Sum(x => x.FinishNumb + x.RejectNumb + x.LossNumb);
+                }
+
                 var vppt = from a in _LocalPringSource
                            where a.RdsNo == item.RdsNo && a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID && a.Side == item.Side
                            select a;
@@ -1266,6 +1299,13 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                                && a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID
                          select a;
                 double finishProdNumb = vf.Sum(x => x.FinishProdNumb), finishNumb = vf.Sum(x => x.FinishNumb);
+
+                if (item.StaticMeasurement == 1)
+                {
+                    finishProdNumb = vf.Sum(x => (x.FinishProdNumb + x.RejectProdNumb + x.LossProdNumb));
+                    finishNumb = vf.Sum(x => x.FinishNumb + x.RejectNumb + x.LossNumb);
+                }
+
                 if (item.ProcessCode != "9035")
                 {
                     var vppt = from a in vProduceSource

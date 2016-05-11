@@ -49,7 +49,7 @@ namespace MYERP_ServerServiceRuner
 <DIV><FONT size=3 face=PMingLiU>&nbsp;</FONT></DIV>
 <DIV><FONT color=#ff0000 size=5 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <B>{0:yy/MM/dd HH:mm} {1}</B></FONT></DIV>
 {4}
-<DIV><FONT face=PMingLiU><FONT size=2></FONT>&nbsp;每日中午11点55发送，当前手工加发一次，提醒各位生管检查排程正确性。</DIV>
+<DIV><FONT face=PMingLiU><FONT size=2></FONT>&nbsp;每日中午11点55发送，提醒各位生管检查排程正确性。</DIV>
 <DIV><FONT color=#0000ff size=2 face=PMingLiU><STRONG>&nbsp;&nbsp;此郵件由ERP系統自動發送，切勿在此郵件上直接回復。</STRONG></FONT></DIV>
 <DIV><FONT color=#800080 size=2><STRONG>&nbsp;&nbsp;&nbsp;</STRONG>
 <FONT color=#000000 face=PMingLiU>{2:yy/MM/dd HH:mm}，由ERP系统伺服器自动发送。<BR>
@@ -62,13 +62,16 @@ namespace MYERP_ServerServiceRuner
   <TBODY>
     <TR>
     <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    工单号    
+    部门
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    工序
     </TD>
     <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
     料号
     </TD>
     <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    工序
+    工单号
     </TD>
     <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
     问题描述
@@ -90,6 +93,9 @@ namespace MYERP_ServerServiceRuner
     </TD>
     <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
     {3}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {4}
     </TD>
     </TR>";
 
@@ -128,9 +134,14 @@ namespace MYERP_ServerServiceRuner
                     vsMain.Dispose();
                     vsMain = null;
                     MyRecord.Say("加载到附件");
-                    foreach (var item in IssuesProduceList)
+
+                    var viss = from a in IssuesProduceList
+                               orderby a.DepartmentName, a.ProcessName, a.ProductName, a.ProduceRdsNo, a.IssuesMemo
+                               select a;
+
+                    foreach (var item in viss)
                     {
-                        brs += string.Format(br, item.ProduceRdsNo, item.ProductName, item.ProcessName, item.IssuesMemo);
+                        brs += string.Format(br, item.DepartmentName, item.ProcessName, item.ProductName, item.ProduceRdsNo, item.IssuesMemo);
                     }
                     brs = string.Format(gridTitle, brs);
                 }
@@ -176,11 +187,13 @@ namespace MYERP_ServerServiceRuner
         {
             public string ProduceRdsNo { get; set; }
             public string ProductName { get; set; }
-
             public string ProcessName { get; set; }
             public string IssuesMemo { get; set; }
             public DateTime SendDate { get; set; }
             public DateTime PlanDate { get; set; }
+            public string DepartmentName { get; set; }
+            public string MachineName { get; set; }
+
         }
 
         private List<FaceGridItem> IssuesProduceList = new List<FaceGridItem>();
@@ -199,6 +212,9 @@ namespace MYERP_ServerServiceRuner
                 MyRecord.Say("2.1，处理数据-v1");
                 #endregion
                 #region 处理数据
+                Regex rgxMachineName = new Regex(@"[a-zA-Z0-9\u4e00-\u9fa5\#\/\~]*");
+                string xMachineName = string.Empty;
+
                 var v = from a in maindata
                         orderby a.ProduceNote, a.SendDate, a.SortID, a.PartID
                         where a.SendDate >= sDBegin && a.SendDate <= sDEnd
@@ -226,6 +242,7 @@ namespace MYERP_ServerServiceRuner
                          {
                              ProcessCode = g.Key,
                              ProcessName = g.FirstOrDefault().ProcessName
+
                          };
                 #endregion
                 MyRecord.Say("3，生成表格。");
@@ -286,8 +303,10 @@ namespace MYERP_ServerServiceRuner
                         vsMain.Rows[jj].UserData = vitem.ProduceNote;
                     }
                     u = 10;
-                    vsMain[j, u] = LCStr("总完工数："); vsMain[j + 1, u] = LCStr("排期数：");
-                    vsMain[j + 2, u] = LCStr("排期时间："); vsMain[j + 3, u] = LCStr("当日完工数：");
+                    vsMain[j, u] = LCStr("总完工数：");
+                    vsMain[j + 1, u] = LCStr("排期数：");
+                    vsMain[j + 2, u] = LCStr("排期时间：");
+                    vsMain[j + 3, u] = LCStr("排程机台：");
 
                     u++;
                     foreach (var v2Item in v2)
@@ -312,7 +331,9 @@ namespace MYERP_ServerServiceRuner
                                  select new
                                  {
                                      Numb1 = a.pNumb,
-                                     BDD = a.SendDate
+                                     BDD = a.SendDate,
+                                     MachineName = a.MachineName,
+                                     DepartmentName = a.DepartmentName
                                  };
                         var vpc = from a in MainPlanData
                                   where a.ProduceNote == vitem.ProduceNote && a.ProcessCode == v2Item.ProcessCode && a.PartID == vitem.PartID &&
@@ -320,7 +341,9 @@ namespace MYERP_ServerServiceRuner
                                   select new
                                   {
                                       Numb1 = a.pNumb,
-                                      BDD = a.SendDate
+                                      BDD = a.SendDate,
+                                      MachineName = a.MachineName,
+                                      DepartmentName = a.DepartmentName
                                   };
 
                         if (vn.Count() > 0)
@@ -341,6 +364,15 @@ namespace MYERP_ServerServiceRuner
                                             xDate = vp.Min(a => a.BDD);
                                             if (xDate > DateTime.Parse("2000-01-01"))
                                             {
+                                                for (int xi = 0; xi < 4; xi++)
+                                                {
+                                                    vsMain.SetCellStyle(j + xi, u, cstErrorPlan);
+                                                    vsMain[j + xi, "isError"] = 1;
+                                                }
+                                                vsMain[j + 2, u] = LCStr(string.Format("{0:MM/dd HH:mm}(错误)", xDate));
+                                                xMachineName = vp.FirstOrDefault().MachineName;
+                                                if (rgxMachineName.IsMatch(xMachineName)) xMachineName = rgxMachineName.Match(xMachineName).Value;
+                                                vsMain[j + 3, u] = string.Format("{0}({1})", xMachineName, vp.FirstOrDefault().DepartmentName);
                                                 IssuesProduceList.Add(new FaceGridItem()
                                                 {
                                                     ProduceRdsNo = vitem.ProduceNote,
@@ -348,36 +380,32 @@ namespace MYERP_ServerServiceRuner
                                                     ProcessName = v2Item.ProcessName,
                                                     SendDate = vitem.SendDate,
                                                     PlanDate = xDate,
+                                                    DepartmentName = vp.FirstOrDefault().DepartmentName,
+                                                    MachineName = xMachineName,
                                                     IssuesMemo = LCStr("排程时间有错误。")
                                                 });
-                                                for (int xi = 0; xi < 4; xi++)
-                                                {
-                                                    vsMain.SetCellStyle(j + xi, u, cstErrorPlan);
-                                                    vsMain[j + xi, "isError"] = 1;
-                                                }
-                                                vsMain[j + 2, u] = string.Format("{0:MM/dd HH:mm}", xDate);
                                             }
                                             else
                                             {
                                                 if (v2Item.ProcessCode != "9999")
                                                 {
-                                                    vsMain[j + 1, u] = LCStr("未排期");
-                                                    vsMain[j + 2, u] = LCStr("未排期");
-                                                    IssuesProduceList.Add(new FaceGridItem()
-                                                        {
-                                                            ProduceRdsNo = vitem.ProduceNote,
-                                                            ProductName = vitem.ProdName,
-                                                            ProcessName = v2Item.ProcessName,
-                                                            SendDate = vitem.SendDate,
-                                                            PlanDate = xDate,
-                                                            IssuesMemo = LCStr("未排期")
-                                                        });
-                                                    
+                                                    vsMain[j + 1, u] = vsMain[j + 2, u] = LCStr("未排期");
+                                                    vsMain[j + 3, u] = string.Format("({0})", vp.FirstOrDefault().DepartmentName);
                                                     for (int xi = 0; xi < 4; xi++)
                                                     {
                                                         vsMain.SetCellStyle(j + xi, u, cstNoPlan);
                                                         vsMain[j + xi, "isError"] = 1;
                                                     }
+                                                    IssuesProduceList.Add(new FaceGridItem()
+                                                    {
+                                                        ProduceRdsNo = vitem.ProduceNote,
+                                                        ProductName = vitem.ProdName,
+                                                        ProcessName = v2Item.ProcessName,
+                                                        SendDate = vitem.SendDate,
+                                                        PlanDate = xDate,
+                                                        DepartmentName = vp.FirstOrDefault().DepartmentName,
+                                                        IssuesMemo = LCStr("未排期")
+                                                    });
                                                 }
                                             }
                                         }
@@ -386,14 +414,22 @@ namespace MYERP_ServerServiceRuner
                                             vsMain[j + 1, u] = vpc.OrderBy(a => a.BDD).FirstOrDefault().Numb1.ToString("f0");
                                             xDate = vpc.Min(a => a.BDD);
                                             vsMain[j + 2, u] = string.Format("{0:MM/dd HH:mm}", xDate);
+                                            xMachineName = vp.FirstOrDefault().MachineName;
+                                            if (rgxMachineName.IsMatch(xMachineName)) xMachineName = rgxMachineName.Match(xMachineName).Value;
+                                            vsMain[j + 3, u] = string.Format("({0})", xMachineName);
                                         }
                                     }
                                     else
                                     {
                                         if (v2Item.ProcessCode != "9999")
                                         {
-                                            vsMain[j + 1, u] = LCStr("未排期");
-                                            vsMain[j + 2, u] = LCStr("未排期");
+                                            vsMain[j + 1, u] = vsMain[j + 2, u] = LCStr("未排期");
+                                            vsMain[j + 3, u] = string.Format("({0})", vp.FirstOrDefault().DepartmentName);
+                                            for (int xi = 0; xi < 4; xi++)
+                                            {
+                                                vsMain.SetCellStyle(j + xi, u, cstNoPlan);
+                                                vsMain[j + xi, "isError"] = 1;
+                                            }
                                             IssuesProduceList.Add(new FaceGridItem()
                                             {
                                                 ProduceRdsNo = vitem.ProduceNote,
@@ -401,24 +437,20 @@ namespace MYERP_ServerServiceRuner
                                                 ProcessName = v2Item.ProcessName,
                                                 SendDate = vitem.SendDate,
                                                 PlanDate = xDate,
+                                                DepartmentName = vp.FirstOrDefault().DepartmentName,
                                                 IssuesMemo = LCStr("未排期")
                                             });
-                                            for (int xi = 0; xi < 4; xi++)
-                                            {
-                                                vsMain.SetCellStyle(j + xi, u, cstNoPlan);
-                                                vsMain[j + xi, "isError"] = 1;
-                                            }
                                         }
                                     }
-                                    var vf = from a in mainFinishData
-                                             where a.ProduceNote == vitem.ProduceNote && a.ProcessCode == v2Item.ProcessCode && a.PartID == vitem.PartID &&
-                                                   a.SendDate <= xDate
-                                             select new
-                                             {
-                                                 Numb1 = a.FinishNumb,
-                                                 Numb2 = a.RejectNumb + a.LossedNumb
-                                             };
-                                    if (vf.Count() > 0) vsMain[j + 3, u] = vf.Sum(a => a.Numb1);
+                                    //var vf = from a in mainFinishData
+                                    //         where a.ProduceNote == vitem.ProduceNote && a.ProcessCode == v2Item.ProcessCode && a.PartID == vitem.PartID &&
+                                    //               a.SendDate <= xDate
+                                    //         select new
+                                    //         {
+                                    //             Numb1 = a.FinishNumb,
+                                    //             Numb2 = a.RejectNumb + a.LossedNumb
+                                    //         };
+                                    //if (vf.Count() > 0) vsMain[j + 3, u] = vf.Sum(a => a.Numb1);
                                 }
                                 else
                                 {
@@ -433,9 +465,7 @@ namespace MYERP_ServerServiceRuner
                             }
                             else
                             {
-                                vsMain[j + 1, u] = LCStr("已完");
-                                vsMain[j + 2, u] = LCStr("已完");
-                                vsMain[j + 3, u] = LCStr("已完");
+                                vsMain[j + 1, u] = vsMain[j + 2, u] = vsMain[j + 3, u] = LCStr("已完");
                                 for (int xi = 0; xi < 4; xi++)
                                 {
                                     vsMain.SetCellStyle(j + xi, u, cstFinished);
@@ -444,10 +474,7 @@ namespace MYERP_ServerServiceRuner
                         }
                         else
                         {
-                            vsMain[j, u] = null;
-                            vsMain[j + 1, u] = null;
-                            vsMain[j + 2, u] = null;
-                            vsMain[j + 3, u] = null;
+                            vsMain[j, u] = vsMain[j + 1, u] = vsMain[j + 2, u] = vsMain[j + 3, u] = null;
                         }
 
                         u++;
@@ -533,10 +560,10 @@ Set NoCount On
 
 select a.ProdNo as ProdRdsNo,a.ProdID as ProductID,a.SendDate,a.pNumb,a.Inputer
 Into #SendList
-from _PMC_DeliverPlan_SendList a,moProduce b,pbProduct c
-Where a.ProdId=b.id And b.Code=c.Code And (Not c.Type in ('109','110','112','114')) 
-      And isNull(b.Status,0) >0 And b.CloseDate is Null And b.Finalized is Null And b.StockDate is Null And b.FinishDate is Null
-	  And a.SendDate Between @ProdBegin And @ProdEnd And b.InputDate < @ProdBegin And
+from _PMC_DeliverPlan_SendList a Inner Join moProduce b On a.ProdId=b.id  
+                                 Inner Join pbProduct c On b.Code=c.Code
+Where isNull(b.Status,0) >0 And b.CloseDate is Null And b.Finalized is Null And b.StockDate is Null And b.FinishDate is Null And
+      (c.Type Not in ({0})) And a.SendDate Between @ProdBegin And @ProdEnd And b.InputDate < @ProdBegin And
       (c.Type=@ProdType or isNull(@ProdType,'')='') And
       (a.ProdNo= @ProductRdsNo or isNull(@ProductRdsNo,'')='') And
       (charindex(@ProdName,c.Name)>0 or isNull(@ProdName,'')='') And
@@ -551,12 +578,16 @@ Select a.*,b.CustID as CustCode,b.Code as ProdCode,ProdName=Convert(nVarchar(100
        SName=isNull((Select Name from moProdProperty Where Code=b.Property),'') + '，' +
              isNull((Select txt from ProdStatusView Where id=b.Status),'') + '，' +
              isNull((Select txt from ProdStockStatusView Where id=b.StockStatus),'未入库'),
-       b.FinishRemark,c.CloseDate,c.Closer
+       b.FinishRemark,c.CloseDate,c.Closer,m.Code as MachineCode,m.name as MachineName,
+	   DepartmentName = (Select Name from pbDept Where [_id] = m.DepartmentID)
 Into #ProdList
-from #SendList a,moProduce b,moProdProcedure c
-Where a.ProductID=b.id And b.id=c.zbid And isNull(b.Status,0) >0 And b.CloseDate is Null And b.Finalized is Null And b.StockDate is Null And b.FinishDate is Null And 
+from #SendList a Inner Join moProduce b ON a.ProductID=b.id
+                 Inner Join moProdProcedure c ON b.id=c.zbid
+				 Left Outer Join moMachine m On c.MachinID = m.Code 
+Where isNull(b.Status,0) >0 And b.CloseDate is Null And b.Finalized is Null And b.StockDate is Null And b.FinishDate is Null And 
       (c.ProcNo = @Process or isNull(@Process,'')='') And
-      (c.Machinid in (select code from moMachine Where DepartmentID = @DeptID) or isNull(@DeptID,0)=0)
+      (m.DepartmentID = @DeptID or isNull(@DeptID,0)=0)
+
 Create Index _Ix_ProdList_ProdRdsNo on #ProdList (ProdRdsNo,SortID)
 update a set a.ProcessName=x.Name from #ProdList a,moProcedure x Where a.ProcessCode=x.Code and SortID between 100 and 110
 
@@ -577,7 +608,7 @@ Drop Table #SendList
 Drop Table #ProdList
 Set NoCount Off
 ";
-
+            SQL = string.Format(SQL, ConfigurationManager.AppSettings["DeliveryPlanFinishStaticExceptProdTypes"]);
             MyData.MyParameter[] mp = new MyData.MyParameter[]
             {
                 new MyData.MyParameter("@ProdBegin",DateBegin, MyData.MyParameter.MyDataType.DateTime),
@@ -603,16 +634,16 @@ Set NoCount Off
 
             SQL = @"
 Select ProduceNo as ProdRdsNo,ProdCode=ProductCode,PartID=Case When PartID='' Then '--' Else PartID End,
-       ProductID=0,TolNumb as pNumb,
-       FinishNumb = Numb1,RejectNumb=Numb2,LossedNumb=a.AdjustNumb + a.SampleNumb,
-       ProcessCode=ProcessID,a.CustCode,SendDate=a.StartTime,ProdName=b.Name
-from ProdDailyReport a Left Outer Join AllMaterialView b ON a.ProductCode=b.Code
+       ProductID=0,TolNumb as pNumb,m.Name as MachineName,DepartmentName=(Select Name From pbDept p Where p.[_ID]=m.DepartmentID),
+       FinishNumb = Numb1,RejectNumb=Numb2,LossedNumb=AdjustNumb + SampleNumb,
+       ProcessCode=ProcessID,CustCode,SendDate=a.StartTime
+from  ProdDailyReport a Inner Join moMachine m On a.MachinID = m.Code
 Where a.ProduceNo in (Select ProdNo From _PMC_DeliverPlan_SendList) And a.EndTime Between @ProdBegin And @ProdEnd And
-      (CharIndex('-' + @ProdType +'-',a.ProductCode)>0 or isNull(@ProdType,'')='') And
-      (a.ProduceNo= @ProductRdsNo or isNull(@ProductRdsNo,'')='') And
-      (a.CustCode= @CustID or isNull(@CustID,'')='') And
-      (a.ProcessID = @Process or isNull(@Process,'')='') And
-      (a.Machinid in (select code from moMachine Where DepartmentID = @DeptID) or isNull(@DeptID,0)=0)
+      (CharIndex('-' + @ProdType +'-',ProductCode)>0 or isNull(@ProdType,'')='') And
+      (ProduceNo= @ProductRdsNo or isNull(@ProductRdsNo,'')='') And
+      (CustCode= @CustID or isNull(@CustID,'')='') And
+      (ProcessID = @Process or isNull(@Process,'')='') And
+      (m.DepartmentID = @DeptID or isNull(@DeptID,0)=0)
 ";
             using (MyData.MyDataTable mdata = new MyData.MyDataTable(SQL, mp))
             {
@@ -653,10 +684,10 @@ Set NoCount OFF
 
             #endregion
             SQL = @"
-Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' Else a.PartNo End,
+Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' Else a.PartNo End,a.DepartmentName,a.MachineName,
        ProductID = b.PRODID,pNumb=a.PlanReqNumb,ProcessCode=a.ProcNo,a.CustCode,SendDate=a.Bdd,a.Closer,a.CloseDate,ProdName=c.Name
-  from [_PMC_DeliverPlan_SendList] b Inner Join [_PMC_PlanProgressList_View] a ON a.zbid = b.PRODID
-                                Left Outer Join AllMaterialView c ON a.ProdCode=c.Code
+  from [_PMC_DeliverPlan_SendList] b Inner Join [_PMC_PlanProgressList_View] a ON a.zbid = b.PRODID 
+                                     Inner Join AllMaterialView c On a.ProdCode = c.Code
  Where (a.ProcNo = @Process or isNull(@Process,'')='') And
        (a.DepartmentID =@DeptID or isNull(@DeptID,0)=0) And
        (CharIndex('-' + @ProdType +'-',a.ProdCode)>0 or isNull(@ProdType,'')='') And
@@ -699,6 +730,8 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
                 FinishRemark = Convert.ToString(mmdr["FinishRemark"]);
                 Closer = Convert.ToString(mmdr["Closer"]);
                 CloseDate = Convert.ToDateTime(mmdr["CloseDate"]);
+                DepartmentName = Convert.ToString(mmdr["DepartmentName"]);
+                MachineName = Convert.ToString(mmdr["MachineName"]);
             }
 
             /// <summary>
@@ -798,6 +831,10 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
             public string Closer { get; private set; }
 
             public DateTime CloseDate { get; private set; }
+
+            public string DepartmentName { get; private set; }
+
+            public string MachineName { get; private set; }
         }
 
 
