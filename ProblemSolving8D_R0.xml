@@ -1,0 +1,520 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="02/05/2015 11:10:54" ReportInfo.Modified="02/29/2016 14:12:22" ReportInfo.CreatorVersion="2013.2.2.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+
+    private void Text18_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.D2_Date&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text18.Visible = true;
+        Text178.Visible = false ;
+      }
+      else 
+      {
+        Text18.Visible = false;
+        Text178.Visible = true;
+      }
+    }
+
+    private void Text179_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.D3_Date&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text35.Visible = true;
+        Text179.Visible = false;
+      }
+      else 
+      {
+        Text35.Visible = false;
+        Text179.Visible = true;
+      }
+    }
+
+    private void Text44_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.D4_Date&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text44.Visible = true;
+        Text180.Visible = false;
+      }
+      else 
+      {
+        Text44.Visible = false;
+        Text180.Visible = true;
+      }
+    }
+
+    private void Text53_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.D5_Date&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text53.Visible = true;
+        Text181.Visible = false;
+      }
+      else 
+      {
+        Text53.Visible = false;
+        Text181.Visible = true;
+      }
+    }
+
+    private void Text62_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.D6_Date&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text62.Visible = true;
+        Text182.Visible = false;
+      }
+      else 
+      {
+        Text62.Visible = false;
+        Text182.Visible = true;
+      }      
+    }
+
+    private void Text71_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.D7_Date&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text71.Visible = true;
+        Text183.Visible = false;
+      }
+      else 
+      {
+        Text71.Visible = false;
+        Text183.Visible = true;
+      } 
+    }
+
+    private void Text80_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.D8_Date&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text80.Visible = true;
+        Text184.Visible = false;
+      }
+      else 
+      {
+        Text80.Visible = false;
+        Text184.Visible = true;
+      } 
+    }
+
+    private void Text96_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.ModifyDate&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text96.Visible = true;
+        Text185.Visible = false;
+      }
+      else 
+      {
+        Text96.Visible = false;
+        Text185.Visible = true;
+      } 
+    }
+
+    private void Text97_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.CheckDate&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text97.Visible = true;
+        Text186.Visible = false;
+      }
+      else 
+      {
+        Text97.Visible = false;
+        Text186.Visible = true;
+      }       
+    }
+
+    private void Text98_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.FinishDate&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text98.Visible = true;
+        Text187.Visible = false;
+      }
+      else 
+      {
+        Text98.Visible = false;
+        Text187.Visible = true;
+      }           
+    }
+
+    private void Text99_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.FinalizDate&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text99.Visible = true;
+        Text188.Visible = false;
+      }
+      else 
+      {
+        Text99.Visible = false;
+        Text188.Visible = true;
+      }
+      
+    }
+
+    private void Text89_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.D5_FinishDate&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text19.Visible=true;
+        Text89.Visible=true;
+        Text193.Visible = false;
+      }
+      else 
+      {
+        Text19.Visible=false;
+        Text89.Visible=false;
+        Text193.Visible = true;
+      }
+    }
+
+    private void Text194_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.D6_FinishDate&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text194.Visible=true;
+        Text195.Visible=true;
+        Text196.Visible = false;
+      }
+      else 
+      {
+        Text194.Visible=false;
+        Text195.Visible=false;
+        Text196.Visible = true;
+      }
+    }
+
+    private void Text198_BeforePrint(object sender, EventArgs e)
+    {
+      if (((DateTime)Report.GetColumnValue(&quot;View.D8_FinishDate&quot;))&gt;Convert.ToDateTime(&quot;2000-01-01&quot;))
+      {
+        Text198.Visible=true;
+        Text199.Visible=true;
+        Text200.Visible = false;
+      }
+      else 
+      {
+        Text198.Visible=false;
+        Text199.Visible=false;
+        Text200.Visible = true;
+      }
+    }
+  }
+}
+</ScriptText>
+  <Dictionary>
+    <TableDataSource Name="View" ReferenceName="View" DataType="System.Int32" Enabled="true">
+      <Column Name="_ID" DataType="System.Int32"/>
+      <Column Name="CGUID" DataType="System.Guid"/>
+      <Column Name="RdsNo" DataType="System.String"/>
+      <Column Name="Inputer" DataType="System.String"/>
+      <Column Name="InputDate" DataType="System.DateTime"/>
+      <Column Name="Checker" DataType="System.String"/>
+      <Column Name="CheckDate" DataType="System.DateTime"/>
+      <Column Name="Status" DataType="System.Int32"/>
+      <Column Name="Type" DataType="System.Int32"/>
+      <Column Name="Code" DataType="System.String"/>
+      <Column Name="DepartmentCode" DataType="System.String"/>
+      <Column Name="SendToUserCode" DataType="System.String"/>
+      <Column Name="D1_Remark1" DataType="System.String"/>
+      <Column Name="D1_Remark2" DataType="System.String"/>
+      <Column Name="D1_Date" DataType="System.DateTime"/>
+      <Column Name="D2_Remark" DataType="System.String"/>
+      <Column Name="D2_Date" DataType="System.DateTime"/>
+      <Column Name="D2_Manager" DataType="System.String"/>
+      <Column Name="D2_Handler" DataType="System.String"/>
+      <Column Name="Modifyer" DataType="System.String"/>
+      <Column Name="ModifyDate" DataType="System.DateTime"/>
+      <Column Name="D3_Remark" DataType="System.String"/>
+      <Column Name="D3_Date" DataType="System.DateTime"/>
+      <Column Name="D3_Manager" DataType="System.String"/>
+      <Column Name="D3_Handler" DataType="System.String"/>
+      <Column Name="D4_Remark" DataType="System.String"/>
+      <Column Name="D4_Date" DataType="System.DateTime"/>
+      <Column Name="D4_Manager" DataType="System.String"/>
+      <Column Name="D4_Handler" DataType="System.String"/>
+      <Column Name="D5_Remark" DataType="System.String"/>
+      <Column Name="D5_Date" DataType="System.DateTime"/>
+      <Column Name="D5_Manager" DataType="System.String"/>
+      <Column Name="D5_Handler" DataType="System.String"/>
+      <Column Name="D5_FinishDate" DataType="System.DateTime"/>
+      <Column Name="D6_Remark" DataType="System.String"/>
+      <Column Name="D6_Date" DataType="System.DateTime"/>
+      <Column Name="D6_Manager" DataType="System.String"/>
+      <Column Name="D6_Handler" DataType="System.String"/>
+      <Column Name="D6_FinishDate" DataType="System.DateTime"/>
+      <Column Name="Finisher" DataType="System.String"/>
+      <Column Name="FinishDate" DataType="System.DateTime"/>
+      <Column Name="FinishType" DataType="System.Int32"/>
+      <Column Name="D7_Remark" DataType="System.String"/>
+      <Column Name="D7_Date" DataType="System.DateTime"/>
+      <Column Name="D7_Manager" DataType="System.String"/>
+      <Column Name="D7_Handler" DataType="System.String"/>
+      <Column Name="D8_Remark" DataType="System.String"/>
+      <Column Name="D8_Date" DataType="System.DateTime"/>
+      <Column Name="D8_Manager" DataType="System.String"/>
+      <Column Name="D8_Handler" DataType="System.String"/>
+      <Column Name="D8_FinishDate" DataType="System.DateTime"/>
+      <Column Name="Finalizer" DataType="System.String"/>
+      <Column Name="FinalizDate" DataType="System.DateTime"/>
+      <Column Name="Name" DataType="System.String"/>
+      <Column Name="TypeName" DataType="System.String"/>
+      <Column Name="FinishTypeName" DataType="System.String"/>
+      <Column Name="StatusName" DataType="System.String"/>
+      <Column Name="DepartmentName" DataType="System.String"/>
+      <Column Name="SendToUserName" DataType="System.String"/>
+      <Column Name="ProjName" DataType="System.String"/>
+    </TableDataSource>
+    <Parameter Name="Inputer" DataType="System.String" Description="制表人"/>
+    <Parameter Name="InputDate" DataType="System.DateTime" Description="制表时间"/>
+    <Parameter Name="Checker" DataType="System.String" Description="审核人"/>
+    <Parameter Name="CheckDate" DataType="System.DateTime" Description="审核时间"/>
+    <Parameter Name="Author" DataType="System.String" Description="列印人"/>
+    <Parameter Name="PrintTimes" DataType="System.Int32" Description="列印次数"/>
+    <Parameter Name="StatusWord" DataType="System.String" Description="单据状态"/>
+  </Dictionary>
+  <ReportPage Name="Page1" RawPaperSize="9" TopMargin="5">
+    <PageHeaderBand Name="PageHeader1" Width="718.2" Height="85.05">
+      <TextObject Name="Text3" Top="56.7" Width="340.2" Height="28.35" Text="反饋日期：[View.D1_Date]" Format="Custom" Format.Format="yyyy年MM月dd日 HH:mm" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt"/>
+      <TextObject Name="Text4" Left="519.75" Top="56.7" Width="189" Height="28.35" Text="編號：[View.RdsNo]" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt"/>
+      <TextObject Name="Text2" Left="155.93" Top="28.35" Width="406.35" Height="28.35" Border.Lines="Bottom" Text="8D 異 常 矯 正 回 饋 單" HorzAlign="Center" Font="Microsoft Sans Serif, 22pt, style=Bold"/>
+      <TextObject Name="Text1" Width="236.25" Height="28.35" Text="明揚彩色包裝印刷有限公司" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+      <TextObject Name="Text25" Left="1" Top="20.35" Width="170.1" Height="18.9" Text="表單編號：B0-04-041 REV:05" VertAlign="Center" Font="Microsoft Sans Serif, 8pt"/>
+      <TextObject Name="Text27" Left="576.45" Top="9.45" Width="113.4" Height="28.35" Text="[View.StatusName]" Font="Microsoft Sans Serif, 16pt, style=Bold"/>
+    </PageHeaderBand>
+    <DataBand Name="Data1" Top="89.05" Width="718.2" Height="100.05" DataSource="View">
+      <TextObject Name="Text5" Width="207.9" Height="24.9" Border.Lines="All" Text="編號：[View.Code]" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text6" Left="207.9" Width="236.25" Height="24.9" Border.Lines="All" Text="料號：[View.Name]" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text7" Left="444.15" Width="274.05" Height="24.9" Border.Lines="All" Text="異常類型：[View.TypeName]" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text8" Top="25.35" Width="207.9" Height="24.9" Border.Lines="All" Text="DISCIPLINE 1" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text9" Left="207.9" Top="25.35" Width="236.25" Height="24.9" Border.Lines="All" Text="公司内部 改善成員" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text10" Left="444.15" Top="25.35" Width="274.05" Height="24.9" Border.Lines="All" Text="公司外部 改善成員" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text11" Top="50.25" Width="207.9" Height="24.9" Border.Lines="All" Text="指定應答部門：[View.DepartmentName]" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+      <TextObject Name="Text12" Left="207.9" Top="50.25" Width="236.25" Height="49.8" Border.Lines="All" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text13" Left="444.15" Top="50.25" Width="274.05" Height="49.8" Border.Lines="All" Text="[View.D1_Remark2]" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text14" Top="74.6" Width="207.9" Height="24.9" Border.Lines="All" Text="指定應答人：[View.SendToUserName]" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+      <TextObject Name="Text28" Left="212.35" Top="53.7" Width="226.8" Height="41.8" CanGrow="true" GrowToBottom="true" Text="[View.D1_Remark1]" Font="Microsoft Sans Serif, 11pt"/>
+    </DataBand>
+    <DataBand Name="Data2" Top="222" Width="718.2" Height="29.35" CanGrow="true" DataSource="View">
+      <TextObject Name="Text16" Width="718.2" Height="29.35" Border.Lines="Left, Right, Top" CanGrow="true" GrowToBottom="true" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text190" Top="4.45" Width="708.75" Height="22.9" Anchor="Top, Bottom, Left, Right" CanGrow="true" GrowToBottom="true" Text="[View.D2_Remark]" Font="Microsoft Sans Serif, 11pt"/>
+      <DataHeaderBand Name="DataHeader2" Top="193.1" Width="718.2" Height="24.9" CanGrow="true">
+        <TextObject Name="Text15" Width="500.85" Height="24.9" Border.Lines="All" Text="DISCIPLINE 2 問題説明 Problem Description （由發現部門提出）" VertAlign="Bottom" Font="Microsoft Sans Serif, 11pt"/>
+        <TextObject Name="Text17" Left="500.85" Width="85.05" Height="24.9" Border.Lines="All" Text="日期時間：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text18" Left="585.9" Width="132.3" Height="24.9" Border.Lines="All" BeforePrintEvent="Text18_BeforePrint" Text="[View.D2_Date]" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+        <TextObject Name="Text178" Left="585.9" Width="132.3" Height="24.9" Visible="false" Border.Lines="All" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+      </DataHeaderBand>
+      <DataFooterBand Name="DataFooter3" Top="255.35" Width="718.2" Height="24.9" CanGrow="true">
+        <TextObject Name="Text20" Left="500.85" Width="85.05" Height="24.9" Border.Lines="All" Text="發現人：" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text21" Left="585.9" Width="132.3" Height="24.9" Border.Lines="All" Text="[View.D2_Handler]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text22" Left="359.1" Width="56.7" Height="24.9" Border.Lines="All" Text="主管：" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text23" Left="415.8" Width="85.05" Height="24.9" Border.Lines="All" Text="[View.D2_Manager]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text189" Width="359.1" Height="24.9" Border.Lines="Left, Right, Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      </DataFooterBand>
+    </DataBand>
+    <DataBand Name="Data4" Top="313.15" Width="718.2" Height="28.35" CanGrow="true" DataSource="View">
+      <TextObject Name="Text36" Width="718.2" Height="28.35" Border.Lines="Left, Right, Top" CanGrow="true" GrowToBottom="true" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text37" Left="4" Top="4" Width="708.75" Height="21.9" Anchor="Top, Bottom, Left, Right" CanGrow="true" GrowToBottom="true" Text="[View.D3_Remark]" Font="Microsoft Sans Serif, 11pt"/>
+      <DataHeaderBand Name="DataHeader3" Top="284.25" Width="718.2" Height="24.9" CanGrow="true">
+        <TextObject Name="Text33" Width="500.85" Height="24.9" Border.Lines="All" Text="DISCIPLINE 3 立即對策 Interim Containment Actions" VertAlign="Bottom" Font="Microsoft Sans Serif, 11pt"/>
+        <TextObject Name="Text34" Left="500.85" Width="85.05" Height="24.9" Border.Lines="All" Text="日期時間：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text179" Left="585.9" Width="132.3" Height="24.9" Border.Lines="All" BeforePrintEvent="Text179_BeforePrint" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+        <TextObject Name="Text35" Left="585.9" Width="132.3" Height="24.9" Border.Lines="All" Text="[View.D3_Date]" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+      </DataHeaderBand>
+      <DataFooterBand Name="DataFooter4" Top="345.5" Width="718.2" Height="24.9" CanGrow="true">
+        <TextObject Name="Text38" Left="500.85" Width="85.05" Height="24.9" Border.Lines="All" GrowToBottom="true" Text="責任人：" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text39" Left="585.9" Width="132.3" Height="24.9" Border.Lines="All" GrowToBottom="true" Text="[View.D3_Handler]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text40" Left="359.1" Width="56.7" Height="24.9" Border.Lines="All" GrowToBottom="true" Text="主管：" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text41" Left="415.8" Width="85.05" Height="24.9" Border.Lines="All" GrowToBottom="true" Text="[View.D3_Manager]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text191" Width="359.1" Height="24.9" Border.Lines="Left, Right, Bottom" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      </DataFooterBand>
+    </DataBand>
+    <DataBand Name="Data5" Top="403.3" Width="718.2" Height="28.35" CanGrow="true" DataSource="View">
+      <TextObject Name="Text45" Width="718.2" Height="28.35" Border.Lines="Left, Right, Top" CanGrow="true" GrowToBottom="true" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text46" Left="4" Top="4" Width="708.75" Height="22.35" Anchor="Top, Bottom, Left, Right" CanGrow="true" Text="[View.D4_Remark]" Font="Microsoft Sans Serif, 11pt"/>
+      <DataHeaderBand Name="DataHeader4" Top="374.4" Width="718.2" Height="24.9" CanGrow="true">
+        <TextObject Name="Text42" Width="500.85" Height="24.9" Border.Lines="All" GrowToBottom="true" Text="DISCIPLINE 4 確認真正原因 Root Cause" VertAlign="Bottom" Font="Microsoft Sans Serif, 11pt"/>
+        <TextObject Name="Text180" Left="585.9" Width="132.3" Height="24.9" Visible="false" Border.Lines="All" GrowToBottom="true" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt"/>
+        <TextObject Name="Text43" Left="500.85" Width="85.05" Height="24.9" Border.Lines="All" GrowToBottom="true" Text="日期時間：" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text44" Left="585.9" Width="132.3" Height="24.9" Border.Lines="All" GrowToBottom="true" BeforePrintEvent="Text44_BeforePrint" Text="[View.D4_Date]" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt"/>
+      </DataHeaderBand>
+      <DataFooterBand Name="DataFooter5" Top="435.65" Width="718.2" Height="24.9" CanGrow="true">
+        <TextObject Name="Text47" Left="500.85" Width="85.05" Height="24.9" Border.Lines="All" GrowToBottom="true" Text="責任人：" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text48" Left="585.9" Width="132.3" Height="24.9" Border.Lines="All" GrowToBottom="true" Text="[View.D4_Handler]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text49" Left="359.1" Width="56.7" Height="24.9" Border.Lines="All" GrowToBottom="true" Text="主管：" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text50" Left="415.8" Width="85.05" Height="24.9" Border.Lines="All" GrowToBottom="true" Text="[View.D4_Manager]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text192" Width="359.1" Height="24.9" Border.Lines="Left, Right, Bottom" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      </DataFooterBand>
+    </DataBand>
+    <DataBand Name="Data6" Top="493.45" Width="718.2" Height="33.25" CanGrow="true" DataSource="View" KeepTogether="true">
+      <TextObject Name="Text54" Width="718.2" Height="33.25" Border.Lines="Left, Right, Top" CanGrow="true" GrowToBottom="true" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text55" Left="4" Top="3.45" Width="708.75" Height="26.8" Anchor="Top, Bottom, Left, Right" CanGrow="true" GrowToBottom="true" Text="[View.D5_Remark]" Font="Microsoft Sans Serif, 11pt"/>
+      <DataHeaderBand Name="DataHeader5" Top="464.55" Width="718.2" Height="24.9" CanGrow="true">
+        <TextObject Name="Text51" Width="500.85" Height="24.9" Border.Lines="All" Text="DISCIPLINE 5 永久改善對策 Permanent Corrective Actions" VertAlign="Bottom" Font="Microsoft Sans Serif, 11pt"/>
+        <TextObject Name="Text52" Left="500.85" Width="85.05" Height="24.9" Border.Lines="All" Text="日期時間：" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text181" Left="585.9" Width="132.3" Height="24.9" Visible="false" Border.Lines="All" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt"/>
+        <TextObject Name="Text53" Left="585.9" Width="132.3" Height="24.9" Border.Lines="All" BeforePrintEvent="Text53_BeforePrint" Text="[View.D5_Date]" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt"/>
+      </DataHeaderBand>
+      <DataFooterBand Name="DataFooter6" Top="530.7" Width="718.2" Height="24.9">
+        <TextObject Name="Text193" Width="359.1" Height="24.9" Border.Lines="Left, Right, Bottom" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text89" Left="179.55" Width="179.55" Height="24.9" Anchor="Top, Left, Right" Border.Lines="Right, Bottom" CanGrow="true" GrowToBottom="true" BeforePrintEvent="Text89_BeforePrint" Text="[View.D5_FinishDate]" Format="Custom" Format.Format="yyyy/MM/dd HH:mm" VertAlign="Center" Font="Microsoft Sans Serif, 12pt, style=Bold"/>
+        <TextObject Name="Text19" Width="179.55" Height="24.9" Border.Lines="Left, Bottom" CanGrow="true" Text="預定完成日期時間：" VertAlign="Center" Font="Microsoft Sans Serif, 12pt, style=Bold"/>
+        <TextObject Name="Text56" Left="500.85" Width="85.05" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="責任人：" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text57" Left="585.9" Width="132.3" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[View.D5_Handler]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text58" Left="359.1" Width="56.7" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="主管：" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text59" Left="415.8" Width="85.05" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[View.D5_Manager]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      </DataFooterBand>
+    </DataBand>
+    <DataBand Name="Data7" Top="588.5" Width="718.2" Height="29.35" CanGrow="true" DataSource="View">
+      <TextObject Name="Text63" Width="718.2" Height="29.35" Border.Lines="Left, Right, Top" CanGrow="true" GrowToBottom="true" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text64" Left="3" Top="3.78" Width="708.75" Height="18.35" Anchor="Top, Bottom, Left, Right" CanGrow="true" GrowToBottom="true" Text="[View.D6_Remark]" Font="Microsoft Sans Serif, 11pt"/>
+      <DataHeaderBand Name="DataHeader6" Top="559.6" Width="718.2" Height="24.9" CanGrow="true">
+        <TextObject Name="Text60" Width="500.85" Height="24.9" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="DISCIPLINE 6 預防在發生對策 Prevent Recurrence" VertAlign="Bottom" Font="Microsoft Sans Serif, 11pt"/>
+        <TextObject Name="Text61" Left="500.85" Width="85.05" Height="24.9" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="日期時間：" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text182" Left="585.9" Width="132.3" Height="24.9" Visible="false" Border.Lines="All" CanGrow="true" GrowToBottom="true" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt"/>
+        <TextObject Name="Text62" Left="585.9" Width="132.3" Height="24.9" Border.Lines="All" CanGrow="true" GrowToBottom="true" BeforePrintEvent="Text62_BeforePrint" Text="[View.D6_Date]" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt"/>
+      </DataHeaderBand>
+      <DataFooterBand Name="DataFooter7" Top="621.85" Width="718.2" Height="24.9" CanGrow="true">
+        <TextObject Name="Text194" Left="179.55" Width="179.55" Height="24.9" Anchor="Top, Left, Right" Border.Lines="Right, Bottom" CanGrow="true" GrowToBottom="true" BeforePrintEvent="Text194_BeforePrint" Text="[View.D6_FinishDate]" Format="Custom" Format.Format="yyyy/MM/dd HH:mm" VertAlign="Center" Font="Microsoft Sans Serif, 12pt, style=Bold"/>
+        <TextObject Name="Text195" Width="179.55" Height="24.9" Border.Lines="Left, Bottom" CanGrow="true" Text="預定完成日期時間：" VertAlign="Center" Font="Microsoft Sans Serif, 12pt, style=Bold"/>
+        <TextObject Name="Text196" Width="359.1" Height="24.9" Visible="false" Border.Lines="Left, Right, Bottom" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text68" Left="415.8" Width="85.05" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[View.D6_Manager]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text66" Left="585.9" Width="132.3" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[View.D6_Handler]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text65" Left="500.85" Width="85.05" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="責任人：" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text67" Left="359.1" Width="56.7" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="主管：" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+      </DataFooterBand>
+    </DataBand>
+    <DataBand Name="Data8" Top="679.65" Width="718.2" Height="47.25" CanGrow="true" DataSource="View">
+      <TextObject Name="Text72" Width="718.2" Height="47.25" Border.Lines="All" CanGrow="true" GrowToBottom="true" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text73" Left="4" Top="26.9" Width="708.75" Height="16.35" Anchor="Top, Bottom, Left, Right" CanGrow="true" GrowToBottom="true" Text="[View.D7_Remark]" Font="Microsoft Sans Serif, 11pt"/>
+      <TextObject Name="Text90" Left="7.45" Top="4.45" Width="37.8" Height="27.35" Text="[IIf([View.FinishType]==1,&quot;&quot;,&quot;&quot;)]" Format="Custom" Format.Format="yy/MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Wingdings, 16pt"/>
+      <TextObject Name="Text24" Left="37.8" Top="9.18" Width="47.25" Height="17.9" Text="結案" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text91" Left="74.6" Top="4.45" Width="37.8" Height="27.35" Text="[IIf([View.FinishType]==2,&quot;&quot;,&quot;&quot;)]" Format="Custom" Format.Format="yy/MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Wingdings, 16pt"/>
+      <TextObject Name="Text92" Left="104.95" Top="9.18" Width="85.05" Height="17.9" Text="繼續跟催" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text93" Left="180" Top="4.45" Width="37.8" Height="27.35" Text="[IIf([View.FinishType]==3,&quot;&quot;,&quot;&quot;)]" Format="Custom" Format.Format="yy/MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Wingdings, 16pt"/>
+      <TextObject Name="Text94" Left="210.35" Top="9.18" Width="179.55" Height="17.9" Text="重擬對策再作跟催" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <DataHeaderBand Name="DataHeader7" Top="650.75" Width="718.2" Height="24.9" CanGrow="true">
+        <TextObject Name="Text69" Width="500.85" Height="24.9" Border.Lines="All" Text="DISCIPLINE 7 對策效果驗證 Verification of the corrective action's effectiveness" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text70" Left="500.85" Width="85.05" Height="24.9" Border.Lines="All" Text="日期時間：" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text183" Left="585.9" Width="132.3" Height="24.9" Visible="false" Border.Lines="All" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt"/>
+        <TextObject Name="Text71" Left="585.9" Width="132.3" Height="24.9" Border.Lines="All" BeforePrintEvent="Text71_BeforePrint" Text="[View.D7_Date]" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt"/>
+      </DataHeaderBand>
+      <DataFooterBand Name="DataFooter8" Top="730.9" Width="718.2" Height="24.9" CanGrow="true">
+        <TextObject Name="Text76" Left="359.1" Width="56.7" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="主管：" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text77" Left="415.8" Width="85.05" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[View.D7_Manager]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text74" Left="500.85" Width="85.05" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="品保：" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text75" Left="585.9" Width="132.3" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[View.D7_Handler]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text197" Width="359.1" Height="24.9" Border.Lines="Left, Right, Bottom" CanGrow="true" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      </DataFooterBand>
+    </DataBand>
+    <DataBand Name="Data9" Top="788.7" Width="718.2" Height="29.35" CanGrow="true" DataSource="View">
+      <TextObject Name="Text81" Width="718.2" Height="29.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text82" Left="4" Top="5" Width="708.75" Height="23.35" Anchor="Top, Bottom, Left, Right" CanGrow="true" GrowToBottom="true" Text="[View.D8_Remark]" Font="Microsoft Sans Serif, 11pt"/>
+      <DataHeaderBand Name="DataHeader8" Top="759.8" Width="718.2" Height="24.9">
+        <TextObject Name="Text78" Width="500.85" Height="24.9" Border.Lines="All" Text="DISCIPLINE 8 標準化 Standardized" VertAlign="Bottom" Font="Microsoft Sans Serif, 11pt"/>
+        <TextObject Name="Text79" Left="500.85" Width="85.05" Height="24.9" Border.Lines="All" Text="日期時間：" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text80" Left="585.9" Width="132.3" Height="24.9" Border.Lines="All" BeforePrintEvent="Text80_BeforePrint" Text="[View.D8_Date]" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt"/>
+        <TextObject Name="Text184" Left="585.9" Width="132.3" Height="24.9" Visible="false" Border.Lines="All" Format="Custom" Format.Format="MM/dd HH:mm" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+      </DataHeaderBand>
+      <DataFooterBand Name="DataFooter1" Top="822.05" Width="718.2" Height="24.9">
+        <TextObject Name="Text200" Width="359.1" Height="24.9" Border.Lines="Left, Right, Bottom" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text198" Left="179.55" Width="179.55" Height="24.9" Anchor="Top, Left, Right" Border.Lines="Right, Bottom" CanGrow="true" GrowToBottom="true" BeforePrintEvent="Text198_BeforePrint" Text="[View.D6_FinishDate]" Format="Custom" Format.Format="yyyy/MM/dd HH:mm" VertAlign="Center" Font="Microsoft Sans Serif, 12pt, style=Bold"/>
+        <TextObject Name="Text199" Width="179.55" Height="24.9" Border.Lines="Left, Bottom" CanGrow="true" Text="預定完成日期時間：" VertAlign="Center" Font="Microsoft Sans Serif, 12pt, style=Bold"/>
+        <TextObject Name="Text86" Left="415.8" Width="85.05" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" GrowToBottom="true" Text="[View.D8_Manager]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text85" Left="359.1" Width="56.7" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" GrowToBottom="true" Text="主管：" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text84" Left="585.9" Width="132.3" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" GrowToBottom="true" Text="[View.D8_Handler]" Format="Custom" Format.Format="MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text83" Left="500.85" Width="85.05" Height="24.9" Anchor="Bottom, Right" Border.Lines="All" GrowToBottom="true" Text="品保：" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      </DataFooterBand>
+    </DataBand>
+    <ColumnFooterBand Name="ColumnFooter1" Top="850.95" Width="718.2" Height="24.9">
+      <TextObject Name="Text95" Width="718.2" Height="24.9" Border.Lines="All" Text="由發現部門填寫D1~D2，再交給責任部門填寫D3~D6，從創建報告開始8H内返回品保。" VertAlign="Bottom"/>
+    </ColumnFooterBand>
+    <PageFooterBand Name="PageFooter1" Top="879.85" Width="718.2" Height="68.7">
+      <TextObject Name="Text26" Top="9.45" Width="245.7" Height="15.45" Text="建單人：[View.Inputer] 建單時間：[View.InputDate]" VertAlign="Center" Font="Microsoft Sans Serif, 8pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy/MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text96" Left="245.7" Top="9.45" Width="245.7" Height="15.45" BeforePrintEvent="Text96_BeforePrint" Text="回復人：[View.Modifyer] 回復時間：[View.ModifyDate]" VertAlign="Center" Font="Microsoft Sans Serif, 8pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy/MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text97" Left="491.4" Top="9.45" Width="245.7" Height="15.45" BeforePrintEvent="Text97_BeforePrint" Text="審核人：[View.Checker] 審核時間：[View.CheckDate]" VertAlign="Center" Font="Microsoft Sans Serif, 8pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy/MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text98" Top="24.8" Width="245.7" Height="20.9" BeforePrintEvent="Text98_BeforePrint" Text="品    保：[View.Finisher] 接收時間：[View.FinishDate]" VertAlign="Center" Font="Microsoft Sans Serif, 8pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy/MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text99" Left="245.7" Top="24.8" Width="245.7" Height="20.9" BeforePrintEvent="Text99_BeforePrint" Text="結案人：[View.Finalizer] 結案時間：[View.FinalizDate]" VertAlign="Center" Font="Microsoft Sans Serif, 8pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy/MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text177" Left="159.65" Top="49.8" Width="551.1" Height="18.9" CanGrow="true" GrowToBottom="true" Text="列印人:[Author] 列印時間：[Date](第[[PrintTimes]+1]次)第[Page]頁共[TotalPages#]頁" HorzAlign="Right" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text185" Left="245.7" Top="9.45" Width="245.7" Height="15.45" Visible="false" Text="待回復！" VertAlign="Center" Font="Microsoft Sans Serif, 8pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy/MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text186" Left="491.4" Top="9.45" Width="245.7" Height="15.45" Visible="false" Text="待審核！" VertAlign="Center" Font="Microsoft Sans Serif, 8pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy/MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text187" Top="27.25" Width="245.7" Height="20.9" Visible="false" Text="品保未確認！" VertAlign="Center" Font="Microsoft Sans Serif, 8pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy/MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text188" Left="246.6" Top="27.25" Width="245.7" Height="20.9" Visible="false" Text="未結案！" VertAlign="Center" Font="Microsoft Sans Serif, 8pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy/MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

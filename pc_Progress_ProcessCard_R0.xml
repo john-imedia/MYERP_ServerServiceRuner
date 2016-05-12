@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="11/13/2015 18:59:43" ReportInfo.Modified="05/05/2016 15:11:11" ReportInfo.CreatorVersion="2013.2.2.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+
+    private void Data1_BeforePrint(object sender, EventArgs e)
+    {
+      if(((String)Report.GetColumnValue(&quot;Master.AccNoteRdsNo&quot;)).Length &lt;=0)
+      {
+         Rich1.Visible = false;
+         Rich2.Visible = true;
+       　Data1.Visible = false;
+         Data2.Visible = true;
+      }
+      else 
+      {
+        Rich1.Visible = true;
+        Rich2.Visible = false;
+        Data1.Visible = true;
+        Data2.Visible = false;
+      }
+    }
+  }
+}
+</ScriptText>
+  <Dictionary>
+    <TableDataSource Name="Master" ReferenceName="Master" DataType="System.Int32" Enabled="true">
+      <Column Name="rdsno" DataType="System.String"/>
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="name" DataType="System.String"/>
+      <Column Name="code" DataType="System.String"/>
+      <Column Name="procremark" DataType="System.String"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="reqnumb" DataType="System.Decimal"/>
+      <Column Name="FinishNumb" DataType="System.Decimal"/>
+      <Column Name="ColNumb" DataType="System.Int32"/>
+      <Column Name="RejectNumb" DataType="System.Decimal"/>
+      <Column Name="LossedNumb" DataType="System.Decimal"/>
+      <Column Name="NextProcName" DataType="System.String"/>
+      <Column Name="ProductName" DataType="System.String"/>
+      <Column Name="ProductCode" DataType="System.String"/>
+      <Column Name="PartID" DataType="System.String"/>
+      <Column Name="EDD" DataType="System.DateTime"/>
+      <Column Name="AccNoteRdsNo" DataType="System.String"/>
+    </TableDataSource>
+    <Parameter Name="Inputer" DataType="System.String" Description="制表人"/>
+    <Parameter Name="InputDate" DataType="System.DateTime" Description="制表时间"/>
+    <Parameter Name="Checker" DataType="System.String" Description="审核人"/>
+    <Parameter Name="CheckDate" DataType="System.DateTime" Description="审核时间"/>
+    <Parameter Name="Author" DataType="System.String" Description="列印人"/>
+    <Parameter Name="PrintTimes" DataType="System.Int32" Description="列印次数"/>
+    <Parameter Name="StatusWord" DataType="System.String" Description="单据状态"/>
+  </Dictionary>
+  <ReportPage Name="Page1" Landscape="true" PaperWidth="210.1" PaperHeight="148.1" RawPaperSize="11" FirstPageSource="4" OtherPagesSource="4">
+    <DataBand Name="Data1" Width="718.58" Height="432.8" CanGrow="true" BeforePrintEvent="Data1_BeforePrint" DataSource="Master" KeepTogether="true">
+      <TextObject Name="Text1" Left="-59.7" Top="18.9" Width="264.6" Height="56.7" Text="工单号：" HorzAlign="Right" Font="Microsoft Sans Serif, 36pt"/>
+      <TextObject Name="Text2" Left="145.85" Top="-6" Width="689.85" Height="90.6" Text="[Master.rdsno]" Font="Microsoft Sans Serif, 66pt, style=Bold"/>
+      <TextObject Name="Text3" Left="-86.05" Top="97.35" Width="292.95" Height="56.7" Text="料    号：" HorzAlign="Right" Font="Microsoft Sans Serif, 36pt"/>
+      <TextObject Name="Text4" Left="158.2" Top="91.9" Width="548.1" Height="123.85" Text="[Master.ProductName]" Font="Microsoft Sans Serif, 40pt, style=Bold"/>
+      <TextObject Name="Text5" Left="-39.8" Top="211.05" Width="245.7" Height="75.6" Text="状    态：" HorzAlign="Right" Font="Microsoft Sans Serif, 36pt"/>
+      <TextObject Name="Text7" Left="-70.15" Top="325.3" Width="274.05" Height="56.7" Text="下制程：" HorzAlign="Right" Font="Microsoft Sans Serif, 36pt"/>
+      <TextObject Name="Text8" Left="162.2" Top="332.3" Width="548.1" Height="98.6" Text="待[Master.NextProcName]" Font="Microsoft Sans Serif, 32pt"/>
+      <RichObject Name="Rich1" Left="170.1" Top="211.35" Width="548.1" Height="132.3" Text="{\rtf1\ansi\ansicpg936\deff0\nouicompat\deflang1033\deflangfe2052{\fonttbl{\f0\fnil\fcharset0 Microsoft Sans Serif;}{\f1\fnil\fcharset134 \'cb\'ce\'cc\'e5;}{\f2\fnil Tahoma;}}&#13;&#10;{\*\generator Riched20 10.0.10240}\viewkind4\uc1 &#13;&#10;\pard\f0\fs72\lang2052 [Master.PartID][Master.name]\f1\'cd\'ea\'b3\'c9\fs44\'a3\'a8\'cf\'c2\'bb\'fa\'a3\'ba\f0 [Master.EDD]\f1\'a3\'a9\f2\fs17\par&#13;&#10;}&#13;&#10;">
+        <Formats>
+          <GeneralFormat/>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+        </Formats>
+      </RichObject>
+      <RichObject Name="Rich2" Left="169.1" Top="210.35" Width="548.1" Height="132.3" Visible="false" Text="{\rtf1\ansi\ansicpg936\deff0\nouicompat\deflang1033\deflangfe2052{\fonttbl{\f0\fnil\fcharset0 Microsoft Sans Serif;}{\f1\fnil\fcharset134 \'cb\'ce\'cc\'e5;}{\f2\fnil Tahoma;}}&#13;&#10;{\*\generator Riched20 10.0.10586}\viewkind4\uc1 &#13;&#10;\pard\f0\fs72\lang2052 [Master.PartID][Master.name]\f1\'cd\'ea\'b3\'c9\f0\lang1033 ?\f1\fs44\lang2052\'a3\'a8\'9f\'6f\'cf\'c2\'99\'43\'95\'72\'e9\'67\'a3\'a9\f2\fs17\par&#13;&#10;}&#13;&#10;">
+        <Formats>
+          <GeneralFormat/>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+        </Formats>
+      </RichObject>
+    </DataBand>
+    <DataBand Name="Data2" Top="436.8" Width="718.58" Height="432.81" Visible="false">
+      <TextObject Name="Text6" Top="3.45" Width="718.2" Height="406.35" Fill.Color="MediumBlue" Text="此工序未輸入完工單，不可以列印立牌！！" Font="微軟正黑體, 70pt, style=Bold" TextFill="LinearGradient" TextFill.StartColor="Yellow" TextFill.EndColor="Red" TextFill.Angle="90" TextFill.Focus="1" TextFill.Contrast="1"/>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="873.61" Width="718.58" Height="18.9">
+      <TextObject Name="Text177" Left="18.9" Width="664.5" Height="18.9" CanGrow="true" GrowToBottom="true" Text="完工單號：[IIf([Master.AccNoteRdsNo].Length&lt;=0,&quot;無&quot;,[Master.AccNoteRdsNo])] 列印人:[Author] 列印時間：[Date](第[[PrintTimes]+1]次)第[Page]頁共[TotalPages#]頁" HorzAlign="Right" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+        </Formats>
+      </TextObject>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

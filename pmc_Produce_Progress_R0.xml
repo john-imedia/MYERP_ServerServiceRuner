@@ -1,0 +1,363 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="08/24/2015 13:21:48" ReportInfo.Modified="03/17/2016 10:31:53" ReportInfo.CreatorVersion="2013.2.2.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+    string lastDepartmentName = string.Empty;
+    string lastProcessName = string.Empty;
+    
+    private void Data1_BeforePrint(object sender, EventArgs e)
+    {
+      if(((Boolean)Report.GetColumnValue(&quot;ProduceData.isMutipart&quot;)))
+      {
+        Text2.Visible = true;
+        Text57.Visible =false;
+      }
+      else 
+      {
+         Text2.Visible = false;
+         Text57.Visible =true;
+      }
+      string nowDepartmentName = ((String)Report.GetColumnValue(&quot;Main.DepartmentName&quot;));
+      string nowProcessName = ((String)Report.GetColumnValue(&quot;Main.ProcessName&quot;));
+      if (lastDepartmentName != string.Empty &amp;&amp; lastDepartmentName == nowDepartmentName )
+      {
+         Text4.Text = string.Empty;
+         Text4.Border.Lines = BorderLines.Left | BorderLines.Right ;
+      }
+      else 
+      {
+         Text4.Text = nowDepartmentName;
+         Text4.Border.Lines = BorderLines.Left | BorderLines.Right | BorderLines.Top;
+      }
+      if (lastProcessName != string.Empty &amp;&amp; lastProcessName == nowProcessName )
+      {
+         Text3.Text = string.Empty;
+         Text3.Border.Lines = BorderLines.Left | BorderLines.Right ;
+      }
+      else 
+      {
+         Text3.Text = nowProcessName;
+         Text3.Border.Lines = BorderLines.Left | BorderLines.Right | BorderLines.Top;
+      }
+      
+      lastDepartmentName = nowDepartmentName;
+      lastProcessName = nowProcessName;
+      
+      
+    }
+  }
+}
+</ScriptText>
+  <Dictionary>
+    <BusinessObjectDataSource Name="Main" ReferenceName="Main" DataType="System.Collections.Generic.List`1[[MYERP.SubModule.pmc_Produce_Progress+Progress_Print_DataMain_Item, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+      <Column Name="PartID" DataType="System.String"/>
+      <Column Name="DepartmentName" DataType="System.String"/>
+      <Column Name="ProcessName" DataType="System.String"/>
+      <Column Name="MachineName" DataType="System.String"/>
+      <Column Name="isOut" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="ReqNumb" DataType="System.Double"/>
+      <Column Name="ProduceSettingLossNumb" DataType="System.Double"/>
+      <Column Name="UseStockNumb" DataType="System.Double"/>
+      <Column Name="PickingNumb" DataType="System.Double"/>
+      <Column Name="FinishNumb" DataType="System.Double"/>
+      <Column Name="RejectNumb" DataType="System.Double"/>
+      <Column Name="LossedNumb" DataType="System.Double"/>
+      <Column Name="DifferentNumb" DataType="System.Double"/>
+      <Column Name="RejectCheckNumb" DataType="System.Double"/>
+      <Column Name="Yield" DataType="System.Double"/>
+      <Column Name="FPY" DataType="System.Double"/>
+      <Column Name="Over" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="OverDate" DataType="System.DateTime"/>
+      <Column Name="ProcessMemo" DataType="System.String"/>
+      <Column Name="StartTime" DataType="System.DateTime"/>
+      <Column Name="EndTime" DataType="System.DateTime"/>
+      <Column Name="PassTime" DataType="System.Double"/>
+      <Column Name="Capcity" DataType="System.Double"/>
+      <Column Name="MachineCode" DataType="System.String"/>
+      <Column Name="ProcessCode" DataType="System.String"/>
+      <Column Name="CutNumb" DataType="System.Int32"/>
+      <Column Name="ColNumb" DataType="System.Int32"/>
+      <Column Name="SortID" DataType="System.String"/>
+      <Column Name="id" DataType="System.Int32"/>
+    </BusinessObjectDataSource>
+    <BusinessObjectDataSource Name="ProduceData" ReferenceName="ProduceData" DataType="System.Collections.Generic.List`1[[MYERP.Framework.MyServiceLogic+ProduceNote, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+      <Column Name="OrderMID" DataType="System.Int32"/>
+      <Column Name="OrderNumb" DataType="System.Int32"/>
+      <Column Name="CustOrderNo" DataType="System.String"/>
+      <Column Name="OrderRemark" DataType="System.String"/>
+      <Column Name="FinishNumber" DataType="System.Int32"/>
+      <Column Name="StockNumber" DataType="System.Int32"/>
+      <Column Name="isNew" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="isEdit" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="isMutipart" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="isStopStock" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="RdsNo" DataType="System.String"/>
+      <Column Name="ID" DataType="System.Int32"/>
+      <Column Name="ProdCode" DataType="System.String"/>
+      <Column Name="Product" DataType="MYERP.Framework.MyServiceLogic+ProductItem, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <Column Name="_ID" DataType="System.Int32"/>
+        <Column Name="Code" DataType="System.String"/>
+        <Column Name="isNew" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="Name" DataType="System.String"/>
+        <Column Name="CustProdName" DataType="System.String"/>
+        <Column Name="CustCode" DataType="System.String"/>
+        <Column Name="Description" DataType="System.String"/>
+        <Column Name="mType" DataType="System.String"/>
+        <Column Name="DeclaretionName" DataType="System.String"/>
+        <Column Name="TypeCode" DataType="System.String"/>
+        <Column Name="TypeName" DataType="System.String"/>
+        <Column Name="Type" DataType="MYERP.Framework.MyServiceLogic+MaterialTypeItem, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="Remark" DataType="System.String"/>
+          <Column Name="TypeName" DataType="System.String"/>
+          <Column Name="TypeCode" DataType="System.String"/>
+          <Column Name="Type" DataType="MYERP.Framework.MyServiceLogic+MaterialType+MaterialTypeEnum, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+          <Column Name="Name" DataType="System.String"/>
+          <Column Name="id" DataType="System.Int32"/>
+          <Column Name="Code" DataType="System.String"/>
+          <Column Name="StatusID" DataType="System.Int32"/>
+        </Column>
+        <Column Name="PlateCode" DataType="System.String"/>
+        <Column Name="CutPlateCode" DataType="System.String"/>
+        <Column Name="HotPlateCode" DataType="System.String"/>
+        <Column Name="ScreenPlateCode" DataType="System.String"/>
+        <Column Name="PhoneSubject" DataType="System.String"/>
+        <Column Name="CreateDate" DataType="System.DateTime"/>
+        <Column Name="ModifyDate" DataType="System.DateTime"/>
+        <Column Name="Creator" DataType="System.String"/>
+        <Column Name="Modifyer" DataType="System.String"/>
+        <Column Name="Size" DataType="System.String"/>
+        <Column Name="UnfoldSize" DataType="System.String"/>
+        <Column Name="Length" DataType="System.Single"/>
+        <Column Name="Width" DataType="System.Single"/>
+        <Column Name="Height" DataType="System.Single"/>
+        <Column Name="UnflodLength" DataType="System.Single"/>
+        <Column Name="UnflodWidth" DataType="System.Single"/>
+        <Column Name="PageNumberTotal" DataType="System.Int32"/>
+        <Column Name="PageNumberCover" DataType="System.Int32"/>
+        <Column Name="PageNumberInside" DataType="System.Int32"/>
+        <Column Name="BindingStyle" DataType="System.String"/>
+        <Column Name="OriginalManuscript" DataType="System.String"/>
+        <Column Name="ColorSTD" DataType="System.String"/>
+        <Column Name="Prepress" DataType="System.String"/>
+        <Column Name="ProductionMemo" DataType="System.String"/>
+        <Column Name="Price" DataType="System.Single"/>
+        <Column Name="Unit" DataType="System.String"/>
+        <Column Name="Bonded" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="Secret" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="Weight" DataType="System.Double"/>
+        <Column Name="MaxStock" DataType="System.Double"/>
+        <Column Name="MinStock" DataType="System.Double"/>
+        <Column Name="Status" DataType="System.Int32"/>
+        <Column Name="Remark1" DataType="System.String"/>
+        <Column Name="Remark2" DataType="System.String"/>
+        <Column Name="FinanceType" DataType="System.String"/>
+        <Column Name="FilePath" DataType="System.String"/>
+        <Column Name="PrepressFinishDate" DataType="System.DateTime"/>
+        <Column Name="StockLocation" DataType="System.String"/>
+        <Column Name="PlateFinishDate" DataType="System.DateTime"/>
+        <Column Name="InputDate" DataType="System.DateTime"/>
+        <Column Name="Inputer" DataType="System.String"/>
+        <Column Name="CheckDate" DataType="System.DateTime"/>
+        <Column Name="Checker" DataType="System.String"/>
+        <Column Name="FSC" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="isKIT" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="isBook" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="isNewERPBom" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="SampleType" DataType="System.String"/>
+        <Column Name="SampleDate" DataType="System.DateTime"/>
+        <Column Name="isSample" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="MassProductionApproveDate" DataType="System.DateTime"/>
+        <Column Name="MassProductionRemark" DataType="System.String"/>
+        <Column Name="MassProductionPMName" DataType="System.String"/>
+        <Column Name="isMassProduction" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="AcceptOnDeviation" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="BomID" DataType="System.Int32"/>
+        <Column Name="BomRemark" DataType="System.String"/>
+        <Column Name="BomCreateDate" DataType="System.DateTime"/>
+        <Column Name="BomCreator" DataType="System.String"/>
+        <Column Name="MutiplePart" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="BomStatus" DataType="System.Int32"/>
+        <Column Name="BomCheckDate" DataType="System.DateTime"/>
+        <Column Name="BomChecker" DataType="System.String"/>
+        <Column Name="BOM" DataType="MYERP.Framework.MyServiceLogic+Bom, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="ID" DataType="System.Int32"/>
+          <Column Name="Code" DataType="System.String"/>
+          <Column Name="Remark" DataType="System.String"/>
+          <Column Name="MutiplePart" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="CutPlateCode" DataType="System.String"/>
+          <Column Name="ScreenPlateCode" DataType="System.String"/>
+          <Column Name="HotPlateCode" DataType="System.String"/>
+          <Column Name="PlateCode" DataType="System.String"/>
+          <Column Name="mType" DataType="System.String"/>
+          <Column Name="isNewBom" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="isOnEdit" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="Status" DataType="System.Int32"/>
+          <Column Name="isNewERPBom" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource4" Alias="Materials" Enabled="false" DataType="System.Collections.Generic.List`1[[MYERP.Framework.MyServiceLogic+BomMaterial, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="Materials"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource5" Alias="Processes" Enabled="false" DataType="System.Collections.Generic.List`1[[MYERP.Framework.MyServiceLogic+BomProcess, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="Processes"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource6" Alias="Parts" Enabled="false" DataType="System.Collections.Generic.List`1[[MYERP.Framework.MyServiceLogic+PartItem, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="Parts"/>
+        </Column>
+        <Column Name="FrontImage" DataType="System.Drawing.Image, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" BindableControl="Picture"/>
+        <Column Name="BackImage" DataType="System.Drawing.Image, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" BindableControl="Picture"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource7" Alias="PartMemoList" Enabled="false" DataType="System.Collections.Generic.List`1[[MYERP.Framework.MyServiceLogic+ProductMemo, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="PartMemoList"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource8" Alias="MaterialList" Enabled="false" DataType="System.Collections.Generic.List`1[[MYERP.Framework.MyServiceLogic+ProductMaterial, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="MaterialList"/>
+        <Column Name="PriceUnit" DataType="System.String"/>
+        <Column Name="PriceUnitConvertRatio" DataType="System.Double"/>
+        <Column Name="PurchaseUnit" DataType="System.String"/>
+        <Column Name="PurchaseUnitConvertRatio" DataType="System.Double"/>
+        <Column Name="LeadTime" DataType="System.Double"/>
+        <Column Name="MOQ" DataType="System.Double"/>
+        <Column Name="EXPeriod" DataType="System.Int32"/>
+        <Column Name="Idel" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="IdelPeriod" DataType="System.Double"/>
+        <Column Name="isNoStock" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="isExpenses" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="PickingType" DataType="System.Int32"/>
+        <Column Name="NumberInteger" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="Experiod" DataType="System.Double"/>
+        <Column Name="InventoryTurnOverDays" DataType="System.Int32"/>
+        <Column Name="LastOutStockDate" DataType="System.DateTime"/>
+      </Column>
+      <Column Name="OrderNo" DataType="System.String"/>
+      <Column Name="OrderSID" DataType="System.Int32"/>
+      <Column Name="CustCode" DataType="System.String"/>
+      <Column Name="PNumb" DataType="System.Int32"/>
+      <Column Name="DeliveryDate" DataType="System.DateTime"/>
+      <Column Name="OrderDeliveryDate" DataType="System.DateTime"/>
+      <Column Name="InputDate" DataType="System.DateTime"/>
+      <Column Name="Inputer" DataType="System.String"/>
+      <Column Name="CheckDate" DataType="System.DateTime"/>
+      <Column Name="Checker" DataType="System.String"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="ReDoTimes" DataType="System.Int32"/>
+      <Column Name="RemarkReDo" DataType="System.String"/>
+      <Column Name="RemarkChange" DataType="System.String"/>
+      <Column Name="FinishRemark" DataType="System.String"/>
+      <Column Name="FinishMan" DataType="System.String"/>
+      <Column Name="DeliveryRemark" DataType="System.String"/>
+      <Column Name="DeliveryCheckDate" DataType="System.DateTime"/>
+      <Column Name="DeliveryChecker" DataType="System.String"/>
+      <Column Name="OriginalRdsNo" DataType="System.String"/>
+      <Column Name="RejectRdsNo" DataType="System.String"/>
+      <Column Name="ReturnRdsNo" DataType="System.String"/>
+      <Column Name="ComplainRdsNo" DataType="System.String"/>
+      <Column Name="Status" DataType="System.Int32"/>
+      <Column Name="StatusWord" DataType="System.String"/>
+      <Column Name="StockStatus" DataType="System.Int32"/>
+      <Column Name="StockStatusWord" DataType="System.String"/>
+      <Column Name="BeforeStatusID" DataType="System.Int32"/>
+      <Column Name="FinishDate" DataType="System.DateTime"/>
+      <Column Name="StockFinishDate" DataType="System.DateTime"/>
+      <Column Name="PropertyID" DataType="System.Int32"/>
+      <Column Name="Property" DataType="System.String"/>
+      <Column Name="VerType" DataType="System.String"/>
+      <Column Name="LastProcessCode" DataType="System.String"/>
+      <Column Name="LastProcessID" DataType="System.Int32"/>
+      <Column Name="UseStockNumb" DataType="System.Single"/>
+      <Column Name="isBonded" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="InStockLocationType" DataType="System.String"/>
+      <Column Name="PlateCode" DataType="System.String"/>
+      <Column Name="CutPlateCode" DataType="System.String"/>
+      <Column Name="HotPlateCode" DataType="System.String"/>
+      <Column Name="ScreenPlateCode" DataType="System.String"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource1" Alias="Parts" Enabled="false" DataType="System.Collections.Generic.List`1[[MYERP.Framework.MyServiceLogic+PartItem, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="Parts"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource2" Alias="Materials" Enabled="false" DataType="System.Collections.Generic.List`1[[MYERP.Framework.MyServiceLogic+ProduceMaterial, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="Materials"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource3" Alias="Processes" Enabled="false" DataType="System.Collections.Generic.List`1[[MYERP.Framework.MyServiceLogic+ProduceProcess, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="Processes"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource9" Alias="Toghethers" Enabled="false" DataType="System.Collections.Generic.List`1[[MYERP.Framework.MyServiceLogic+ProduceTogether, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="Toghethers"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource10" Alias="DestroyProduct" Enabled="false" DataType="System.Collections.Generic.List`1[[MYERP.Framework.MyServiceLogic+ProduceDestroyProduct, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="DestroyProduct"/>
+    </BusinessObjectDataSource>
+    <Parameter Name="Inputer" DataType="System.String" Description="制表人"/>
+    <Parameter Name="InputDate" DataType="System.DateTime" Description="制表时间"/>
+    <Parameter Name="Checker" DataType="System.String" Description="审核人"/>
+    <Parameter Name="CheckDate" DataType="System.DateTime" Description="审核时间"/>
+    <Parameter Name="Author" DataType="System.String" Description="列印人"/>
+    <Parameter Name="PrintTimes" DataType="System.Int32" Description="列印次数"/>
+    <Parameter Name="StatusWord" DataType="System.String" Description="单据状态"/>
+  </Dictionary>
+  <ReportPage Name="Page1" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" FirstPageSource="4" OtherPagesSource="4">
+    <PageHeaderBand Name="PageHeader1" Width="1047.06" Height="49.7" CanGrow="true">
+      <TextObject Name="Text1" Left="217.35" Width="538.65" Height="28.35" Text="生產進度表" HorzAlign="Center" Font="Bookman Old Style, 20pt"/>
+      <TextObject Name="Text33" Left="59.7" Top="30.8" Width="179.55" Height="17.9" CanGrow="true" Text="[ProduceData.RdsNo]" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text34" Top="34.8" Width="94.5" Height="14.9" Text="工單號：" Font="宋体, 12pt, style=Bold"/>
+      <TextObject Name="Text35" Left="302.85" Top="30.8" Width="179.55" Height="17.9" CanGrow="true" Text="[ProduceData.ProdCode]" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text36" Left="243.15" Top="34.8" Width="94.5" Height="14.9" Text="產品號：" Font="宋体, 12pt, style=Bold"/>
+      <TextObject Name="Text37" Left="522.75" Top="30.8" Width="236.25" Height="17.9" CanGrow="true" Text="[ProduceData.Product.Name]" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text38" Left="472.5" Top="34.8" Width="94.5" Height="14.9" Text="料號：" Font="宋体, 12pt, style=Bold"/>
+      <TextObject Name="Text39" Left="721.3" Top="7.45" Width="311.85" Height="17.9" Text="[ProduceData.StatusWord] [ProduceData.StockStatusWord]" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text40" Left="765.45" Top="34.8" Width="94.5" Height="14.9" Text="版號：" Font="宋体, 12pt, style=Bold"/>
+      <TextObject Name="Text49" Left="609.35" Top="7.45" Width="179.55" Height="17.9" Text="[ProduceData.Property]" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text54" Left="812.7" Top="30.8" Width="179.55" Height="17.9" CanGrow="true" Text="[ProduceData.PlateCode]" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text55" Left="87.5" Top="5" Width="94.5" Height="28.35" Text="[IIf([ProduceData.Product.Secret],&quot;BK&quot;,&quot;&quot;)]" Font="宋体, 18pt"/>
+      <TextObject Name="Text56" Left="157.65" Top="5.45" Width="94.5" Height="28.35" Text="[IIf([ProduceData.isBonded],&quot;保稅&quot;,&quot;&quot;)]" Font="宋体, 18pt"/>
+    </PageHeaderBand>
+    <DataBand Name="Data1" Top="86.05" Width="1047.06" Height="37.8" CanGrow="true" BeforePrintEvent="Data1_BeforePrint" Guides="0" DataSource="Main">
+      <TextObject Name="Text2" Width="44.7" Height="37.8" Visible="false" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.PartID]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text4" Left="44.7" Width="47.25" Height="37.8" Border.Lines="Left, Right, Top" CanGrow="true" GrowToBottom="true" Text="[Main.DepartmentName]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text3" Left="91.95" Width="66.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.ProcessName]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text5" Left="158.1" Width="189" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.MachineName]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <CheckBoxObject Name="CheckBox1" Left="347.1" Width="18.9" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Checked="false" DataColumn="Main.isOut"/>
+      <TextObject Name="Text6" Left="366" Width="60.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.ReqNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text8" Left="426.15" Width="50.7" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.ProduceSettingLossNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text10" Left="476.85" Width="50.7" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.UseStockNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text12" Left="527.55" Width="60.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.PickingNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text14" Left="587.7" Width="60.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.FinishNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text16" Left="647.85" Width="60.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.RejectNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text9" Left="768.15" Width="60.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.DifferentNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text7" Left="708" Width="60.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.LossedNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text13" Left="903.9" Width="68.6" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.Yield]" Format="Percent" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.PercentSymbol="%" Format.PositivePattern="1" Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text31" Left="972.5" Width="68.6" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.FPY]" Format="Percent" Format.UseLocale="true" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text11" Left="828.3" Width="75.6" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Main.RejectCheckNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text57" Width="44.7" Height="37.8" Border.Lines="Left, Right" CanGrow="true" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <DataHeaderBand Name="DataHeader1" Top="53.7" Width="1047.06" Height="28.35">
+        <TextObject Name="Text17" Width="44.7" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="部件" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold"/>
+        <TextObject Name="Text18" Left="44.7" Width="47.25" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="部門" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold"/>
+        <TextObject Name="Text19" Left="91.95" Width="66.15" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="工序" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold"/>
+        <TextObject Name="Text20" Left="158.1" Width="189" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="機臺" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold"/>
+        <TextObject Name="Text21" Left="366" Width="60.15" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="應產數" Format="Number" Format.UseLocale="true" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold" Trimming="EllipsisCharacter"/>
+        <TextObject Name="Text22" Left="426.15" Width="50.7" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="放損數" Format="Number" Format.UseLocale="true" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold" Trimming="EllipsisCharacter"/>
+        <TextObject Name="Text23" Left="476.85" Width="50.7" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="殘頁數" Format="Number" Format.UseLocale="true" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold" Trimming="EllipsisCharacter"/>
+        <TextObject Name="Text24" Left="527.55" Width="60.15" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="領料數" Format="Number" Format.UseLocale="true" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold" Trimming="EllipsisCharacter"/>
+        <TextObject Name="Text25" Left="587.7" Width="60.15" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="完工數" Format="Number" Format.UseLocale="true" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold" Trimming="EllipsisCharacter"/>
+        <TextObject Name="Text26" Left="647.85" Width="60.15" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="不良數" Format="Number" Format.UseLocale="true" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold" Trimming="EllipsisCharacter"/>
+        <TextObject Name="Text28" Left="768.15" Width="60.15" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="差異數" Format="Number" Format.UseLocale="true" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold" Trimming="EllipsisCharacter"/>
+        <TextObject Name="Text30" Left="347.1" Width="18.9" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="發外" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold"/>
+        <TextObject Name="Text27" Left="708" Width="60.15" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="損耗數" Format="Number" Format.UseLocale="true" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold" Trimming="EllipsisCharacter"/>
+        <TextObject Name="Text15" Left="903.9" Width="68.6" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="良品率" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold"/>
+        <TextObject Name="Text32" Left="972.5" Width="68.6" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="直通率" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold"/>
+        <TextObject Name="Text29" Left="828.3" Width="75.6" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="不良判定數" Format="Number" Format.UseLocale="true" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt, style=Bold" Trimming="EllipsisCharacter"/>
+      </DataHeaderBand>
+      <DataFooterBand Name="DataFooter1" Top="127.85" Width="1047.06" Height="47.25">
+        <TextObject Name="Text41" Left="69.15" Top="2.55" Width="179.55" Height="17.9" Text="[ProduceData.InputDate]" Format="Custom" Format.Format="yy.MM.dd HH:mm" Font="Bookman Old Style, 10pt"/>
+        <TextObject Name="Text44" Left="277.05" Top="2.55" Width="179.55" Height="17.9" Text="[ProduceData.InputDate]" Format="Custom" Format.Format="yy.MM.dd HH:mm" Font="Bookman Old Style, 10pt"/>
+        <TextObject Name="Text46" Left="503.85" Top="2.55" Width="179.55" Height="17.9" Text="[ProduceData.FinishDate]" Format="Custom" Format.Format="yy.MM.dd HH:mm" Font="Bookman Old Style, 10pt"/>
+        <TextObject Name="Text48" Left="711.75" Top="2.55" Width="179.55" Height="17.9" Text="[ProduceData.StockFinishDate]" Format="Custom" Format.Format="yy.MM.dd HH:mm" Font="Bookman Old Style, 10pt"/>
+        <TextObject Name="Text47" Left="652.05" Top="6.55" Width="94.5" Height="14.9" Text="入庫完成：" Font="宋体, 10pt"/>
+        <TextObject Name="Text42" Left="9.45" Top="6.55" Width="94.5" Height="14.9" Text="開單日期：" Font="宋体, 10pt"/>
+        <TextObject Name="Text43" Left="217.35" Top="6.55" Width="94.5" Height="14.9" Text="審核日期：" Font="宋体, 10pt"/>
+        <TextObject Name="Text45" Left="444.15" Top="6.55" Width="94.5" Height="14.9" Text="生產完成：" Font="宋体, 10pt"/>
+        <TextObject Name="Text51" Left="69.15" Top="22.45" Width="94.5" Height="14.9" Text="[ProduceData.Inputer]" Font="宋体, 10pt"/>
+        <TextObject Name="Text53" Left="277.05" Top="21.45" Width="94.5" Height="14.9" Text="[ProduceData.Checker]" Font="宋体, 10pt"/>
+        <TextObject Name="Text50" Left="9.45" Top="24.45" Width="94.5" Height="14.9" Text="開單人：" Font="宋体, 10pt"/>
+        <TextObject Name="Text52" Left="217.35" Top="23.45" Width="94.5" Height="14.9" Text="審核人：" Font="宋体, 10pt"/>
+        <TextObject Name="Text58" Width="926.1" Height="18.9" Border.Lines="Top" Font="宋体, 9pt"/>
+      </DataFooterBand>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="179.1" Width="1047.06" Height="20.45"/>
+  </ReportPage>
+</Report>

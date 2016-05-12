@@ -1,0 +1,253 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="07/08/2015 17:35:29" ReportInfo.Modified="04/12/2016 17:37:45" ReportInfo.CreatorVersion="2013.2.2.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+
+    private void Data1_BeforePrint(object sender, EventArgs e)
+    {
+      Data2.Visible = true;
+      Data5.Visible= true;
+      DataHeader1.Visible = true ;
+      Data4.Visible = true ;
+      if (((String)Report.GetColumnValue(&quot;MAIN.TypeCode&quot;))==&quot;1115&quot;)
+      {
+        Data2.Visible = false;
+        Data5.Visible = false;
+      }
+      else if(((String)Report.GetColumnValue(&quot;MAIN.TypeCode&quot;))==&quot;118&quot; &amp;&amp; 
+        (((String)Report.GetColumnValue(&quot;MAIN.CoverPagePaperName&quot;)) + ((String)Report.GetColumnValue(&quot;MAIN.InsidePagePaperName&quot;))).Length&lt;=0)
+      {
+        Data2.Visible = false;
+        Data5.Visible = false;
+      }
+      else 
+      {
+        DataHeader1.Visible = false ;
+        Data4.Visible = false ;
+      }
+      
+      if(((String)Report.GetColumnValue(&quot;MAIN.CutPlateCode&quot;)).Length &gt; 21)
+      {
+         Text74.Font=new Font(FontFamily.GenericSansSerif,11,FontStyle.Regular);
+      }
+      else if(((String)Report.GetColumnValue(&quot;MAIN.CutPlateCode&quot;)).Length &gt; 11)
+      {
+         Text74.Font=new Font(FontFamily.GenericSansSerif,20,FontStyle.Regular);
+      }
+      else
+      {
+         Text74.Font=new Font(FontFamily.GenericSansSerif,40,FontStyle.Regular);
+      }
+      
+      if(((String)Report.GetColumnValue(&quot;MAIN.PlateCode&quot;)).Length &gt; 21)
+      {
+        Text62.Font=new Font(FontFamily.GenericSansSerif,11,FontStyle.Regular);
+      }
+      else if(((String)Report.GetColumnValue(&quot;MAIN.PlateCode&quot;)).Length &gt; 11)
+      {
+        Text62.Font=new Font(FontFamily.GenericSansSerif,20,FontStyle.Regular);
+      }
+      else
+      {
+        Text62.Font=new Font(FontFamily.GenericSansSerif ,48,FontStyle.Regular);
+      }
+      
+      if(((String)Report.GetColumnValue(&quot;MAIN.ScreenPlateCode&quot;)).Length &gt; 21)
+      {
+        Text84.Font=new Font(FontFamily.GenericSansSerif,11,FontStyle.Regular);
+      }
+      else if(((String)Report.GetColumnValue(&quot;MAIN.ScreenPlateCode&quot;)).Length &gt; 11)
+      {
+        Text84.Font=new Font(FontFamily.GenericSansSerif,20,FontStyle.Regular);
+      }
+      else 
+      {
+        Text84.Font=new Font(FontFamily.GenericSansSerif,46,FontStyle.Regular);
+      }
+      
+      if ( ((String)Report.GetColumnValue(&quot;MAIN.ColorSTD&quot;)).Length &lt;=0)
+      {
+        Text105.Visible = false ;
+      }
+      else 
+      {
+        Text105.Visible = true;
+      }
+    }
+  }
+}
+</ScriptText>
+  <Dictionary>
+    <BusinessObjectDataSource Name="MAIN" ReferenceName="MAIN" DataType="System.Collections.Generic.List`1[[MYERP.SubModule.pub_Product_Bom+ProductFolder, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+      <Column Name="CustCode" DataType="System.String"/>
+      <Column Name="Checker" DataType="System.String"/>
+      <Column Name="CheckDate" DataType="System.DateTime"/>
+      <Column Name="TypeCode" DataType="System.String"/>
+      <Column Name="Code" DataType="System.String"/>
+      <Column Name="Name" DataType="System.String"/>
+      <Column Name="Size" DataType="System.String"/>
+      <Column Name="ProdTypeName" DataType="System.String"/>
+      <Column Name="PlateCode" DataType="System.String"/>
+      <Column Name="CutPlateCode" DataType="System.String"/>
+      <Column Name="Gloss" DataType="System.String"/>
+      <Column Name="CoverPageColor" DataType="System.String"/>
+      <Column Name="InsidePageColor" DataType="System.String"/>
+      <Column Name="CoverPageSize" DataType="System.String"/>
+      <Column Name="InsidePageSize" DataType="System.String"/>
+      <Column Name="CoverPagePaperName" DataType="System.String"/>
+      <Column Name="InsidePagePaperName" DataType="System.String"/>
+      <Column Name="CoverType" DataType="System.Int32"/>
+      <Column Name="InsideType" DataType="System.Int32"/>
+      <Column Name="ColorSTD" DataType="System.String"/>
+      <BusinessObjectDataSource Name="MaterialList" DataType="System.Collections.Generic.List`1[[MYERP.SubModule.pub_Product_Bom+ProductFolderMaterialItem, MYERP, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+        <Column Name="Code" DataType="System.String"/>
+        <Column Name="Name" DataType="System.String"/>
+        <Column Name="Numb" DataType="System.Int32"/>
+        <Column Name="Memo" DataType="System.String"/>
+      </BusinessObjectDataSource>
+      <Column Name="ScreenPlateCode" DataType="System.String"/>
+    </BusinessObjectDataSource>
+    <Parameter Name="Inputer" DataType="System.String" Description="制表人"/>
+    <Parameter Name="InputDate" DataType="System.DateTime" Description="制表时间"/>
+    <Parameter Name="Checker" DataType="System.String" Description="审核人"/>
+    <Parameter Name="CheckDate" DataType="System.DateTime" Description="审核时间"/>
+    <Parameter Name="Author" DataType="System.String" Description="列印人"/>
+    <Parameter Name="PrintTimes" DataType="System.Int32" Description="列印次数"/>
+    <Parameter Name="StatusWord" DataType="System.String" Description="单据状态"/>
+  </Dictionary>
+  <ReportPage Name="Page1" RawPaperSize="9" LeftMargin="5" TopMargin="8" RightMargin="5" BottomMargin="5" FirstPageSource="4" OtherPagesSource="4">
+    <DataBand Name="Data1" Width="756" Height="233.92" BeforePrintEvent="Data1_BeforePrint" DataSource="MAIN">
+      <TextObject Name="Text89" Left="75.6" Top="175.55" Width="679.51" Height="58.37" Border.Lines="Right, Top, Bottom" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text79" Left="508.93" Top="116.85" Width="246.36" Height="58.37" Border.Lines="Right, Top, Bottom" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text70" Left="431.57" Width="74.71" Height="58.37" Border.Lines="Left, Top, Bottom" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text69" Left="507.18" Width="248.36" Height="58.37" Border.Lines="Right, Top, Bottom" Border.Width="2" CanBreak="false" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text77" Left="506.28" Top="58.15" Width="249.26" Height="58.37" Border.Lines="Right, Top, Bottom" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text78" Left="431.57" Top="58.15" Width="72.71" Height="58.37" Border.Lines="Left, Top, Bottom" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text68" Left="74.36" Width="357.21" Height="58.37" Border.Lines="Right, Top, Bottom" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text2" Left="501.75" Width="221.13" Height="58.37" CanBreak="false" Text="[MAIN.CustCode]" VertAlign="Center" Font="Bookman Old Style, 28pt"/>
+      <TextObject Name="Text5" Left="481.63" Top="65.6" Width="269.35" Height="48.25" CanBreak="false" Text="[MAIN.Code]" VertAlign="Center" Font="Bookman Old Style, 20pt, style=Bold"/>
+      <TextObject Name="Text6" Width="73.71" Height="58.37" Border.Lines="Left, Top, Bottom" Border.Width="2" CanBreak="false" VertAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text7" Left="531.75" Top="121.4" Width="213.9" Height="54.15" CanBreak="false" Text="[MAIN.Size]" VertAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text11" Left="87.05" Top="184" Width="680.4" Height="47.25" CanBreak="false" Text="[MAIN.Name]" Font="Bookman Old Style, 28pt"/>
+      <TextObject Name="Text62" Left="68.6" Top="-4" Width="361.66" Height="61.37" CanBreak="false" Text="[MAIN.PlateCode]" HorzAlign="Center" Font="Microsoft Sans Serif, 48pt"/>
+      <TextObject Name="Text1" Left="431.25" Top="17.9" Width="85.05" Height="31.35" Text="客戶：" VertAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text67" Left="9.45" Top="18.9" Width="85.05" Height="28.35" Text="版號：" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text71" Left="74.36" Top="58.15" Width="357.21" Height="58.37" Border.Lines="Right, Top, Bottom" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text73" Top="58.15" Width="73.71" Height="58.37" Border.Lines="Left, Top, Bottom" Border.Width="2" CanBreak="false" VertAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text74" Left="66.71" Top="59.15" Width="361.66" Height="58.37" CanBreak="false" Text="[MAIN.CutPlateCode]" HorzAlign="Center" Font="Microsoft Sans Serif, 40pt"/>
+      <TextObject Name="Text75" Left="431.25" Top="76.05" Width="85.05" Height="31.35" Text="編號：" VertAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text76" Left="-0.65" Top="77.05" Width="113.4" Height="28.35" Text="刀模號：" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text80" Left="431.22" Top="116.85" Width="70.71" Height="58.37" Border.Lines="Left, Top, Bottom" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text82" Left="74.36" Top="116.85" Width="357.21" Height="58.37" Border.Lines="Right, Top, Bottom" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text83" Top="116.85" Width="73.71" Height="58.37" Border.Lines="Left, Top, Bottom" Border.Width="2" CanBreak="false" VertAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text84" Left="67.36" Top="114.85" Width="361.66" Height="59.82" CanBreak="false" Text="[MAIN.ScreenPlateCode]" HorzAlign="Center" Font="Microsoft Sans Serif, 46pt"/>
+      <TextObject Name="Text85" Left="431.25" Top="134.75" Width="132.3" Height="31.35" Text="成品尺寸：" VertAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text86" Top="135.75" Width="113.4" Height="28.35" Text="網版號：" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text87" Left="9.45" Top="194.45" Width="113.4" Height="28.35" Text="料號：" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text88" Top="175.55" Width="73.71" Height="58.37" Border.Lines="Left, Top, Bottom" Border.Width="2" CanBreak="false" VertAlign="Center" Font="Bookman Old Style, 14pt"/>
+    </DataBand>
+    <DataBand Name="Data5" Top="237.92" Width="756" Height="255.05" DataSource="MAIN">
+      <TextObject Name="Text90" Top="-0.55" Width="755.66" Height="254.82" Border.Lines="All" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text58" Left="113.3" Top="203.35" Width="617.25" Height="42.25" CanBreak="false" Text="[MAIN.Gloss]" AutoShrink="FontSize" AutoShrinkMinSize="12" Font="Bookman Old Style, 20pt, style=Bold"/>
+      <TextObject Name="Text34" Left="3.45" Top="201.8" Width="132.3" Height="37.8" CanBreak="false" Text="表面處理：" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text46" Left="37.8" Top="115.6" Width="680.4" Height="75.6" Text="[MAIN.InsidePageColor]" Font="宋体, 22pt, style=Bold"/>
+      <TextObject Name="Text37" Left="37.8" Top="40.25" Width="680.4" Height="75.6" Text="[MAIN.CoverPageColor]" Font="宋体, 22pt, style=Bold"/>
+      <TextObject Name="Text59" Left="3.45" Top="9.35" Width="94.5" Height="28.35" Text="印刷：" Font="Bookman Old Style, 16pt"/>
+    </DataBand>
+    <DataBand Name="Data6" Top="496.97" Width="756" Height="161.77" DataSource="MAIN">
+      <TextObject Name="Text91" Top="-0.55" Width="755.56" Height="162.32" Border.Lines="All" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text52" Left="242.69" Top="120.25" Width="30.24" Height="30.24" Border.Lines="All" Border.Width="2" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text102" Left="17" Top="120.25" Width="30.24" Height="30.24" Border.Lines="All" Border.Width="2" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text103" Left="51.25" Top="121.2" Width="94.5" Height="28.35" Text="標準樣" VertAlign="Center" Font="Microsoft Sans Serif, 16pt"/>
+      <TextObject Name="Text104" Left="481.17" Top="121.2" Width="94.5" Height="28.35" Text="其他" VertAlign="Center" Font="Microsoft Sans Serif, 16pt"/>
+      <TextObject Name="Text53" Left="272.94" Top="111.75" Width="94.5" Height="47.25" Text="數位樣" VertAlign="Center" Font="Microsoft Sans Serif, 16pt"/>
+      <TextObject Name="Text97" Left="51.25" Top="79.03" Width="94.5" Height="28.35" Text="刀模圖" VertAlign="Center" Font="Microsoft Sans Serif, 16pt"/>
+      <TextObject Name="Text99" Left="272.94" Top="79.03" Width="94.5" Height="28.35" Text="貼膠圖" VertAlign="Center" Font="Microsoft Sans Serif, 16pt"/>
+      <TextObject Name="Text101" Left="481.17" Top="79.03" Width="94.5" Height="28.35" Text="UV圖" VertAlign="Center" Font="Microsoft Sans Serif, 16pt"/>
+      <TextObject Name="Text96" Left="17" Top="78.08" Width="30.24" Height="30.24" Border.Lines="All" Border.Width="2" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text98" Left="242.69" Top="78.08" Width="30.24" Height="30.24" Border.Lines="All" Border.Width="2" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text100" Left="449.37" Top="78.08" Width="30.24" Height="30.24" Border.Lines="All" Border.Width="2" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text49" Left="51.25" Top="36.84" Width="141.75" Height="28.35" Text="印件資料表" VertAlign="Center" Font="Microsoft Sans Serif, 16pt"/>
+      <TextObject Name="Text51" Left="272.94" Top="36.84" Width="132.3" Height="28.35" Text="產品履歷表" VertAlign="Center" Font="Microsoft Sans Serif, 16pt"/>
+      <TextObject Name="Text95" Left="481.17" Top="36.84" Width="160.65" Height="28.35" Text="印刷打樣首件" VertAlign="Center" Font="Microsoft Sans Serif, 16pt"/>
+      <TextObject Name="Text48" Left="17" Top="35.9" Width="30.24" Height="30.24" Border.Lines="All" Border.Width="2" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text50" Left="242.69" Top="35.9" Width="30.24" Height="30.24" Border.Lines="All" Border.Width="2" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text94" Left="449.37" Top="35.9" Width="30.24" Height="30.24" Border.Lines="All" Border.Width="2" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text60" Left="9.45" Top="9.8" Width="94.5" Height="28.35" Text="附件：" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text121" Left="449.37" Top="120.25" Width="30.24" Height="30.24" Border.Lines="All" Border.Width="2" VertAlign="Center" Font="宋体, 9pt"/>
+    </DataBand>
+    <DataBand Name="Data2" Top="662.74" Width="756" Height="249.6" BeforePrintEvent="Data2_BeforePrint" DataSource="MAIN">
+      <TextObject Name="Text24" Top="124.75" Width="105.84" Height="124.74" Border.Lines="All" Border.Width="2" CanBreak="false" VertAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text25" Left="105.84" Width="272.27" Height="124.74" Border.Lines="Left, Top, Bottom" Border.Width="2" CanBreak="false" VertAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text92" Left="484.4" Width="270.61" Height="124.74" Border.Lines="All" Border.Width="2" CanBreak="false" VertAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text20" Left="381.9" Top="192.9" Width="66.15" Height="56.7" CanBreak="false" Text="内頁&#13;&#10;尺寸" HorzAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text28" Left="-7" Top="192.9" Width="66.15" Height="56.7" CanBreak="false" Text="内頁&#13;&#10;用紙" HorzAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text42" Left="56.42" Top="192.9" Width="37.8" Height="28.35" Text="[IIf([MAIN.InsideType]==1,&quot;&quot;,&quot;&quot;)]" HorzAlign="Center" VertAlign="Center" Font="Wingdings, 20pt"/>
+      <TextObject Name="Text44" Left="445.32" Top="192.9" Width="37.8" Height="28.35" Text="[IIf([MAIN.InsideType]==1,&quot;&quot;,&quot;&quot;)]" HorzAlign="Center" VertAlign="Center" Font="Wingdings, 20pt"/>
+      <TextObject Name="Text19" Left="367.73" Top="144.65" Width="94.5" Height="37.8" CanBreak="false" Text="底紙" HorzAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text27" Left="-21.17" Top="144.65" Width="94.5" Height="37.8" CanBreak="false" Text="底紙" HorzAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text43" Left="56.42" Top="144.65" Width="37.8" Height="28.35" Text="[IIf([MAIN.InsideType]==2,&quot;&quot;,&quot;&quot;)]" HorzAlign="Center" VertAlign="Center" Font="Wingdings, 20pt"/>
+      <TextObject Name="Text45" Left="445.32" Top="144.65" Width="37.8" Height="28.35" Text="[IIf([MAIN.InsideType]==2,&quot;&quot;,&quot;&quot;)]" HorzAlign="Center" VertAlign="Center" Font="Wingdings, 20pt"/>
+      <TextObject Name="Text16" Left="378.56" Top="124.75" Width="105.84" Height="124.74" Border.Lines="All" Border.Width="2" CanBreak="false" VertAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text18" Left="484.4" Top="124.75" Width="270.61" Height="124.74" Border.Lines="All" Border.Width="2" CanBreak="false" VertAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text26" Left="105.84" Top="124.75" Width="272.27" Height="124.74" Border.Lines="Left, Top, Bottom" Border.Width="2" CanBreak="false" VertAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text55" Left="491.85" Top="134.2" Width="198.45" Height="94.5" CanBreak="false" Text="[MAIN.InsidePageSize]" VertAlign="Center" Font="Bookman Old Style, 18pt"/>
+      <TextObject Name="Text57" Left="102.95" Top="134.2" Width="274.05" Height="94.5" CanBreak="false" Text="[MAIN.InsidePagePaperName]" VertAlign="Center" Font="Bookman Old Style, 18pt"/>
+      <TextObject Name="Text38" Left="445.32" Top="67.15" Width="37.8" Height="28.35" Text="[IIf([MAIN.CoverType]==1,&quot;&quot;,&quot;&quot;)]" HorzAlign="Center" VertAlign="Center" Font="Wingdings, 20pt"/>
+      <TextObject Name="Text39" Left="56.42" Top="67.15" Width="37.8" Height="28.35" Text="[IIf([MAIN.CoverType]==1,&quot;&quot;,&quot;&quot;)]" HorzAlign="Center" VertAlign="Center" Font="Wingdings, 20pt"/>
+      <TextObject Name="Text22" Left="381.9" Top="57.25" Width="66.15" Height="56.7" CanBreak="false" Text="封面&#13;&#10;尺寸" HorzAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text30" Left="-7" Top="57.25" Width="66.15" Height="56.7" CanBreak="false" Text="封面&#13;&#10;用紙" HorzAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text21" Left="367.73" Top="18.45" Width="94.5" Height="37.8" CanBreak="false" Text="面紙" HorzAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text29" Left="-21.17" Top="18.45" Width="94.5" Height="37.8" CanBreak="false" Text="面紙" HorzAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text40" Left="445.32" Top="16.45" Width="37.8" Height="28.35" Text="[IIf([MAIN.CoverType]==2,&quot;&quot;,&quot;&quot;)]" HorzAlign="Center" VertAlign="Center" Font="Wingdings, 20pt"/>
+      <TextObject Name="Text41" Left="56.42" Top="16.45" Width="37.8" Height="28.35" Text="[IIf([MAIN.CoverType]==2,&quot;&quot;,&quot;&quot;)]" HorzAlign="Center" VertAlign="Center" Font="Wingdings, 20pt"/>
+      <TextObject Name="Text54" Left="491.85" Top="9.9" Width="198.45" Height="85.05" CanBreak="false" Text="[MAIN.CoverPageSize]" VertAlign="Center" Font="Bookman Old Style, 18pt"/>
+      <TextObject Name="Text56" Left="103.95" Top="9.9" Width="274.05" Height="94.5" CanBreak="false" Text="[MAIN.CoverPagePaperName]" VertAlign="Center" Font="Bookman Old Style, 18pt"/>
+      <TextObject Name="Text23" Width="105.84" Height="124.74" Border.Lines="All" Border.Width="2" CanBreak="false" VertAlign="Center" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text13" Left="378.56" Width="105.84" Height="124.74" Border.Lines="All" Border.Width="2" CanBreak="false" HorzAlign="Center" VertAlign="Center" Font="Bookman Old Style, 16pt"/>
+    </DataBand>
+    <DataBand Name="Data4" Top="958.81" Width="756" Height="38.47" Visible="false" DataSource="MaterialList">
+      <TextObject Name="Text120" Left="515.97" Width="239.14" Height="38.47" Border.Lines="All" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text119" Left="429.03" Width="86.94" Height="38.47" Border.Lines="All" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text118" Left="162.54" Width="266.49" Height="38.47" Border.Lines="All" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text117" Width="162.54" Height="38.47" Border.Lines="All" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text3" Left="4.17" Top="4.45" Width="154.2" Height="31.35" Text="[MAIN.MaterialList.Code]" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 12pt"/>
+      <TextObject Name="Text106" Left="165.1" Top="4.45" Width="255.15" Height="31.35" Text="[MAIN.MaterialList.Name]" VertAlign="Center" Font="MS Reference Sans Serif, 12pt"/>
+      <TextObject Name="Text107" Left="438.15" Top="4.45" Width="70.5" Height="31.35" Text="[MAIN.MaterialList.Numb]" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 12pt"/>
+      <TextObject Name="Text108" Left="519.75" Top="4.45" Width="231.25" Height="31.35" Text="[MAIN.MaterialList.Memo]" VertAlign="Center" Font="MS Reference Sans Serif, 12pt"/>
+      <DataHeaderBand Name="DataHeader1" Top="916.34" Width="756" Height="38.47" Visible="false">
+        <TextObject Name="Text116" Left="515.97" Width="239.14" Height="38.47" Border.Lines="All" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+        <TextObject Name="Text115" Left="429.03" Width="86.94" Height="38.47" Border.Lines="All" Border.Width="2" CanBreak="false" HorzAlign="Center" VertAlign="Center" Font="Bookman Old Style, 14pt"/>
+        <TextObject Name="Text114" Left="162.54" Width="266.49" Height="38.47" Border.Lines="All" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+        <TextObject Name="Text113" Width="162.54" Height="38.47" Border.Lines="All" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+        <TextObject Name="Text109" Left="15.12" Top="9.45" Width="132.3" Height="18.9" Text="半成品編號" HorzAlign="Center" Font="MS Reference Sans Serif, 12pt"/>
+        <TextObject Name="Text110" Left="229.63" Top="9.45" Width="132.3" Height="18.9" Text="半成品料號" HorzAlign="Center" Font="MS Reference Sans Serif, 12pt"/>
+        <TextObject Name="Text111" Left="434.7" Top="9.45" Width="75.6" Height="18.9" Text="用量" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 12pt"/>
+        <TextObject Name="Text112" Left="523.2" Top="9.45" Width="94.5" Height="18.9" Text="説明" Font="MS Reference Sans Serif, 12pt"/>
+      </DataHeaderBand>
+    </DataBand>
+    <DataBand Name="Data3" Top="1001.28" Width="756" Height="142.42" DataSource="MAIN">
+      <TextObject Name="Text93" Width="755.11" Height="142.42" Border.Lines="All" Border.Width="2" CanBreak="false" HorzAlign="Center" Font="Bookman Old Style, 14pt"/>
+      <TextObject Name="Text61" Left="9.45" Top="29.8" Width="94.5" Height="28.35" Text="備注：" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text47" Left="103.95" Top="28.35" Width="321.3" Height="56.7" Text="[MAIN.ProdTypeName]" Font="宋体, 18pt"/>
+      <TextObject Name="Text105" Left="5" Top="94.5" Width="743.55" Height="45.25" Text="颜色标准：[MAIN.ColorSTD]" VertAlign="Center" Font="宋体, 18pt"/>
+      <BarcodeObject Name="Barcode1" Left="511.75" Top="9.45" Width="183.8" Height="85.05" AutoSize="false" DataColumn="MAIN.PlateCode" Text="18212" Barcode="Code128" Barcode.AutoEncode="true"/>
+    </DataBand>
+  </ReportPage>
+</Report>

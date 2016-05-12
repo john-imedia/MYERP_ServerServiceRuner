@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="11/01/2013 19:44:28" ReportInfo.Modified="03/30/2016 11:52:52" ReportInfo.CreatorVersion="2013.2.2.0">
+  <Dictionary>
+    <TableDataSource Name="Master" ReferenceName="Master" DataType="System.Int32" Enabled="true">
+      <Column Name="ID" DataType="System.Int32"/>
+      <Column Name="_ID" DataType="System.Int32"/>
+      <Column Name="GUID" DataType="System.Guid"/>
+      <Column Name="InputDate" DataType="System.DateTime"/>
+      <Column Name="Inputer" DataType="System.String"/>
+      <Column Name="CheckDate" DataType="System.DateTime"/>
+      <Column Name="Checker" DataType="System.String"/>
+      <Column Name="DeptID" DataType="System.Int32"/>
+      <Column Name="StockDate" DataType="System.DateTime"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="RdsNo" DataType="System.String"/>
+      <Column Name="Status" DataType="System.Int16"/>
+      <Column Name="DeptName" DataType="System.String"/>
+      <Column Name="InBonded" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="ManualNo" DataType="System.String"/>
+      <Column Name="Secret" DataType="System.Boolean" BindableControl="CheckBox"/>
+    </TableDataSource>
+    <TableDataSource Name="Detial" ReferenceName="Detial" DataType="System.Int32" Enabled="true">
+      <Column Name="_ID" DataType="System.Int32"/>
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="IPQC_List_ID" DataType="System.Int32"/>
+      <Column Name="ProduceRdsNo" DataType="System.String"/>
+      <Column Name="Produce_ID" DataType="System.Int32"/>
+      <Column Name="ProdCode" DataType="System.String"/>
+      <Column Name="ProcessCode" DataType="System.String"/>
+      <Column Name="PartID" DataType="System.String"/>
+      <Column Name="PrdID" DataType="System.Int32"/>
+      <Column Name="ProdDailyReport_ID" DataType="System.Int32"/>
+      <Column Name="MachineCode" DataType="System.String"/>
+      <Column Name="Number" DataType="System.Decimal"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="ResolutionID" DataType="System.Int32"/>
+      <Column Name="ProjID" DataType="System.Int32"/>
+      <Column Name="RejectRdsNo" DataType="System.String"/>
+      <Column Name="FinishRdsNo" DataType="System.String"/>
+      <Column Name="Operator" DataType="System.String"/>
+      <Column Name="CustID" DataType="System.String"/>
+      <Column Name="PaperCode" DataType="System.String"/>
+      <Column Name="Scrap_ID" DataType="System.Int32"/>
+      <Column Name="GUID" DataType="System.Guid"/>
+      <Column Name="PaperName" DataType="System.String"/>
+      <Column Name="ProdName" DataType="System.String"/>
+      <Column Name="ProcessName" DataType="System.String"/>
+      <Column Name="MachineName" DataType="System.String"/>
+      <Column Name="ResolutionName" DataType="System.String"/>
+      <Column Name="ProjectName" DataType="System.String"/>
+      <Column Name="pw" DataType="System.Decimal"/>
+      <Column Name="gwt" DataType="System.Decimal"/>
+      <Column Name="ReceiptRdsNo" DataType="System.String"/>
+      <Column Name="ReceiptDate" DataType="System.DateTime"/>
+      <Column Name="RejColNumb" DataType="System.Int32"/>
+      <Column Name="PaperColNumb" DataType="System.Int32"/>
+      <Column Name="PaperSize" DataType="System.String"/>
+      <Column Name="inBonded" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="AssignToDepartmentID" DataType="System.Int32"/>
+      <Column Name="AssignToProcessCode" DataType="System.String"/>
+      <Column Name="inBondedWord" DataType="System.String"/>
+      <Column Name="AssignToDepartment" DataType="System.String"/>
+      <Column Name="AssignToProcessName" DataType="System.String"/>
+      <Column Name="QCEditor" DataType="System.String"/>
+      <Column Name="QCEditDate" DataType="System.DateTime"/>
+      <Column Name="Editor" DataType="System.String"/>
+      <Column Name="EditDate" DataType="System.DateTime"/>
+      <Column Name="CustName" DataType="System.String"/>
+    </TableDataSource>
+    <Parameter Name="Inputer" DataType="System.String" Description="制表人"/>
+    <Parameter Name="InputDate" DataType="System.DateTime" Description="制表时间"/>
+    <Parameter Name="Checker" DataType="System.String" Description="审核人"/>
+    <Parameter Name="CheckDate" DataType="System.DateTime" Description="审核时间"/>
+    <Parameter Name="Author" DataType="System.String" Description="列印人"/>
+    <Parameter Name="PrintTimes" DataType="System.Int32" Description="列印次数"/>
+    <Parameter Name="StatusWord" DataType="System.String" Description="单据状态"/>
+    <Total Name="SumGwt" Expression="[Detial.gwt]" Evaluator="Data2"/>
+  </Dictionary>
+  <ReportPage Name="Page1" RawPaperSize="9" FirstPageSource="15" OtherPagesSource="15">
+    <PageHeaderBand Name="PageHeader1" Width="718.2" Height="148.53">
+      <TextObject Name="Text3" Left="7.69" Top="113.98" Width="383.13" Height="13.23" Text="2，□改版報廢   3，□客退報廢    4，□呆滯料報廢" Format="Date" Format.Format="D" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text8" Left="459.1" Top="36.76" Width="55.95" Height="19.18" Text="編號：" Font="SimSun-ExtB, 11pt"/>
+      <TextObject Name="Text5" Left="519.95" Top="34.36" Width="117.6" Height="21.58" Border.Lines="Bottom" Text="[Master.RdsNo]" HorzAlign="Center" Font="SimSun-ExtB, 14pt, style=Bold"/>
+      <TextObject Name="Text7" Left="192.78" Top="19.48" Width="302.4" Height="41.58" Text="報 廢 申 請 單" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 16pt"/>
+      <TextObject Name="Text9" Left="516" Top="74.84" Width="168.5" Height="18.9" Text="[Master.StockDate]" Format="Date" Format.Format="D" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text17" Left="421.54" Top="74.84" Width="94.5" Height="18.9" Text="報廢日期：" HorzAlign="Right" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text11" Left="59.2" Top="46.25" Width="94.5" Height="30.9" Text="[IIf([Master.InBonded],&quot;保稅&quot;,&quot;非稅&quot;)]" Font="SimSun-ExtB, 10pt, style=Bold"/>
+      <TextObject Name="Text27" Left="21.39" Top="18.14" Width="151.2" Height="18.9" Text="組織碼：[Master.DeptName]" VertAlign="Bottom" Font="SimSun-ExtB, 10pt"/>
+      <TextObject Name="Text40" Left="7.69" Top="71.96" Width="367.6" Height="18" Text="報廢種類：（在相對應的項目方框上打勾“√”）" VertAlign="Bottom" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text52" Left="192.78" Top="-6" Width="302.4" Height="41.58" Text="明泰彩色包裝印刷有限公司" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 16pt"/>
+      <TextObject Name="Text53" Left="7.69" Top="94.5" Width="566.05" Height="18" Text="1，製程報廢：(1)□印刷不合格報廢   (2)□後制不合格報廢   (3)□校車紙報廢   (4)□其他" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text1" Left="639.25" Top="0.45" Width="66.15" Height="18.9" Text="[IIf([Page]&gt;1,&quot;續上頁&quot;,&quot;首頁&quot;)]" HorzAlign="Center" Font="SimSun-ExtB, 9pt"/>
+    </PageHeaderBand>
+    <DataBand Name="Data2" Top="226.57" Width="718.2" Height="30.24" DataSource="Detial">
+      <TextObject Name="Text6" Left="0.06" Width="64.61" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.CustID]" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text14" Left="200.75" Width="55.38" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.DeclaretionName]" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text13" Left="64.67" Width="136.08" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.ProdName][IIf(Length([Detial.PartID])&gt;0,&quot;/&quot;+[Detial.PartID],&quot;&quot;)]" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text15" Left="256.13" Width="60.16" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.ProjectName]" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text18" Left="470.45" Width="71.15" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.ProduceRdsNo]" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text19" Left="316.29" Width="56.16" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.Number]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text20" Left="372.45" Width="50.28" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[[Detial.pw]/1000]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="4" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text21" Left="422.73" Width="47.72" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.gwt]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="4" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text50" Left="614.07" Width="103.59" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.CustName]" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 7pt"/>
+      <TextObject Name="Text12" Left="541.6" Width="72.47" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.ReceiptRdsNo]" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      <DataHeaderBand Name="DataHeader1" Top="152.53" Width="718.2" Height="70.04" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true">
+        <TextObject Name="Text28" Left="200.75" Top="0.62" Width="55.38" Height="30.24" Border.Lines="All" CanGrow="true" Text="類型" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text29" Left="64.67" Top="0.62" Width="136.08" Height="30.24" Border.Lines="All" CanGrow="true" Text="料號/臺號" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text30" Left="256.13" Top="0.62" Width="60.16" Height="30.24" Border.Lines="All" CanGrow="true" Text="報廢原因" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text32" Left="469.98" Top="0.62" Width="72.15" Height="30.24" Border.Lines="All" CanGrow="true" Text="對應單號" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text33" Left="316.29" Top="0.62" Width="56.16" Height="30.24" Border.Lines="All" CanGrow="true" Text="數量" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" WordWrap="false" Font="SimSun-ExtB, 9pt" Trimming="EllipsisCharacter"/>
+        <TextObject Name="Text35" Left="372.45" Top="0.62" Width="97.53" Height="30.24" Border.Lines="All" CanGrow="true" Text="單重(kg)" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" WordWrap="false" Font="SimSun-ExtB, 9pt" Trimming="EllipsisCharacter"/>
+        <TextObject Name="Text51" Left="613.6" Top="0.62" Width="104.59" Height="30.24" Border.Lines="All" CanGrow="true" Text="備註說明" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text26" Left="542.13" Top="0.62" Width="71.47" Height="30.24" Border.Lines="All" CanGrow="true" Text="流水號" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text54" Top="30.35" Width="64.61" Height="39.69" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="印件單上客戶代碼" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text55" Left="200.69" Top="30.35" Width="55.38" Height="39.69" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="報廢物料型號" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text56" Left="64.61" Top="30.35" Width="136.08" Height="39.69" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="印件單上料號/臺號" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text57" Left="256.07" Top="30.35" Width="60.16" Height="39.69" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="該物料報廢原因" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text58" Left="469.92" Top="30.35" Width="72.15" Height="39.69" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="該物料報廢原因對應的單號" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text59" Left="316.23" Top="30.35" Width="56.16" Height="39.69" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="該物料申請報廢數量" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt" Trimming="EllipsisCharacter"/>
+        <TextObject Name="Text60" Left="372.39" Top="30.35" Width="97.53" Height="39.69" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="該物料每PCS重量" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt" Trimming="EllipsisCharacter"/>
+        <TextObject Name="Text62" Left="613.54" Top="30.35" Width="104.59" Height="39.69" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="進一步説明的情況" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text63" Left="542.07" Top="30.35" Width="71.47" Height="39.69" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="報表上面對應單號" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+        <TextObject Name="Text24" Left="0.06" Top="0.44" Width="64.61" Height="30.24" Border.Lines="All" CanGrow="true" Text="客戶" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      </DataHeaderBand>
+    </DataBand>
+    <DataBand Name="Data1" Top="260.81" Width="718.2" Height="30.24" DataSource="Master">
+      <TextObject Name="Text64" Width="64.61" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text65" Left="200.69" Width="55.38" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text66" Left="64.61" Width="136.08" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text67" Left="256.07" Width="60.16" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text69" Left="316.23" Width="56.16" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" WordWrap="false" Font="SimSun-ExtB, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text70" Left="372.39" Width="50.28" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="合計：" Format="Number" Format.UseLocale="false" Format.DecimalDigits="4" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" Font="SimSun-ExtB, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text71" Left="422.67" Width="119.32" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[SumGwt]kg" Format="Number" Format.UseLocale="false" Format.DecimalDigits="4" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" VertAlign="Center" Font="SimSun-ExtB, 9pt" Trimming="EllipsisCharacter"/>
+      <TextObject Name="Text72" Left="614.01" Width="103.59" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 7pt"/>
+      <TextObject Name="Text73" Left="541.54" Width="72.47" Height="30.24" Border.Lines="All" CanGrow="true" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="SimSun-ExtB, 9pt"/>
+    </DataBand>
+    <ColumnFooterBand Name="ColumnFooter1" Top="295.05" Width="718.2" Height="149.2">
+      <TextObject Name="Text74" Width="255.71" Height="30.24" Border.Lines="All" CanGrow="true" Text="申請人：填寫此表單的人員簽名&#13;&#10;[Master.Inputer]（[Master.InputDate]）" Font="SimSun-ExtB, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy/MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text75" Left="255.7" Width="286.61" Height="30.24" Border.Lines="All" CanGrow="true" Text="權責單位主管：依報廢類型相應權責單位主管簽名" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text76" Top="30.24" Width="255.71" Height="30.24" Border.Lines="All" CanGrow="true" Text="申請單位主管：填寫此表單人員單位主管簽名" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text77" Left="541.65" Width="176.56" Height="30.24" Border.Lines="All" CanGrow="true" Text="財務主管：財務主管人員簽名" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text78" Left="255.7" Top="30.24" Width="286.61" Height="30.24" Border.Lines="All" CanGrow="true" Text="審核：權責主管" Font="SimSun-ExtB, 9pt"/>
+      <TextObject Name="Text79" Left="541.65" Top="30.24" Width="176.56" Height="30.24" Border.Lines="All" CanGrow="true" Text="報廢執行人：倉庫執行人員簽名" Font="SimSun-ExtB, 9pt"/>
+      <RichObject Name="Rich1" Top="64.15" Width="718.2" Height="85.05" Text="{\rtf1\ansi\ansicpg936\deff0\deflang1033\deflangfe2052{\fonttbl{\f0\fnil\fcharset134 \'cb\'ce\'cc\'e5;}{\f1\fnil\fcharset0 Tahoma;}}&#13;&#10;{\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\lang2052\f0\fs18\'82\'e4\'d7\'a2\'a3\'ba1\'a3\'ac\ul\b\'ee\'90\'d0\'cd\'b7\'d6\'a0\'91\'a3\'ba\'c4\'7a\'d1\'62\'a1\'a2\'f2\'54\'f1\'52\'d3\'86\'a1\'a2\'b2\'ca\'ba\'d0\'a1\'a2\'b2\'ca\'bf\'a8\'a1\'a2\'d5\'68\'c3\'f7\'95\'f8\'b5\'c8\ulnone\b0\par&#13;&#10;      2\'a3\'ac\'8c\'a6\'91\'aa\'86\'ce\'cc\'96\'a0\'91\ldblquote\'b2\'bb\'ba\'cf\'b8\'f1\'cd\'a8\'d6\'aa\'cc\'8e\'c0\'ed\'86\'ce\rdblquote\'a3\'ac\ldblquote\'b0\'e6\'b1\'be\'d7\'83\'b8\'fc\'cd\'a8\'d6\'aa\'86\'ce\rdblquote\'a3\'ac\ldblquote\'bf\'cd\'91\'f4\'bf\'cd\'d4\'56/\'bf\'cd\'cd\'cb\'cc\'8e\'c0\'ed\'cd\'a8\'d6\'aa\'86\'ce\rdblquote\'b5\'c8\'a1\'a3\par&#13;&#10;      3\'a3\'ac\'88\'f3\'8f\'55\'c9\'ea\'d5\'88\'86\'ce\'d0\'e8\'b8\'bd\'d3\'d0\'82\'80\'86\'ce\'93\'fe\'b5\'c4\'d1\'7d\'d3\'a1\'bc\'fe\'bb\'f2\'c3\'f7\'bc\'9a\'a3\'a8\'c8\'e7\'a3\'ba\'d2\'f2\'b8\'c4\'b0\'e6\'d0\'e8\'88\'f3\'8f\'55\'b5\'c4\'91\'aa\'b8\'bd\'d3\'d0\ldblquote\'b0\'e6\'b1\'be\'d7\'83\'b8\'fc\'86\'ce\rdblquote )\'bc\'b0\'b2\'bb\'c1\'bc\'98\'d3\'c6\'b7\'a1\'a3\par&#13;&#10;      4\'a3\'ac\ul\'88\'f3\'8f\'55\'d1\'75\'b3\'cc\'a3\'ba\lang1033\f1 A\lang2052\f0\'d3\'a1\'cb\'a2\'b2\'bb\'ba\'cf\'b8\'f1\'88\'f3\'8f\'55 \lang1033\f1 B\lang2052\f0\'b2\'ca\'ba\'d0\'b2\'bb\'ba\'cf\'b8\'f1\'88\'f3\'8f\'55 \lang1033\f1 C\lang2052\f0\'e1\'e1\'d6\'c6\'b2\'bb\'ba\'cf\'b8\'f1\'88\'f3\'8f\'55 \lang1033\f1 D\lang2052\f0\'b0\'fc\'d1\'62\'b2\'bb\'ba\'cf\'b8\'f1\'88\'f3\'8f\'55 \lang1033\f1 E\lang2052\f0\'c6\'e4\'cb\'fb\ulnone\par&#13;&#10;      5\'a3\'ac\ul\'88\'f3\'8f\'55\'b7\'d6\'ee\'90\'a3\'ba\lang1033\f1 A\lang2052\f0\'b8\'c4\'b0\'e6 \lang1033\f1 B\lang2052\f0\'d1\'75\'b3\'cc\'b2\'bb\'c1\'bc \lang1033\f1 C\lang2052\f0\'bf\'cd\'cd\'cb\'b2\'bb\'c1\'bc \lang1033\f1 D\lang2052\f0\'b4\'f4\'9c\'fe\'c1\'cf \lang1033\f1 E\lang2052\f0\'c6\'e4\'cb\'fb\lang1033\ulnone\f1\fs17\par&#13;&#10;}&#13;&#10;"/>
+    </ColumnFooterBand>
+    <PageFooterBand Name="PageFooter1" Top="448.25" Width="718.2" Height="21.9">
+      <TextObject Name="Text48" Left="293.73" Top="3" Width="414.73" Height="18.9" Text="列印人：[Author] 列印時間：[Date](第[[PrintTimes]+1]次) 第[Page]頁共[TotalPages#]頁" HorzAlign="Right" VertAlign="Center" Font="Arial, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+          <NumberFormat UseLocale="false" DecimalDigits="0"/>
+          <NumberFormat UseLocale="false" DecimalDigits="0"/>
+          <NumberFormat UseLocale="false" DecimalDigits="0"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text49" Left="3" Top="2" Width="248.04" Height="18.9" Text="制表人:[Inputer] 制表時間:[InputDate]" VertAlign="Center" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

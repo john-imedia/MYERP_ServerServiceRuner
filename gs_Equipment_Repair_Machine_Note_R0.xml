@@ -1,0 +1,366 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="08/14/2015 21:12:50" ReportInfo.Modified="04/01/2016 14:59:04" ReportInfo.CreatorVersion="2013.2.2.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+
+    private void Text178_BeforePrint(object sender, EventArgs e)
+    {
+      if(((String)Report.GetColumnValue(&quot;View.checker&quot;)).Length &gt; 0 )
+      {
+        Text175.Visible = true;
+        Text178.Visible = false;
+      }
+      else 
+      {
+        Text175.Visible = false;
+        Text178.Visible = true;
+      }
+    }
+
+    private void Text44_BeforePrint(object sender, EventArgs e)
+    {
+      bool v=((DateTime)Report.GetColumnValue(&quot;View.HaltTime1&quot;))&lt;Convert.ToDateTime(&quot;2000-01-01 00:00:00&quot;);
+      bool iv=!v;
+      Text119.Visible = iv;
+      Text121.Visible = iv;
+      Text123.Visible = iv;
+      Text125.Visible = iv;
+      Text127.Visible = iv;
+      Text129.Visible = iv;
+      Text199.Visible = v;
+      Text200.Visible = v;
+      Text201.Visible = v;
+      Text202.Visible = v;
+      Text203.Visible = v;
+      Text204.Visible = v;
+    }
+
+    private void Text43_BeforePrint(object sender, EventArgs e)
+    {
+      bool v=((DateTime)Report.GetColumnValue(&quot;View.HaltTime2&quot;))&lt;Convert.ToDateTime(&quot;2000-01-01 00:00:00&quot;);
+      bool iv=!v;
+      Text134.Visible = iv;
+      Text136.Visible = iv;
+      Text138.Visible = iv;
+      Text140.Visible = iv;
+      Text142.Visible = iv;
+      Text144.Visible = iv;
+      Text209.Visible = v;
+      Text208.Visible = v;
+      Text207.Visible = v;
+      Text206.Visible = v;
+      Text205.Visible = v;
+      Text211.Visible = v;
+    }
+
+    private void Text212_BeforePrint(object sender, EventArgs e)
+    {
+      Text73.Visible =!(((DateTime)Report.GetColumnValue(&quot;View.FinishTime&quot;))&lt;Convert.ToDateTime(&quot;2000-01-01 00:00:00&quot;));      
+    }
+  }
+}
+</ScriptText>
+  <Dictionary>
+    <TableDataSource Name="View" ReferenceName="View" DataType="System.Int32" Enabled="true">
+      <Column Name="_ID" DataType="System.Int32"/>
+      <Column Name="ID" DataType="System.Int32"/>
+      <Column Name="RdsNo" DataType="System.String"/>
+      <Column Name="CGUID" DataType="System.Guid"/>
+      <Column Name="Inputer" DataType="System.String"/>
+      <Column Name="InputDate" DataType="System.DateTime"/>
+      <Column Name="Checker" DataType="System.String"/>
+      <Column Name="CheckDate" DataType="System.DateTime"/>
+      <Column Name="Creator" DataType="System.String"/>
+      <Column Name="CreateDate" DataType="System.DateTime"/>
+      <Column Name="DepartmentCode" DataType="System.String"/>
+      <Column Name="DepartmentID" DataType="System.Int32"/>
+      <Column Name="ProcessCode" DataType="System.String"/>
+      <Column Name="MachineCode" DataType="System.String"/>
+      <Column Name="MachineDescription" DataType="System.String"/>
+      <Column Name="Operator" DataType="System.String"/>
+      <Column Name="FaultPart" DataType="System.String"/>
+      <Column Name="FaultTitle" DataType="System.String"/>
+      <Column Name="FaultMemo" DataType="System.String"/>
+      <Column Name="Status" DataType="System.Int32"/>
+      <Column Name="Level" DataType="System.String"/>
+      <Column Name="Type" DataType="System.String"/>
+      <Column Name="Urgent" DataType="System.Int32"/>
+      <Column Name="RequestFinishDate" DataType="System.DateTime"/>
+      <Column Name="InspectionDate" DataType="System.DateTime"/>
+      <Column Name="Reason" DataType="System.String"/>
+      <Column Name="RxTitle" DataType="System.String"/>
+      <Column Name="RxMemo" DataType="System.String"/>
+      <Column Name="PreventiveSolution" DataType="System.String"/>
+      <Column Name="ResultType" DataType="System.String"/>
+      <Column Name="ResultMemo" DataType="System.String"/>
+      <Column Name="NextStepMemo" DataType="System.String"/>
+      <Column Name="Engineer" DataType="System.String"/>
+      <Column Name="FinishType" DataType="System.String"/>
+      <Column Name="FinishMemo" DataType="System.String"/>
+      <Column Name="FinishTime" DataType="System.DateTime"/>
+      <Column Name="DepartmentName" DataType="System.String"/>
+      <Column Name="ProcessName" DataType="System.String"/>
+      <Column Name="StatusName" DataType="System.String"/>
+      <Column Name="LevelName" DataType="System.String"/>
+      <Column Name="ReasonTitle" DataType="System.String"/>
+      <Column Name="HaltTime1" DataType="System.DateTime"/>
+      <Column Name="ResumeTime1" DataType="System.DateTime"/>
+      <Column Name="HaltTime2" DataType="System.DateTime"/>
+      <Column Name="ResumeTime2" DataType="System.DateTime"/>
+      <Column Name="ResonTitleName" DataType="System.String"/>
+      <Column Name="RxTitleName" DataType="System.String"/>
+      <Column Name="ResultTypeName" DataType="System.String"/>
+      <Column Name="FinishTypeName" DataType="System.String"/>
+      <Column Name="MaterialCode" DataType="System.String"/>
+      <Column Name="UseTime" DataType="System.Decimal"/>
+      <Column Name="WorkTime" DataType="System.Decimal"/>
+      <Column Name="GSChecker" DataType="System.String"/>
+      <Column Name="GSCheckDate" DataType="System.DateTime"/>
+    </TableDataSource>
+    <Parameter Name="Inputer" DataType="System.String" Description="制表人"/>
+    <Parameter Name="InputDate" DataType="System.DateTime" Description="制表时间"/>
+    <Parameter Name="Checker" DataType="System.String" Description="审核人"/>
+    <Parameter Name="CheckDate" DataType="System.DateTime" Description="审核时间"/>
+    <Parameter Name="Author" DataType="System.String" Description="列印人"/>
+    <Parameter Name="PrintTimes" DataType="System.Int32" Description="列印次数"/>
+    <Parameter Name="StatusWord" DataType="System.String" Description="单据状态"/>
+  </Dictionary>
+  <ReportPage Name="Page1" PaperHeight="140" TopMargin="6" BottomMargin="4" FirstPageSource="4" OtherPagesSource="4">
+    <PageHeaderBand Name="PageHeader1" Width="718.2" Height="56.7">
+      <TextObject Name="Text1" Left="226.8" Width="226.8" Height="28.35" Text="設備維修申請單" HorzAlign="Center" Font="Microsoft Sans Serif, 22pt"/>
+      <TextObject Name="Text2" Width="160.65" Height="28.35" Text="明泰彩色包裝印刷有限公司&#13;&#10;編號：F-M-035 Rev A3" Font="宋体, 9pt"/>
+      <TextObject Name="Text3" Left="472.5" Top="9.45" Width="56.7" Height="18.9" Text="№：" Font="新宋体, 16pt"/>
+      <TextObject Name="Text4" Left="506.3" Top="8.45" Width="203.9" Height="19.9" Text="[View.RdsNo]" Font="Bookman Old Style, 16pt"/>
+      <TextObject Name="Text5" Top="30.8" Width="30.35" Height="23.9" Text="[IIf([View.Urgent]==0,&quot;&quot;,&quot;&quot;)]" Font="Wingdings, 18pt"/>
+      <TextObject Name="Text6" Left="28.35" Top="37.3" Width="94.5" Height="18.9" Text="一般" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text7" Left="66.15" Top="30.8" Width="30.35" Height="23.9" Text="[IIf([View.Urgent]==1,&quot;&quot;,&quot;&quot;)]" Font="Wingdings, 18pt"/>
+      <TextObject Name="Text8" Left="94.5" Top="37.3" Width="94.5" Height="18.9" Text="急" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text9" Left="117.3" Top="30.8" Width="30.35" Height="23.9" Text="[IIf([View.Urgent]==2,&quot;&quot;,&quot;&quot;)]" Font="Wingdings, 18pt"/>
+      <TextObject Name="Text10" Left="145.65" Top="37.3" Width="94.5" Height="18.9" Text="特急" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text65" Left="503.85" Top="35.8" Width="207.9" Height="18.9" Text="[View.LevelName]" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+      <TextObject Name="Text149" Left="415.8" Top="37.8" Width="207.9" Height="18.9" Text="故障損壞程度：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+    </PageHeaderBand>
+    <DataBand Name="Data1" Top="60.7" Width="718.2" Height="407.35" DataSource="View">
+      <TextObject Name="Text212" Left="288.5" Top="352.65" Width="193.8" Height="27.35" Border.Lines="All" BeforePrintEvent="Text212_BeforePrint" VertAlign="Center" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+          <GeneralFormat/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text44" Left="98.95" Top="210.55" Width="463.4" Height="40.35" Border.Lines="All" BeforePrintEvent="Text44_BeforePrint" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text129" Left="391.45" Top="211.35" Width="47.25" Height="18.9" Border.Lines="Bottom" Text="[Minute([View.ResumeTime1])]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text127" Left="340.75" Top="211.35" Width="47.25" Height="18.9" Border.Lines="Bottom" Text="[Hour([View.ResumeTime1])]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text125" Left="287.5" Top="211.35" Width="47.25" Height="18.9" Border.Lines="Bottom" Text="[Day([View.ResumeTime1])]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text123" Left="211.9" Top="211.35" Width="47.25" Height="18.9" Border.Lines="Bottom" Text="[Minute([View.HaltTime1])]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text121" Left="161.2" Top="211.35" Width="47.25" Height="18.9" Border.Lines="Bottom" Text="[Hour([View.HaltTime1])]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text119" Left="107.95" Top="211.35" Width="47.25" Height="18.9" Border.Lines="Bottom" Text="[Day([View.HaltTime1])]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text204" Left="391.9" Top="211.35" Width="47.25" Height="18.9" Visible="false" Border.Lines="Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text203" Left="341.2" Top="211.35" Width="47.25" Height="18.9" Visible="false" Border.Lines="Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text202" Left="287.95" Top="211.35" Width="47.25" Height="18.9" Visible="false" Border.Lines="Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text201" Left="212.35" Top="211.35" Width="47.25" Height="18.9" Visible="false" Border.Lines="Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text200" Left="161.65" Top="211.35" Width="47.25" Height="18.9" Visible="false" Border.Lines="Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text199" Left="108.4" Top="211.35" Width="47.25" Height="18.9" Visible="false" Border.Lines="Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text75" Left="19.35" Top="380.75" Width="679.75" Height="26.35" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text15" Left="18.9" Top="57.7" Width="80.5" Height="28.9" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text11" Width="18.9" Height="86.05" Border.Lines="All" Text="申請單位" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text12" Left="18.9" Width="80.5" Height="20.9" Border.Lines="All" Text="部    門" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text13" Left="18.9" Top="20.9" Width="80.5" Height="36.35" Border.Lines="All" Text="故障部位" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text14" Left="13.9" Top="60.7" Width="91.5" Height="24.9" Text="希望完成時間" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text16" Left="98.95" Top="57.7" Width="90.85" Height="28.9" Border.Lines="All" Text="[View.RequestFinishDate]" Format="Custom" Format.Format="yy/MM/dd tt" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text17" Left="98.95" Width="90.85" Height="20.9" Border.Lines="All" Text="[View.DepartmentName]" Format="Custom" Format.Format="yy/MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text18" Left="98.95" Top="20.9" Width="90.85" Height="36.35" Border.Lines="All" Text="[View.FaultPart]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text19" Left="190" Width="80.5" Height="20.9" Border.Lines="All" Text="機    臺" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text20" Left="270.05" Width="212.8" Height="20.9" Border.Lines="All" Text="[View.MachineDescription]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text21" Left="482.95" Width="99.4" Height="20.9" Border.Lines="All" Text="申請日期時間" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text22" Left="581.9" Width="117.3" Height="20.9" Border.Lines="All" Text="[View.CreateDate]" Format="Custom" Format.Format="yy/MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text23" Left="190" Top="20.9" Width="80.5" Height="36.35" Border.Lines="All" Text="故障情形" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text24" Left="270.05" Top="20.9" Width="71.05" Height="36.35" Border.Lines="All" Text="[View.FaultTitle]" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text25" Left="341.2" Top="20.9" Width="80.5" Height="36.35" Border.Lines="All" Text="故障描述" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text26" Left="422.25" Top="20.9" Width="276.95" Height="36.35" Border.Lines="All" Text="[View.FaultMemo]" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text27" Left="190" Top="57.7" Width="80.5" Height="28.9" Border.Lines="All" Text="審  核" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text28" Left="270.05" Top="57.7" Width="71.05" Height="28.9" Border.Lines="All" Text="[View.Checker]" Format="Custom" Format.Format="yy/MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text29" Left="341.2" Top="57.7" Width="80.5" Height="28.9" Border.Lines="All" Text="部門主管" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text30" Left="422.25" Top="57.7" Width="79.5" Height="28.9" Border.Lines="All" Format="Custom" Format.Format="yy/MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text31" Left="502.3" Top="57.7" Width="80.5" Height="28.9" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text32" Left="583.35" Top="57.7" Width="115.3" Height="28.9" Border.Lines="All" Text="[View.Operator]" Format="Custom" Format.Format="yy/MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text33" Left="496.3" Top="59.7" Width="91.5" Height="24.9" Text="機臺操作人" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text34" Left="699.3" Width="18.9" Height="407.25" Border.Lines="All" Text="第一联  白  设备组  ， 第二联  黄  申请单位" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text35" Top="89.5" Width="18.9" Height="317.65" Border.Lines="All" Text="维修单位填写" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text36" Top="86.05" Width="699.3" Height="3.45" Border.Lines="All" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text37" Left="18.9" Top="89.5" Width="80.5" Height="40.35" Border.Lines="All" Text="故障原因" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text38" Left="98.95" Top="89.5" Width="600.15" Height="40.35" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text39" Left="18.9" Top="129.85" Width="80.5" Height="40.35" Border.Lines="All" Text="處理方式" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text40" Left="98.95" Top="129.85" Width="600.15" Height="40.35" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text41" Left="18.9" Top="170.2" Width="80.5" Height="40.35" Border.Lines="All" Text="預防方案" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text42" Left="98.95" Top="170.2" Width="600.15" Height="40.35" Border.Lines="All" Text="[View.PreventiveSolution]" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text43" Left="18.9" Top="210.55" Width="80.5" Height="40.35" Border.Lines="All" BeforePrintEvent="Text43_BeforePrint" Text="處理時間" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text45" Left="18.9" Top="250.9" Width="80.5" Height="40.35" Border.Lines="All" Text="處理結果" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text46" Left="98.95" Top="250.9" Width="108.75" Height="40.35" Border.Lines="All" Text="[View.ResultTypeName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text47" Left="207.9" Top="250.9" Width="80.5" Height="40.35" Border.Lines="All" Text="待處理事項" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text48" Left="287.95" Top="250.9" Width="411.15" Height="40.35" Border.Lines="All" Text="[View.NextStepMemo]" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text49" Left="18.9" Top="291.15" Width="188.9" Height="20.45" Border.Lines="All" Text="零件/材料名稱" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text50" Left="207.8" Top="291.15" Width="80.5" Height="20.45" Border.Lines="All" Text="編號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text51" Left="288.3" Top="291.15" Width="108.85" Height="20.45" Border.Lines="All" Text="規格" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text52" Left="397.15" Top="291.15" Width="42.6" Height="20.45" Border.Lines="All" Text="單位" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text53" Left="439.75" Top="291.15" Width="42.6" Height="20.45" Border.Lines="All" Text="數量" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text54" Left="482.35" Top="291.15" Width="80.4" Height="20.45" Border.Lines="All" Text="單價(元)" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text55" Left="562.75" Top="291.15" Width="136.65" Height="20.45" Border.Lines="All" Text="總金額(元)" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text56" Left="18.9" Top="311.6" Width="188.9" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text57" Left="207.8" Top="311.6" Width="80.5" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text58" Left="288.3" Top="311.6" Width="108.85" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text59" Left="397.15" Top="311.6" Width="42.6" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text60" Left="439.75" Top="311.6" Width="42.6" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text61" Left="482.35" Top="311.6" Width="80.4" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text62" Left="562.75" Top="311.6" Width="136.65" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text70" Left="18.9" Top="351.95" Width="80.5" Height="28.35" Border.Lines="All" Text="審  核" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text71" Left="98.95" Top="351.95" Width="108.75" Height="28.35" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text72" Left="207.9" Top="351.95" Width="80.5" Height="28.35" Border.Lines="All" Text="機臺確認" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text73" Left="289.95" Top="354.95" Width="189.8" Height="24.35" Text="[View.FinishTypeName]([View.FinishTime])&#13;&#10;[View.FinishMemo]" VertAlign="Center" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+          <GeneralFormat/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text74" Left="2.35" Top="378" Width="80.5" Height="29.35" Text="備注：" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text76" Left="481.95" Top="351.95" Width="81.5" Height="28.35" Border.Lines="All" Text="維修人員" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text77" Left="563" Top="351.95" Width="135.65" Height="28.35" Border.Lines="All" Text="[View.Engineer]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text78" Left="18.9" Top="332.05" Width="188.9" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text79" Left="207.8" Top="332.05" Width="80.5" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text80" Left="288.3" Top="332.05" Width="108.85" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text81" Left="397.15" Top="332.05" Width="42.6" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text82" Left="439.75" Top="332.05" Width="42.6" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text83" Left="482.35" Top="332.05" Width="80.4" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text84" Left="562.75" Top="332.05" Width="136.65" Height="20.45" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text63" Left="100.95" Top="91.5" Width="21.9" Height="17.9" Text="[IIf([View.ReasonTitle]==&quot;01&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text64" Left="117.85" Top="91.5" Width="94.5" Height="18.9" Text="材質不良" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text86" Left="193.9" Top="91.5" Width="94.5" Height="18.9" Text="潤滑不良" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text88" Left="273.5" Top="91.5" Width="94.5" Height="18.9" Text="操作不當" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text90" Left="351.55" Top="91.5" Width="94.5" Height="18.9" Text="修理不精" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text92" Left="430.15" Top="91.5" Width="94.5" Height="18.9" Text="過濾不良" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text94" Left="504.75" Top="91.5" Width="94.5" Height="18.9" Text="磨損" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text96" Left="559" Top="91.5" Width="94.5" Height="18.9" Text="異物混入" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text98" Left="633.6" Top="91.5" Width="66.15" Height="18.9" Text="電氣因素" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text99" Left="103.95" Top="109.95" Width="94.5" Height="18.9" Text="説明：" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text101" Left="118.85" Top="132.3" Width="94.5" Height="18.9" Text="整修" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text103" Left="194.9" Top="132.3" Width="94.5" Height="18.9" Text="調整" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text105" Left="274.5" Top="132.3" Width="94.5" Height="18.9" Text="拆除" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text107" Left="352.55" Top="132.3" Width="94.5" Height="18.9" Text="更換" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text109" Left="431.15" Top="132.3" Width="94.5" Height="18.9" Text="裝配" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text111" Left="505.75" Top="132.3" Width="94.5" Height="18.9" Text="保養" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text113" Left="560" Top="132.3" Width="94.5" Height="18.9" Text="檢修" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text115" Left="634.6" Top="132.3" Width="66.15" Height="18.9" Text="焊補" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text116" Left="103.95" Top="149.75" Width="94.5" Height="18.9" Text="説明：" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text117" Left="562.35" Top="210.55" Width="71.05" Height="40.35" Border.Lines="All" Text="處理工時" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text118" Left="633.4" Top="210.55" Width="65.5" Height="40.35" Border.Lines="All" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text120" Left="146.2" Top="211.35" Width="18.9" Height="18.9" Text="日" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text122" Left="199.45" Top="211.35" Width="18.9" Height="18.9" Text="時" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text124" Left="250.15" Top="211.35" Width="56.7" Height="18.9" Text="分起——" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text126" Left="325.75" Top="211.35" Width="18.9" Height="18.9" Text="日" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text128" Left="379" Top="211.35" Width="18.9" Height="18.9" Text="時" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text130" Left="429.7" Top="211.35" Width="37.8" Height="18.9" Text="分終" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text131" Left="495.4" Top="211.35" Width="47.25" Height="18.9" Border.Lines="Bottom" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text132" Left="533.65" Top="211.35" Width="18.9" Height="18.9" Text="時" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text133" Left="467.05" Top="211.35" Width="37.8" Height="18.9" Text="暫停" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text134" Left="107.95" Top="228.8" Width="47.25" Height="18.9" Visible="false" Border.Lines="Bottom" Text="[Day([View.HaltTime2])]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text135" Left="146.2" Top="228.8" Width="18.9" Height="18.9" Text="日" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text136" Left="161.2" Top="228.8" Width="47.25" Height="18.9" Visible="false" Border.Lines="Bottom" Text="[Hour([View.HaltTime2])]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text137" Left="199.45" Top="228.8" Width="18.9" Height="18.9" Text="時" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text138" Left="211.9" Top="228.8" Width="47.25" Height="18.9" Visible="false" Border.Lines="Bottom" Text="[Minute([View.HaltTime2])]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text139" Left="250.15" Top="228.8" Width="56.7" Height="18.9" Text="分起——" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text140" Left="287.5" Top="228.8" Width="47.25" Height="18.9" Visible="false" Border.Lines="Bottom" Text="[Day([View.ResumeTime2])]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text141" Left="325.75" Top="228.8" Width="18.9" Height="18.9" Text="日" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text142" Left="340.75" Top="228.8" Width="47.25" Height="18.9" Visible="false" Border.Lines="Bottom" Text="[Hour([View.ResumeTime2])]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text143" Left="379" Top="228.8" Width="18.9" Height="18.9" Text="時" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text144" Left="391.45" Top="228.8" Width="47.25" Height="18.9" Visible="false" Border.Lines="Bottom" Text="[Minute([View.ResumeTime2])]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text145" Left="429.7" Top="228.8" Width="37.8" Height="18.9" Text="分終" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text146" Left="495.4" Top="228.8" Width="47.25" Height="18.9" Border.Lines="Bottom" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text147" Left="533.65" Top="228.8" Width="18.9" Height="18.9" Text="時" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text148" Left="467.05" Top="228.8" Width="37.8" Height="18.9" Text="暫停" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text179" Left="175.55" Top="91.5" Width="21.9" Height="17.9" Text="[IIf([View.ReasonTitle]==&quot;02&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text180" Left="252.15" Top="91.5" Width="21.9" Height="17.9" Text="[IIf([View.ReasonTitle]==&quot;03&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text181" Left="328.75" Top="91.5" Width="21.9" Height="17.9" Text="[IIf([View.ReasonTitle]==&quot;04&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text182" Left="405.35" Top="91.5" Width="21.9" Height="17.9" Text="[IIf([View.ReasonTitle]==&quot;05&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text183" Left="480.95" Top="91.5" Width="21.9" Height="17.9" Text="[IIf([View.ReasonTitle]==&quot;06&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text184" Left="535.65" Top="91.5" Width="21.9" Height="17.9" Text="[IIf([View.ReasonTitle]==&quot;07&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text185" Left="611.25" Top="91.5" Width="21.9" Height="17.9" Text="[IIf([View.ReasonTitle]==&quot;08&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text186" Left="99.5" Top="132.3" Width="21.9" Height="17.9" Text="[IIf([View.RxTitle]==&quot;01&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text187" Left="175.55" Top="132.3" Width="21.9" Height="17.9" Text="[IIf([View.RxTitle]==&quot;02&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text188" Left="252.15" Top="132.3" Width="21.9" Height="17.9" Text="[IIf([View.RxTitle]==&quot;03&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text189" Left="328.75" Top="132.3" Width="21.9" Height="17.9" Text="[IIf([View.RxTitle]==&quot;04&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text190" Left="405.35" Top="132.3" Width="21.9" Height="17.9" Text="[IIf([View.RxTitle]==&quot;05&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text191" Left="480.95" Top="132.3" Width="21.9" Height="17.9" Text="[IIf([View.RxTitle]==&quot;06&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text192" Left="535.65" Top="132.3" Width="21.9" Height="17.9" Text="[IIf([View.RxTitle]==&quot;07&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text193" Left="611.25" Top="132.3" Width="21.9" Height="17.9" Text="[IIf([View.RxTitle]==&quot;08&quot;,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 14pt"/>
+      <TextObject Name="Text194" Left="135.3" Top="109.95" Width="557.55" Height="18.9" Text="[View.Reason]" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text195" Left="135.3" Top="149.75" Width="548.1" Height="18.9" Text="[View.RxMemo]" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text196" Left="57.15" Top="381" Width="638.05" Height="23.35" Text="[View.FinishMemo]" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text197" Left="697.3" Top="92.05" Width="18.9" Height="48.15" Text="（    " HorzAlign="Center" VertAlign="Center" Angle="90" Font="Microsoft Sans Serif, 12pt"/>
+      <TextObject Name="Text205" Left="391.45" Top="228.8" Width="47.25" Height="18.9" Border.Lines="Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text206" Left="340.75" Top="228.8" Width="47.25" Height="18.9" Border.Lines="Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text207" Left="211.9" Top="228.8" Width="47.25" Height="18.9" Border.Lines="Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text208" Left="161.2" Top="228.8" Width="47.25" Height="18.9" Border.Lines="Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text209" Left="107.95" Top="228.8" Width="47.25" Height="18.9" Border.Lines="Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text210" Left="249.7" Top="228.8" Width="56.7" Height="18.9" Text="分起——" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text211" Left="287.5" Top="228.8" Width="47.25" Height="18.9" Border.Lines="Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text66" Left="100.95" Top="354.1" Width="104.5" Height="23.9" Text="[View.GSChecker]&#13;&#10;[View.GSCheckDate]" Font="宋体, 9pt">
+        <Formats>
+          <CustomFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text67" Left="699.3" Top="170.1" Width="18.9" Height="18.9" Text="）" Angle="90" Font="宋体, 12pt"/>
+      <TextObject Name="Text213" Left="697.3" Top="274.05" Width="18.9" Height="48.15" Text="（    " HorzAlign="Center" VertAlign="Center" Angle="90" Font="Microsoft Sans Serif, 12pt"/>
+      <TextObject Name="Text214" Left="700.3" Top="366.45" Width="18.9" Height="18.9" Text="）" Angle="90" Font="宋体, 12pt"/>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="472.05" Width="718.2" Height="17.9">
+      <TextObject Name="Text176" Top="1" Width="238.9" Height="16.9" CanGrow="true" GrowToBottom="true" Text="輸入人:[View.inputer], [View.inputdate]" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text175" Left="223.25" Top="1" Width="247.9" Height="16.9" CanGrow="true" GrowToBottom="true" BeforePrintEvent="Text175_BeforePrint" Text="審核人:[View.checker], [View.CheckDate]" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text177" Left="352.75" Top="1" Width="371.55" Height="16.9" CanGrow="true" GrowToBottom="true" Text="列印人:[Author], [Date](第[[PrintTimes]+1]次)第[Page]頁共[TotalPages#]頁" HorzAlign="Right" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text178" Left="285.5" Top="1" Width="77.8" Height="16.9" Visible="false" CanGrow="true" GrowToBottom="true" BeforePrintEvent="Text178_BeforePrint" Text="未審核" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+        </Formats>
+      </TextObject>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

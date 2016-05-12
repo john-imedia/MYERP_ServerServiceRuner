@@ -1,0 +1,75 @@
+
+----------------------BEGIN--------------------------
+[1748]INFO  2016-05-12 15:40:08,219 (At:Default-Logger)
+本地INI配置位置：C:\Users\John\AppData\Local\MYERP.ini
+[2086]INFO  2016-05-12 15:40:08,558 (At:MYERP.Framework.MySimplyBasic)
+准备开始读取远程配置。
+[2095]INFO  2016-05-12 15:40:08,567 (At:MYERP.Framework.MyConfig+StartConfig)
+准备创建Request
+[2120]INFO  2016-05-12 15:40:08,592 (At:MYERP.Framework.MyConfig+StartConfig)
+已经读取到了内容
+System.Net.HttpWebResponse
+[2123]INFO  2016-05-12 15:40:08,595 (At:MYERP.Framework.MyConfig+StartConfig)
+读取XML资源
+[2127]INFO  2016-05-12 15:40:08,599 (At:MYERP.Framework.MyConfig+StartConfig)
+已经读取，准备创建资源配置
+[2132]INFO  2016-05-12 15:40:08,604 (At:MYERP.Framework.MyConfig+StartConfig)
+初始配置读取正常，准备开始进入软件....
+[2135]INFO  2016-05-12 15:40:08,607 (At:MYERP.Framework.MySimplyBasic)
+远程配置读取完成。
+[3945]INFO  2016-05-12 15:40:10,416 (At:MYERP.Framework.GeneralSystem.SystemSecurity.SystemLogin)
+开始调入
+[3957]INFO  2016-05-12 15:40:10,428 (At:MYERP.Framework.GeneralSystem.SystemSecurity.SystemLogin)
+获取起始配置 
+<BookSet Key="SZ1" Name="苏州明扬彩印包装"><Set Key="Database" Host="192.168.1.7" UID="sa" PWD="sql891195" DBName="oterp_new" /><Set Key="Config" Host="Http://192.168.1.7/Config/MY" /><Set Key="Version" Name="3.55.399" Host="\\192.168.1.7\123\Release" UID="erpupdate" PWD="abcde_12345"><![CDATA[<Size=16><Color=Brown><B>生产看板得分</B><Color><Size>]]></Set></BookSet><BookSet Key="ZS2" Name="苏州明扬纸塑包装"><Set Key="Database" Host="192.168.1.7" UID="sa" PWD="sql891195" DBName="MYERP_2nd" /><Set Key="Config" Host="Http://192.168.1.7/Config/MY2" /><Set Key="Version" Name="3.55.399" Host="\\192.168.1.7\123\Release" UID="erpupdate" PWD="abcde_12345"><![CDATA[<Size=16><Color=Brown><B>生产看板得分</B><Color><Size>]]></Set></BookSet><BookSet Key="DG1" Name="东莞明泰彩印包装-远端数据"><Set Key="Database" Host="192.168.16.60" UID="sa" PWD="operp" DBName="DG-MT-ERP" /><Set Key="Config" Host="Http://192.168.1.6/Config/MT" /><Set Key="Version" Name="3.55.399" Host="\\192.168.1.7\123\Release" UID="erpupdate" PWD="abcde_12345"><![CDATA[<Size=16><Color=Brown><B>生产看板得分</B><Color><Size>]]></Set></BookSet><BookSet Key="TT-SZ2" Name="明扬-达成率测试0507"><Set Key="Database" Host="192.168.1.6" UID="sa" PWD="sql891195" DBName="Test_ERP2" /><Set Key="Config" Host="Http://192.168.1.7/Config/MY" /><Set Key="Version" Name="3.55.399" Host="\\192.168.1.7\123\Release" UID="erpupdate" PWD="abcde_12345"><![CDATA[<Size=16><Color=Brown><B>生产看板得分</B><Color><Size>]]></Set></BookSet><BookSet Key="TT-SZ" Name="测试-明扬MY0504"><Set Key="Database" Host="192.168.1.7" UID="sa" PWD="sql891195" DBName="Test_ERP" /><Set Key="Config" Host="Http://192.168.1.7/Config/MY" /><Set Key="Version" Name="3.55.399" Host="\\192.168.1.7\123\Release" UID="erpupdate" PWD="abcde_12345"><![CDATA[<Size=16><Color=Brown><B>生产看板得分</B><Color><Size>]]></Set></BookSet>
+
+[3962]INFO  2016-05-12 15:40:10,433 (At:MYERP.Framework.GeneralSystem.SystemSecurity.SystemLogin)
+挂接事件
+[3966]INFO  2016-05-12 15:40:10,437 (At:MYERP.Framework.GeneralSystem.SystemSecurity.SystemLogin)
+获取默认值
+[3980]INFO  2016-05-12 15:40:10,451 (At:MYERP.Framework.GeneralSystem.SystemSecurity.SystemLogin)
+读取帐套内容
+[3984]INFO  2016-05-12 15:40:10,455 (At:MYERP.Framework.GeneralSystem.SystemSecurity.SystemLogin)
+帐套内容：  SZ1  
+[3988]INFO  2016-05-12 15:40:10,459 (At:MYERP.Framework.GeneralSystem.SystemSecurity.SystemLogin)
+创建初始配置对象，存入全局变量
+[3994]INFO  2016-05-12 15:40:10,465 (At:MYERP.Framework.GeneralSystem.SystemSecurity.SystemLogin)
+加载账户线程开启
+[4284]INFO  2016-05-12 15:40:10,755 (At:Default-Logger)
+测试服务器连通性
+[6504]INFO  2016-05-12 15:40:12,976 (At:MYERP.Framework.MyConfig+ModuleConfig)
+准备创建Request
+[6524]INFO  2016-05-12 15:40:12,996 (At:MYERP.Framework.MyConfig+ModuleConfig)
+已经读取到了内容
+System.Net.HttpWebResponse
+[6530]INFO  2016-05-12 15:40:13,002 (At:MYERP.Framework.MyConfig+ModuleConfig)
+读取XML资源
+[6694]INFO  2016-05-12 15:40:13,165 (At:MYERP.Framework.MyConfig+ModuleConfig)
+已经读取，准备创建资源配置
+[6696]INFO  2016-05-12 15:40:13,168 (At:MYERP.Framework.MyConfig+ModuleConfig)
+已经读取了CONFIG配置
+[22547]INFO  2016-05-12 15:40:29,018 (At:Default-Logger)
+Debug Model Action
+[27274]INFO  2016-05-12 15:40:33,745 (At:MYERP.Framework.MyConfig+ModuleConfig)
+准备创建Request
+[27283]INFO  2016-05-12 15:40:33,754 (At:MYERP.Framework.MyConfig+ModuleConfig)
+已经读取到了内容
+System.Net.HttpWebResponse
+[27286]INFO  2016-05-12 15:40:33,757 (At:MYERP.Framework.MyConfig+ModuleConfig)
+读取XML资源
+[27403]INFO  2016-05-12 15:40:33,874 (At:MYERP.Framework.MyConfig+ModuleConfig)
+已经读取，准备创建资源配置
+[27405]INFO  2016-05-12 15:40:33,877 (At:MYERP.Framework.MyConfig+ModuleConfig)
+已经读取了CONFIG配置
+[31418]INFO  2016-05-12 15:40:37,889 (At:MYERP.Framework.MyReport+Report)连接服务器出错，路径：Http://192.168.1.7/Config/MY/Report/crm_sd_OrderNote_R0.xml
+System.Net.WebException: 远程服务器返回错误: (404) 未找到。
+   在 System.Net.HttpWebRequest.GetResponse()
+   在 MYERP.Framework.MyReport.Report.Load(String ReportName, String ReportUrl) 位置 d:\工作文件夹\MY_NEW\MYERP(C#)\MYERP\MYERP\Framework\BaseClass\MyReport.cs:行号 427
+[96823]ERROR 2016-05-12 15:41:43,295 (At:MYERP.Framework.MyData+MyDataTable)
+
+System.InvalidOperationException: ExecuteReader: CommandText 属性尚未初始化
+   在 MYERP.Framework.MyData.MyDataTable.ExecuteSQL(String SQL, MyParameter[] args, Int32 Interval) 位置 d:\工作文件夹\MY_NEW\MYERP(C#)\MYERP\MYERP\Framework\BaseClass\MyData.cs:行号 57
+[1731165]INFO  2016-05-12 16:08:57,637 (At:Default-Logger)
+退出程序
+
+---------------------- END --------------------------

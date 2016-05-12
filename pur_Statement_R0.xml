@@ -1,0 +1,431 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="01/07/2016 13:40:35" ReportInfo.Modified="04/21/2016 10:02:15" ReportInfo.CreatorVersion="2013.2.2.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+
+    private void Text175_BeforePrint(object sender, EventArgs e)
+    {
+      if(((DateTime)Report.GetColumnValue(&quot;Main.CheckDate&quot;))&lt;DateTime.Parse(&quot;2000-01-01&quot;))
+      {
+          Text175.Text = &quot;未審核&quot;;
+      }
+    }
+  }
+}
+</ScriptText>
+  <Styles>
+    <Style Name="格式1" Fill.Color="White"/>
+  </Styles>
+  <Dictionary>
+    <TableDataSource Name="Main" ReferenceName="Main" DataType="System.Int32" Enabled="true">
+      <Column Name="_id" DataType="System.Int32"/>
+      <Column Name="CGUID" DataType="System.Guid"/>
+      <Column Name="Inputer" DataType="System.String"/>
+      <Column Name="InputDate" DataType="System.DateTime"/>
+      <Column Name="Checker" DataType="System.String"/>
+      <Column Name="CheckDate" DataType="System.DateTime"/>
+      <Column Name="Status" DataType="System.Int32"/>
+      <Column Name="RdsNo" DataType="System.String"/>
+      <Column Name="SupplierCode" DataType="System.String"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="taxRate" DataType="System.Decimal"/>
+      <Column Name="MoneyTypeCode" DataType="System.String"/>
+      <Column Name="PayTypeCode" DataType="System.String"/>
+      <Column Name="ReqPayDate" DataType="System.DateTime"/>
+      <Column Name="InvoiceType" DataType="System.String"/>
+      <Column Name="Amount" DataType="System.Decimal"/>
+      <Column Name="AmountUpperRMB" DataType="System.String"/>
+      <Column Name="SupplierName" DataType="System.String"/>
+      <Column Name="account" DataType="System.String"/>
+      <Column Name="SupplierAddress" DataType="System.String"/>
+      <Column Name="connecter" DataType="System.String"/>
+      <Column Name="MobileNumber" DataType="System.String"/>
+      <Column Name="fax" DataType="System.String"/>
+      <Column Name="BankAccount" DataType="System.String"/>
+      <Column Name="Bank" DataType="System.String"/>
+      <Column Name="tel" DataType="System.String"/>
+      <Column Name="MoneyTypeName" DataType="System.String"/>
+      <Column Name="PaymentTypeName" DataType="System.String"/>
+      <Column Name="AmountTax" DataType="System.Decimal"/>
+    </TableDataSource>
+    <TableDataSource Name="Detial_Stock" ReferenceName="Detial_Stock" DataType="System.Int32" Enabled="true">
+      <Column Name="_id" DataType="System.Int32"/>
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="PurchaseStockRdsNo" DataType="System.String"/>
+      <Column Name="PurchaseStockPID" DataType="System.Int32"/>
+      <Column Name="PurchaseRdsNo" DataType="System.String"/>
+      <Column Name="PurchasePID" DataType="System.Int32"/>
+      <Column Name="InvoiceRdsNo" DataType="System.String"/>
+      <Column Name="InvoiceAmount" DataType="System.Decimal"/>
+      <Column Name="CutPayAmount" DataType="System.Decimal"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="CutPayRemark" DataType="System.String"/>
+      <Column Name="MaterialCode" DataType="System.String"/>
+      <Column Name="MaterialName" DataType="System.String"/>
+      <Column Name="DeliveryNoteRdsNo" DataType="System.String"/>
+      <Column Name="IQC" DataType="System.String"/>
+      <Column Name="LID" DataType="System.String"/>
+      <Column Name="LotNo" DataType="System.String"/>
+      <Column Name="InStockRemark" DataType="System.String"/>
+      <Column Name="StockDate" DataType="System.DateTime"/>
+      <Column Name="WarehouseKeeper" DataType="System.String"/>
+      <Column Name="InStockNumb" DataType="System.Decimal"/>
+      <Column Name="PurchaseNumb" DataType="System.Decimal"/>
+      <Column Name="Price" DataType="System.Decimal"/>
+      <Column Name="PruchaseRemark" DataType="System.String"/>
+      <Column Name="TaxRate" DataType="System.Decimal"/>
+      <Column Name="Unit" DataType="System.String"/>
+      <Column Name="Section" DataType="System.String"/>
+      <Column Name="AmountTax" DataType="System.Decimal"/>
+      <Column Name="MaterialPureName" DataType="System.String"/>
+      <Column Name="Size" DataType="System.String"/>
+      <Column Name="SupplierName" DataType="System.String"/>
+      <Column Name="DepartmentName" DataType="System.String"/>
+      <Column Name="PriceUnitPriceTax" DataType="System.Double"/>
+    </TableDataSource>
+    <TableDataSource Name="Detial_CutPay" ReferenceName="Detial_CutPay" DataType="System.Int32" Enabled="true">
+      <Column Name="_id" DataType="System.Int32"/>
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="PurchaseStockRdsNo" DataType="System.String"/>
+      <Column Name="PurchaseStockPID" DataType="System.Int32"/>
+      <Column Name="PurchaseRdsNo" DataType="System.String"/>
+      <Column Name="PurchasePID" DataType="System.Int32"/>
+      <Column Name="InvoiceRdsNo" DataType="System.String"/>
+      <Column Name="InvoiceAmount" DataType="System.Decimal"/>
+      <Column Name="CutPayAmount" DataType="System.Decimal"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="CutPayRemark" DataType="System.String"/>
+      <Column Name="MaterialCode" DataType="System.String"/>
+      <Column Name="MaterialName" DataType="System.String"/>
+      <Column Name="DeliveryNoteRdsNo" DataType="System.String"/>
+      <Column Name="IQC" DataType="System.String"/>
+      <Column Name="LID" DataType="System.String"/>
+      <Column Name="LotNo" DataType="System.String"/>
+      <Column Name="InStockRemark" DataType="System.String"/>
+      <Column Name="StockDate" DataType="System.DateTime"/>
+      <Column Name="WarehouseKeeper" DataType="System.String"/>
+      <Column Name="InStockNumb" DataType="System.Decimal"/>
+      <Column Name="PurchaseNumb" DataType="System.Decimal"/>
+      <Column Name="Price" DataType="System.Decimal"/>
+      <Column Name="PruchaseRemark" DataType="System.String"/>
+      <Column Name="TaxRate" DataType="System.Decimal"/>
+      <Column Name="Unit" DataType="System.String"/>
+      <Column Name="Section" DataType="System.String"/>
+      <Column Name="AmountTax" DataType="System.Decimal"/>
+      <Column Name="MaterialPureName" DataType="System.String"/>
+      <Column Name="Size" DataType="System.String"/>
+      <Column Name="SupplierName" DataType="System.String"/>
+      <Column Name="DepartmentName" DataType="System.String"/>
+      <Column Name="PriceUnitPriceTax" DataType="System.Decimal"/>
+    </TableDataSource>
+    <TableDataSource Name="Detial_Expenses" ReferenceName="Detial_Expenses" DataType="System.Int32" Enabled="true">
+      <Column Name="_id" DataType="System.Int32"/>
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="PurchaseStockRdsNo" DataType="System.String"/>
+      <Column Name="PurchaseStockPID" DataType="System.Int32"/>
+      <Column Name="PurchaseRdsNo" DataType="System.String"/>
+      <Column Name="PurchasePID" DataType="System.Int32"/>
+      <Column Name="InvoiceRdsNo" DataType="System.String"/>
+      <Column Name="InvoiceAmount" DataType="System.Decimal"/>
+      <Column Name="CutPayAmount" DataType="System.Decimal"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="CutPayRemark" DataType="System.String"/>
+      <Column Name="MaterialCode" DataType="System.String"/>
+      <Column Name="MaterialName" DataType="System.String"/>
+      <Column Name="DeliveryNoteRdsNo" DataType="System.String"/>
+      <Column Name="LotNo" DataType="System.String"/>
+      <Column Name="InStockRemark" DataType="System.String"/>
+      <Column Name="inputdate" DataType="System.DateTime"/>
+      <Column Name="inputer" DataType="System.String"/>
+      <Column Name="InStockNumb" DataType="System.Decimal"/>
+      <Column Name="AmountTax" DataType="System.Decimal"/>
+      <Column Name="PurchaseNumb" DataType="System.Decimal"/>
+      <Column Name="Price" DataType="System.Decimal"/>
+      <Column Name="PruchaseRemark" DataType="System.String"/>
+      <Column Name="TaxRate" DataType="System.Decimal"/>
+      <Column Name="Unit" DataType="System.String"/>
+      <Column Name="Section" DataType="System.String"/>
+      <Column Name="MaterialPureName" DataType="System.String"/>
+      <Column Name="Size" DataType="System.String"/>
+      <Column Name="SupplierName" DataType="System.String"/>
+      <Column Name="DepartmentName" DataType="System.String"/>
+      <Column Name="PriceUnitPriceTax" DataType="System.Decimal"/>
+    </TableDataSource>
+    <TableDataSource Name="Detial_Prepayment" ReferenceName="Detial_Prepayment" DataType="System.Int32" Enabled="true">
+      <Column Name="_id" DataType="System.Int32"/>
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="PurchaseStockRdsNo" DataType="System.String"/>
+      <Column Name="PurchaseStockPID" DataType="System.Int32"/>
+      <Column Name="PurchaseRdsNo" DataType="System.String"/>
+      <Column Name="PurchasePID" DataType="System.Int32"/>
+      <Column Name="InvoiceRdsNo" DataType="System.String"/>
+      <Column Name="InvoiceAmount" DataType="System.Decimal"/>
+      <Column Name="CutPayAmount" DataType="System.Decimal"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="CutPayRemark" DataType="System.String"/>
+      <Column Name="MaterialCode" DataType="System.String"/>
+      <Column Name="DeliveryNoteRdsNo" DataType="System.String"/>
+      <Column Name="LotNo" DataType="System.String"/>
+      <Column Name="InStockRemark" DataType="System.String"/>
+      <Column Name="inputdate" DataType="System.DateTime"/>
+      <Column Name="inputer" DataType="System.String"/>
+      <Column Name="InStockNumb" DataType="System.Decimal"/>
+      <Column Name="AmountTax" DataType="System.Decimal"/>
+      <Column Name="PurchaseNumb" DataType="System.Decimal"/>
+      <Column Name="Price" DataType="System.Decimal"/>
+      <Column Name="PruchaseRemark" DataType="System.String"/>
+      <Column Name="Column1" DataType="System.Int32"/>
+      <Column Name="Unit" DataType="System.String"/>
+      <Column Name="Section" DataType="System.String"/>
+      <Column Name="PerpaymentRemark" DataType="System.String"/>
+      <Column Name="SupplierName" DataType="System.String"/>
+    </TableDataSource>
+    <TableDataSource Name="Detial_CutPerpayment" ReferenceName="Detial_CutPerpayment" DataType="System.Int32" Enabled="true">
+      <Column Name="_id" DataType="System.Int32"/>
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="PurchaseStockRdsNo" DataType="System.String"/>
+      <Column Name="PurchaseStockPID" DataType="System.Int32"/>
+      <Column Name="PurchaseRdsNo" DataType="System.String"/>
+      <Column Name="PurchasePID" DataType="System.Int32"/>
+      <Column Name="InvoiceRdsNo" DataType="System.String"/>
+      <Column Name="InvoiceAmount" DataType="System.Decimal"/>
+      <Column Name="CutPayAmount" DataType="System.Decimal"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="CutPayRemark" DataType="System.String"/>
+      <Column Name="MaterialCode" DataType="System.String"/>
+      <Column Name="DeliveryNoteRdsNo" DataType="System.String"/>
+      <Column Name="LotNo" DataType="System.String"/>
+      <Column Name="InStockRemark" DataType="System.String"/>
+      <Column Name="inputdate" DataType="System.DateTime"/>
+      <Column Name="inputer" DataType="System.String"/>
+      <Column Name="InStockNumb" DataType="System.Decimal"/>
+      <Column Name="AmountTax" DataType="System.Decimal"/>
+      <Column Name="PurchaseNumb" DataType="System.Decimal"/>
+      <Column Name="Price" DataType="System.Decimal"/>
+      <Column Name="PruchaseRemark" DataType="System.String"/>
+      <Column Name="Column1" DataType="System.Int32"/>
+      <Column Name="Unit" DataType="System.String"/>
+      <Column Name="Section" DataType="System.String"/>
+      <Column Name="PerpaymentRemark" DataType="System.String"/>
+      <Column Name="SupplierName" DataType="System.String"/>
+    </TableDataSource>
+    <Parameter Name="Inputer" DataType="System.String" Description="制表人"/>
+    <Parameter Name="InputDate" DataType="System.DateTime" Description="制表时间"/>
+    <Parameter Name="Checker" DataType="System.String" Description="审核人"/>
+    <Parameter Name="CheckDate" DataType="System.DateTime" Description="审核时间"/>
+    <Parameter Name="Author" DataType="System.String" Description="列印人"/>
+    <Parameter Name="PrintTimes" DataType="System.Int32" Description="列印次数"/>
+    <Parameter Name="StatusWord" DataType="System.String" Description="单据状态"/>
+    <Parameter Name="AmountTax" DataType="System.Double"/>
+    <Parameter Name="Amount" DataType="System.Double"/>
+    <Parameter Name="Taxes" DataType="System.Double"/>
+    <Parameter Name="CCurrencyStringAmount" DataType="System.String"/>
+  </Dictionary>
+  <ReportPage Name="Page1" Landscape="true" PaperWidth="297" PaperHeight="210" FirstPageSource="4" OtherPagesSource="4">
+    <PageHeaderBand Name="PageHeader1" Width="1047.06" Height="74.15">
+      <TextObject Name="Text1" Left="310.91" Top="-2.5" Width="425.25" Height="66.15" Text="明泰彩印對賬單" HorzAlign="Center" Font="Microsoft Sans Serif, 32pt, style=Bold"/>
+      <TextObject Name="Text2" Top="1" Width="237.35" Height="28.35" Text="明泰彩色包裝印刷有限公司 &#13;&#10;F-P-025 Rev A" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text3" Top="42.25" Width="661.5" Height="29.9" Text="廠商名稱：[Main.SupplierCode]，[Main.SupplierName]" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt, style=Bold"/>
+      <TextObject Name="Text4" Left="697.95" Top="18.9" Width="245.7" Height="28.35" Text="單號：" VertAlign="Bottom" Font="Microsoft Sans Serif, 14pt, style=Bold"/>
+      <TextObject Name="Text5" Left="672.5" Top="45.25" Width="274.05" Height="25.9" Text="日期：[Main.InputDate]" Format="Date" Format.Format="D" VertAlign="Bottom" Font="Microsoft Sans Serif, 12pt, style=Bold"/>
+      <TextObject Name="Text6" Left="946.65" Width="122.85" Height="47.25" Text="HSF" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 26pt, style=Bold"/>
+      <TextObject Name="Text47" Left="746.1" Top="14.9" Width="280.15" Height="31.35" Text="[Main.RdsNo]" VertAlign="Center" Font="Microsoft Sans Serif, 22pt, style=Bold"/>
+    </PageHeaderBand>
+    <DataBand Name="Data1" Top="78.15" Width="1047.06" Fill.Color="White">
+      <DataBand Name="Data2" Top="126.95" Width="1047.06" Height="38.35" CanGrow="true" DataSource="Detial_Stock" KeepTogether="true" KeepDetail="true">
+        <TextObject Name="Text33" Width="28.35" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Row#]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+        <TextObject Name="Text36" Left="28.35" Width="80.05" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.LotNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text37" Left="180.55" Width="71.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.PurchaseRdsNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text38" Left="500.85" Width="60.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.StockDate]" Format="Custom" Format.Format="yy/MM/dd" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text15" Left="251.7" Width="69.6" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.DeliveryNoteRdsNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text39" Left="321.3" Width="75.6" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.MaterialCode]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text40" Left="396.9" Width="103.95" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.MaterialName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text41" Left="561" Width="66.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.InStockNumb]" Format="Custom" Format.Format="#,##0.###" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text42" Left="665.5" Width="70.6" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.Price]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="4" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text43" Left="812.25" Width="76.05" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.InvoiceAmount]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text45" Left="951" Width="40.35" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.Remark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text46" Left="991.25" Width="58.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.PurchaseNumb]" Format="Custom" Format.Format="#,##0.###" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text44" Left="735.65" Width="76.05" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.AmountTax]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text250" Left="888.3" Width="62.7" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.InvoiceRdsNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text333" Left="626.7" Width="38.8" Height="38.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.Unit]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text335" Left="108.5" Width="72.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Stock.InStockRemark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <DataHeaderBand Name="DataHeader2" Top="82.15" Width="1047.06" Height="40.8" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true">
+          <TextObject Name="Text7" Top="18.9" Width="28.35" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="序" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text8" Left="28.35" Top="18.9" Width="80.05" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="入庫批號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text9" Left="180.55" Top="18.9" Width="71.15" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="訂單號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text10" Left="251.7" Top="18.9" Width="69.6" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="進貨單號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text11" Left="321.3" Top="18.9" Width="75.6" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="物料編號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text12" Left="396.9" Top="18.9" Width="103.95" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="品名（規格）" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text13" Left="500.85" Top="18.9" Width="60.15" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="進貨日" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text14" Left="561" Top="18.9" Width="66.15" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="進貨數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text16" Left="665.5" Top="18.9" Width="70.6" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="含稅價" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text17" Left="735.65" Top="18.9" Width="76.05" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="總金額" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text18" Left="812.25" Top="18.9" Width="76.05" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="發票金額" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text19" Left="951" Top="18.9" Width="40.35" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="備註" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text20" Left="991.25" Top="18.9" Width="58.15" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="采購數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text34" Width="1048.95" Height="18.9" Border.Lines="All" Text="入庫" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+          <TextObject Name="Text249" Left="888.3" Top="18.9" Width="62.7" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="發票號碼" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text35" Left="626.6" Top="18.9" Width="38.8" Height="21.9" Border.Lines="All" Text="單位" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text334" Left="108.5" Top="18.9" Width="72.15" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="驗收單號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        </DataHeaderBand>
+      </DataBand>
+      <DataBand Name="Data3" Top="214.1" Width="1047.06" Height="37.8" CanGrow="true" DataSource="Detial_Expenses" KeepTogether="true" KeepDetail="true">
+        <TextObject Name="Text222" Width="28.35" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Row#]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text224" Left="28.35" Width="80.05" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Expenses.PurchaseRdsNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text225" Left="500.85" Width="60.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Expenses.inputdate]" Format="Custom" Format.Format="yy/MM/dd" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text226" Left="108.5" Width="143.2" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Expenses.InStockRemark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text227" Left="251.7" Width="145.75" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Expenses.MaterialCode]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text228" Left="396.9" Width="103.95" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Expenses.MaterialName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text230" Left="665.5" Width="70.6" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Expenses.Price]" Format="Custom" Format.Format="0,000.00##" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text231" Left="812.25" Width="76.05" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Expenses.InvoiceAmount]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text232" Left="951" Width="98.3" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Expenses.Remark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text234" Left="735.65" Width="76.05" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Expenses.AmountTax]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text253" Left="888.3" Width="62.7" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Expenses.InvoiceRdsNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text321" Left="561" Width="103.95" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_Expenses.InStockNumb][Detial_Expenses.Unit]" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt">
+          <Formats>
+            <CustomFormat Format="#,##0.###"/>
+            <GeneralFormat/>
+          </Formats>
+        </TextObject>
+        <DataHeaderBand Name="DataHeader1" Top="169.3" Width="1047.06" Height="40.8" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true">
+          <TextObject Name="Text207" Top="18.9" Width="28.35" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="序" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text209" Left="28.35" Top="18.9" Width="80.05" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="訂單號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text210" Left="108.5" Top="18.9" Width="143.2" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="進貨單號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text211" Left="251.7" Top="18.9" Width="145.75" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="物料編號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text212" Left="396.9" Top="18.9" Width="103.95" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="品名（規格）" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text213" Left="500.85" Top="18.9" Width="60.15" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="進貨日" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text215" Left="665.5" Top="18.9" Width="70.6" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="含稅價" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text216" Left="735.65" Top="18.9" Width="76.05" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="總金額" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text217" Left="812.25" Top="18.9" Width="76.05" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="發票金額" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text218" Left="951" Top="18.9" Width="98.3" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="備註" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text220" Width="1048.95" Height="18.9" Border.Lines="All" Text="費用" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+          <TextObject Name="Text252" Left="888.3" Top="18.9" Width="62.7" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="發票號碼" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text322" Left="561" Top="18.9" Width="103.95" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="進貨數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        </DataHeaderBand>
+      </DataBand>
+      <DataBand Name="Data4" Top="299.7" Width="1047.06" Height="28.35" CanGrow="true" DataSource="Detial_Prepayment" KeepTogether="true" KeepDetail="true">
+        <TextObject Name="Text254" Width="28.35" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Row#]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text48" Left="28.35" Width="80.05" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_Prepayment.PurchaseRdsNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text50" Left="108.5" Width="72.15" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_Prepayment.MaterialCode]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text51" Left="180.55" Width="555.3" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_Prepayment.PerpaymentRemark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text54" Left="735.65" Width="76.05" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_Prepayment.AmountTax]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text55" Left="812.25" Width="76.05" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_Prepayment.InvoiceAmount]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text56" Left="888.3" Width="62.7" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_Prepayment.InvoiceRdsNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text57" Left="951" Width="98.3" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_Prepayment.Remark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <DataHeaderBand Name="DataHeader3" Top="255.9" Width="1047.06" Height="39.8" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true">
+          <TextObject Name="Text235" Top="18.9" Width="28.35" Height="20.9" Border.Lines="All" CanGrow="true" Text="序" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text237" Left="28.35" Top="18.9" Width="80.05" Height="20.9" Border.Lines="All" Text="訂單號" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text239" Left="108.5" Top="18.9" Width="72.15" Height="20.9" Border.Lines="All" Text="項目" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text240" Left="180.55" Top="18.9" Width="555.3" Height="20.9" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="預付款説明" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text244" Left="735.65" Top="18.9" Width="76.05" Height="20.9" Border.Lines="All" Text="總金額" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text245" Left="812.25" Top="18.9" Width="76.05" Height="20.9" Border.Lines="All" Text="發票金額" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text246" Left="951" Top="18.9" Width="98.3" Height="20.9" Border.Lines="All" Text="備註" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text248" Width="1048.95" Height="18.9" Border.Lines="All" Text="預付款" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+          <TextObject Name="Text251" Left="888.3" Top="18.9" Width="62.7" Height="20.9" Border.Lines="All" Text="發票號碼" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt"/>
+        </DataHeaderBand>
+      </DataBand>
+      <DataBand Name="Data5" Top="376.85" Width="1047.06" Height="37.8" CanGrow="true" DataSource="Detial_CutPay" KeepTogether="true" KeepDetail="true">
+        <TextObject Name="Text268" Width="28.35" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Row#]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text277" Left="735.65" Width="76.05" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_CutPay.CutPayAmount]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text279" Left="811.7" Width="237.25" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_CutPay.Remark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text327" Left="321.3" Width="414.35" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_CutPay.CutPayRemark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text336" Left="28.35" Width="80.05" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_CutPay.LotNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text337" Left="180.55" Width="71.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_CutPay.PurchaseRdsNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text338" Left="251.7" Width="69.6" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_CutPay.DeliveryNoteRdsNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text339" Left="108.4" Width="72.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial_CutPay.InStockRemark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <DataHeaderBand Name="DataHeader4" Top="332.05" Width="1047.06" Height="40.8" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true">
+          <TextObject Name="Text281" Top="18.9" Width="28.35" Height="21.9" Border.Lines="All" CanGrow="true" Text="序" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text289" Left="735.65" Top="18.9" Width="76.05" Height="21.9" Border.Lines="All" CanGrow="true" Text="扣款金額" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text290" Left="811.7" Top="18.9" Width="237.25" Height="21.9" Border.Lines="All" CanGrow="true" Text="備註" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text292" Width="1048.95" Height="18.9" Border.Lines="All" Text="扣款" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+          <TextObject Name="Text328" Left="321.3" Top="18.9" Width="414.35" Height="21.9" Border.Lines="All" CanGrow="true" Text="扣款説明" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text340" Left="28.35" Top="18.9" Width="80.05" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="入庫批號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text341" Left="180.55" Top="18.9" Width="71.15" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="訂單號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text342" Left="251.7" Top="18.9" Width="69.6" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="進貨單號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text343" Left="108.4" Top="18.9" Width="72.15" Height="21.9" Border.Lines="All" GrowToBottom="true" Text="驗收單號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        </DataHeaderBand>
+      </DataBand>
+      <DataBand Name="Data6" Top="460.45" Width="1047.06" Height="28.35" CanGrow="true" DataSource="Detial_CutPerpayment" KeepTogether="true" KeepDetail="true">
+        <TextObject Name="Text309" Width="28.35" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Row#]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text311" Left="28.35" Width="80.05" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_CutPerpayment.PurchaseRdsNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text317" Left="735.65" Width="76.05" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_CutPerpayment.AmountTax]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text318" Left="812.25" Width="76.05" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_CutPerpayment.InvoiceAmount]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text319" Left="888.3" Width="62.7" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_CutPerpayment.InvoiceRdsNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text320" Left="951" Width="98.3" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_CutPerpayment.Remark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text329" Left="108.5" Width="72.15" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="[Detial_CutPerpayment.MaterialCode]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text330" Left="180.55" Width="555.3" Height="28.35" Border.Lines="All" GrowToBottom="true" Text="（扣減）[Detial_CutPerpayment.CutPayRemark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <DataHeaderBand Name="DataHeader5" Top="418.65" Width="1047.06" Height="37.8" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true">
+          <TextObject Name="Text295" Top="18.9" Width="28.35" Height="18.9" Border.Lines="All" Text="序" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text297" Left="28.35" Top="18.9" Width="80.05" Height="18.9" Border.Lines="All" Text="訂單號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text302" Left="735.65" Top="18.9" Width="76.05" Height="18.9" Border.Lines="All" Text="總金額" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text303" Left="812.25" Top="18.9" Width="76.05" Height="18.9" Border.Lines="All" Text="發票金額" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text304" Left="951" Top="18.9" Width="98.3" Height="18.9" Border.Lines="All" Text="備註" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text306" Width="1049.95" Height="18.9" Border.Lines="All" Text="扣沖預付款" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+          <TextObject Name="Text307" Left="888.3" Top="18.9" Width="62.7" Height="18.9" Border.Lines="All" Text="發票號碼" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text331" Left="108.5" Top="18.9" Width="72.15" Height="18.9" Border.Lines="All" Text="項目" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+          <TextObject Name="Text332" Left="180.55" Top="18.9" Width="555.3" Height="18.9" Border.Lines="All" Text="預付款説明" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        </DataHeaderBand>
+      </DataBand>
+      <DataFooterBand Name="DataFooter1" Top="492.8" Width="1047.06" Height="133.3">
+        <TextObject Name="Text21" Width="1049.4" Height="28.35" Border.Lines="All" Font="Microsoft Sans Serif, 11pt"/>
+        <TextObject Name="Text22" Left="641.6" Width="94.5" Height="28.35" Border.Lines="Right, Top, Bottom" Text="合計：" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+        <TextObject Name="Text23" Left="740.65" Width="217.35" Height="28.35" Border.Lines="Top, Bottom" Text="[AmountTax] 元" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" VertAlign="Center" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+        <TextObject Name="Text24" Width="113.4" Height="28.35" Border.Lines="Top, Bottom" Text="[Main.MoneyTypeName]大寫：" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+        <TextObject Name="Text25" Left="110.95" Width="463.05" Height="28.35" Border.Lines="Top, Bottom" Text="[CCurrencyStringAmount]" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+        <TextObject Name="Text26" Top="28.35" Width="28.35" Height="75.6" Border.Lines="All" Text="註" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+        <TextObject Name="Text27" Left="28.35" Top="28.35" Width="604.8" Height="75.6" Border.Lines="Left, Top, Bottom" Text="明泰彩印每月20日結算當月交貨明細，20日以後交貨部分則列爲次月貨款；爲避免影響付款作業，請務必於每月20日前將當月對賬單提交明泰采購結算。" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+        <TextObject Name="Text28" Left="633.15" Top="28.35" Width="415.8" Height="75.6" Border.Lines="Right, Top, Bottom" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+        <TextObject Name="Text29" Left="633.15" Top="109.95" Width="56.7" Height="20.9" Text="製表：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text30" Left="680.4" Top="109.95" Width="94.5" Height="20.9" Text="[Main.Inputer]" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+        <TextObject Name="Text31" Left="765.45" Top="109.95" Width="56.7" Height="20.9" Text="日期：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text32" Left="810.25" Top="108.95" Width="198.45" Height="20.9" Text="[Main.InputDate]" Format="Custom" Format.Format="yyyy/MM/dd HH:mm" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+        <TextObject Name="Text206" Top="109.95" Width="595.35" Height="21.9" Text="TIP：以下爲空白。（内容手寫、數量塗抹，單據無效）" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+      </DataFooterBand>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="630.1" Width="1047.06" Height="18.9">
+      <TextObject Name="Text176" Width="304.6" Height="18.9" Text="輸入人:[Main.Inputer],創建時間:[Main.InputDate]" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text177" Left="708.75" Width="333.75" Height="18.9" CanGrow="true" GrowToBottom="true" Text="列印人:[Author] 列印時間：[Date]第[Page]頁共[TotalPages#]頁" HorzAlign="Right" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text175" Left="321.3" Width="238.45" Height="18.9" BeforePrintEvent="Text175_BeforePrint" Text="審核人:[Main.Checker],審核時間:[Main.CheckDate]" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+        </Formats>
+      </TextObject>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

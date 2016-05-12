@@ -1,0 +1,153 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="02/24/2016 10:18:00" ReportInfo.Modified="02/25/2016 16:57:44" ReportInfo.CreatorVersion="2013.2.2.0">
+  <Dictionary>
+    <TableDataSource Name="Master" ReferenceName="Master" DataType="System.Int32" Enabled="true">
+      <Column Name="ID" DataType="System.Int32"/>
+      <Column Name="_ID" DataType="System.Int32"/>
+      <Column Name="GUID" DataType="System.Guid"/>
+      <Column Name="InputDate" DataType="System.DateTime"/>
+      <Column Name="Inputer" DataType="System.String"/>
+      <Column Name="CheckDate" DataType="System.DateTime"/>
+      <Column Name="Checker" DataType="System.String"/>
+      <Column Name="DeptID" DataType="System.Int32"/>
+      <Column Name="StockDate" DataType="System.DateTime"/>
+      <Column Name="StoreKeeper" DataType="System.String"/>
+      <Column Name="QCChecker" DataType="System.String"/>
+      <Column Name="Sender" DataType="System.String"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="PCChecker" DataType="System.String"/>
+      <Column Name="RdsNo" DataType="System.String"/>
+      <Column Name="Status" DataType="System.Int16"/>
+      <Column Name="inBonded" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="isBK" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="Type" DataType="System.String"/>
+      <Column Name="DeptName" DataType="System.String"/>
+    </TableDataSource>
+    <TableDataSource Name="Detial" ReferenceName="Detial" DataType="System.Int32" Enabled="true">
+      <Column Name="_ID" DataType="System.Int32"/>
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="IPQC_List_ID" DataType="System.Int32"/>
+      <Column Name="ProduceRdsNo" DataType="System.String"/>
+      <Column Name="Produce_ID" DataType="System.Int32"/>
+      <Column Name="ProdCode" DataType="System.String"/>
+      <Column Name="ProcessCode" DataType="System.String"/>
+      <Column Name="PartID" DataType="System.String"/>
+      <Column Name="PrdID" DataType="System.Int32"/>
+      <Column Name="ProdDailyReport_ID" DataType="System.Int32"/>
+      <Column Name="MachineCode" DataType="System.String"/>
+      <Column Name="Number" DataType="System.Decimal"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="ResolutionID" DataType="System.Int32"/>
+      <Column Name="ProjID" DataType="System.Int32"/>
+      <Column Name="RejectRdsNo" DataType="System.String"/>
+      <Column Name="FinishRdsNo" DataType="System.String"/>
+      <Column Name="Operator" DataType="System.String"/>
+      <Column Name="CustID" DataType="System.String"/>
+      <Column Name="PaperCode" DataType="System.String"/>
+      <Column Name="Scrap_ID" DataType="System.Int32"/>
+      <Column Name="GUID" DataType="System.Guid"/>
+      <Column Name="pw" DataType="System.Decimal"/>
+      <Column Name="gwt" DataType="System.Decimal"/>
+      <Column Name="RejColNumb" DataType="System.Int32"/>
+      <Column Name="PaperColNumb" DataType="System.Int32"/>
+      <Column Name="PaperSize" DataType="System.String"/>
+      <Column Name="inBonded" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="AssignToDepartmentID" DataType="System.Int32"/>
+      <Column Name="AssignToProcessCode" DataType="System.String"/>
+      <Column Name="QCEditor" DataType="System.String"/>
+      <Column Name="QCEditDate" DataType="System.DateTime"/>
+      <Column Name="Editor" DataType="System.String"/>
+      <Column Name="EditDate" DataType="System.DateTime"/>
+      <Column Name="ProductCode" DataType="System.String"/>
+      <Column Name="ColNumb" DataType="System.Int32"/>
+      <Column Name="CutNumb" DataType="System.Int32"/>
+      <Column Name="PrintSize" DataType="System.String"/>
+      <Column Name="inBondedWord" DataType="System.String"/>
+      <Column Name="PaperName" DataType="System.String"/>
+      <Column Name="ProductName" DataType="System.String"/>
+      <Column Name="SecretWord" DataType="System.String"/>
+      <Column Name="ProcessName" DataType="System.String"/>
+      <Column Name="MachineName" DataType="System.String"/>
+      <Column Name="PrintLength" DataType="System.Double"/>
+      <Column Name="PrintWidth" DataType="System.Double"/>
+      <Column Name="PaperLength" DataType="System.Double"/>
+      <Column Name="PaperWidth" DataType="System.Double"/>
+      <Column Name="gw" DataType="System.Double"/>
+      <Column Name="PickingNumb" DataType="System.Double"/>
+      <Column Name="PrintNumb" DataType="System.Double"/>
+      <Column Name="AdjustNumb" DataType="System.Decimal"/>
+      <Column Name="Numb1" DataType="System.Double"/>
+      <Column Name="uw" DataType="System.Decimal"/>
+      <Column Name="gwt1" DataType="System.Decimal"/>
+      <Column Name="pwt" DataType="System.Decimal"/>
+    </TableDataSource>
+    <Parameter Name="Inputer" DataType="System.String" Description="制表人"/>
+    <Parameter Name="InputDate" DataType="System.DateTime" Description="制表时间"/>
+    <Parameter Name="Checker" DataType="System.String" Description="审核人"/>
+    <Parameter Name="CheckDate" DataType="System.DateTime" Description="审核时间"/>
+    <Parameter Name="Author" DataType="System.String" Description="列印人"/>
+    <Parameter Name="PrintTimes" DataType="System.Int32" Description="列印次数"/>
+    <Parameter Name="StatusWord" DataType="System.String" Description="单据状态"/>
+    <Total Name="Total_gw" Expression="[Detial.gwt1]" Evaluator="Data1" PrintOn="DataFooter1"/>
+    <Total Name="Total_pwt" Expression="[Detial.pwt]" Evaluator="Data1" PrintOn="DataFooter1"/>
+  </Dictionary>
+  <ReportPage Name="Page1" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" LeftMargin="5" TopMargin="5" RightMargin="5" BottomMargin="5">
+    <PageHeaderBand Name="PageHeader1" Width="1084.86" Height="84.05" CanGrow="true">
+      <TextObject Name="Text1" Left="378.05" Top="4.72" Width="303.75" Height="28.35" Border.Lines="Bottom" Text="印刷結製令退料表" HorzAlign="Center" VertAlign="Bottom" Font="Microsoft Sans Serif, 16pt, style=Bold"/>
+      <TextObject Name="Text2" Top="46.25" Width="69.6" Height="37.8" Border.Lines="All" CanGrow="true" Text="機臺" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text3" Left="69.6" Top="46.25" Width="85.05" Height="37.8" Border.Lines="All" CanGrow="true" Text="工單號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text4" Left="154.65" Top="46.25" Width="71.6" Height="37.8" Border.Lines="All" CanGrow="true" Text="客戶單號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text5" Left="225.8" Top="46.25" Width="63.15" Height="37.8" Border.Lines="All" CanGrow="true" Text="產品編號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text6" Left="289.4" Top="46.25" Width="88.95" Height="37.8" Border.Lines="All" CanGrow="true" Text="產品名稱" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text7" Left="378.45" Top="46.25" Width="35.8" Height="37.8" Border.Lines="All" CanGrow="true" Text="部件" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text8" Left="414.25" Top="46.25" Width="86.95" Height="37.8" Border.Lines="All" CanGrow="true" Text="紙張名稱" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text9" Left="500.75" Top="46.25" Width="77.05" Height="37.8" Border.Lines="All" CanGrow="true" Text="紙張編碼" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text10" Left="578.35" Top="46.25" Width="69.05" Height="37.8" Border.Lines="All" CanGrow="true" Text="領紙張數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text11" Left="647.4" Top="46.25" Width="34.8" Height="37.8" Border.Lines="All" CanGrow="true" Text="開數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text12" Left="682.2" Top="46.25" Width="67.15" Height="37.8" Border.Lines="All" CanGrow="true" Text="印張尺寸(mm)" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text13" Left="749.35" Top="46.25" Width="48.7" Height="37.8" Border.Lines="All" CanGrow="true" Text="印張數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text14" Left="797.6" Top="46.25" Width="49.7" Height="37.8" Border.Lines="All" CanGrow="true" Text="良品數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text15" Left="846.85" Top="46.25" Width="48.7" Height="37.8" Border.Lines="All" CanGrow="true" Text="過版紙數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text16" Left="896.1" Top="46.25" Width="52.7" Height="37.8" Border.Lines="All" CanGrow="true" Text="過版紙單重(g)" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text17" Left="948.9" Top="46.25" Width="56.7" Height="37.8" Border.Lines="All" CanGrow="true" Text="過版紙總重(kg)" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text18" Left="1005.6" Top="46.25" Width="80.7" Height="37.8" Border.Lines="All" CanGrow="true" Text="過版紙折原紙總重(kg)" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text40" Left="37.8" Width="122.85" Height="28.35" Text="[IIf([Master.inBonded],&quot;保稅&quot;,&quot;非稅&quot;)]&#13;&#10;" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text41" Left="179.55" Width="103.95" Height="28.35" Text="[IIf([Master.isBK],&quot;B&quot;,&quot;  &quot;)]" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text42" Left="727.65" Top="18.9" Width="94.5" Height="18.9" Text="[Master.RdsNo]" Font="宋体, 9pt"/>
+    </PageHeaderBand>
+    <DataBand Name="Data1" Top="88.05" Width="1084.86" Height="37.8" CanGrow="true" DataSource="Detial" KeepTogether="true" KeepDetail="true">
+      <TextObject Name="Text19" Width="69.6" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.MachineName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text20" Left="69.6" Width="85.05" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.ProduceRdsNo]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text21" Left="154.65" Width="71.6" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text22" Left="225.8" Width="63.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.ProdCode]" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text23" Left="288.95" Width="88.95" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.ProductName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text24" Left="378" Width="35.8" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.PartID]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text25" Left="413.8" Width="86.95" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.PaperName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text26" Left="500.85" Width="77.05" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.PaperCode]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text27" Left="578.45" Width="69.05" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.PickingNumb]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text28" Left="646.6" Width="35.8" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.CutNumb]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text29" Left="682.4" Width="66.15" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.PrintSize]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text30" Left="748.55" Width="49.7" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.PrintNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text31" Left="797.8" Width="49.7" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.Numb1]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text32" Left="847.5" Width="48.7" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.AdjustNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text33" Left="895.75" Width="53.7" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.pw]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="1" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text34" Left="949" Width="56.7" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.gwt1]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="3" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text35" Left="1006.15" Width="79.7" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.pwt]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="3" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <DataFooterBand Name="DataFooter1" Top="129.85" Width="1084.86" Height="37.8">
+        <TextObject Name="Text36" Left="0.45" Width="949" Height="37.8" Border.Lines="All" Text="合計：" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text37" Left="949" Width="56.7" Height="37.8" Border.Lines="All" Text="[Total_gw]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="3" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+        <TextObject Name="Text38" Left="1005.7" Width="79.7" Height="37.8" Border.Lines="All" Text="[Total_pwt]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="3" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      </DataFooterBand>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="171.65" Width="1084.86" Height="18.9">
+      <TextObject Name="Text39" Left="576.45" Width="505.7" Height="18.9" Text="列印人：[Author],列印時間：[Date]  第[Page]頁/共[TotalPages#]頁 " HorzAlign="Right" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+        </Formats>
+      </TextObject>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

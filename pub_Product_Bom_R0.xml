@@ -1,0 +1,548 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="04/26/2014 19:29:06" ReportInfo.Modified="04/09/2016 13:17:07" ReportInfo.CreatorVersion="2013.2.2.0">
+  <Dictionary>
+    <TableDataSource Name="Product" ReferenceName="Product" DataType="System.Int32" Enabled="true">
+      <Column Name="type" DataType="System.String"/>
+      <Column Name="code" DataType="System.String"/>
+      <Column Name="name" DataType="System.String"/>
+      <Column Name="unit" DataType="System.String"/>
+      <Column Name="length" DataType="System.Double"/>
+      <Column Name="width" DataType="System.Double"/>
+      <Column Name="height" DataType="System.Double"/>
+      <Column Name="price" DataType="System.Decimal"/>
+      <Column Name="location" DataType="System.String"/>
+      <Column Name="maxstock" DataType="System.Decimal"/>
+      <Column Name="minstock" DataType="System.Decimal"/>
+      <Column Name="custprodno" DataType="System.String"/>
+      <Column Name="status" DataType="System.Byte"/>
+      <Column Name="remark" DataType="System.String"/>
+      <Column Name="typename" DataType="System.String"/>
+      <Column Name="mType" DataType="System.String"/>
+      <Column Name="CustCode" DataType="System.String"/>
+      <Column Name="CoverPage" DataType="System.Int32"/>
+      <Column Name="ContentPage" DataType="System.Int32"/>
+      <Column Name="pLength" DataType="System.Double"/>
+      <Column Name="pWidth" DataType="System.Double"/>
+      <Column Name="powerrate" DataType="System.Double"/>
+      <Column Name="weight" DataType="System.Decimal"/>
+      <Column Name="fPaperRemark" DataType="System.String"/>
+      <Column Name="fColorRemark" DataType="System.String"/>
+      <Column Name="fProceRemark" DataType="System.String"/>
+      <Column Name="fMarkRemark" DataType="System.String"/>
+      <Column Name="lPaperRemark" DataType="System.String"/>
+      <Column Name="lColorRemark" DataType="System.String"/>
+      <Column Name="lProceRemark" DataType="System.String"/>
+      <Column Name="lMarkRemark" DataType="System.String"/>
+      <Column Name="lProductRemark" DataType="System.String"/>
+      <Column Name="mCustNO" DataType="System.String"/>
+      <Column Name="PackType" DataType="System.String"/>
+      <Column Name="CreateDate" DataType="System.DateTime"/>
+      <Column Name="fNumb" DataType="System.String"/>
+      <Column Name="color" DataType="System.String"/>
+      <Column Name="BackMark" DataType="System.String"/>
+      <Column Name="Manuscript" DataType="System.String"/>
+      <Column Name="ProdRemark" DataType="System.String"/>
+      <Column Name="PathName" DataType="System.String"/>
+      <Column Name="Smp" DataType="System.String"/>
+      <Column Name="SmpDate" DataType="System.DateTime"/>
+      <Column Name="Inputer" DataType="System.String"/>
+      <Column Name="UserID" DataType="System.Int32"/>
+      <Column Name="InputDate" DataType="System.DateTime"/>
+      <Column Name="remark2" DataType="System.String"/>
+      <Column Name="PN" DataType="System.String"/>
+      <Column Name="_ID" DataType="System.Int32"/>
+      <Column Name="Specs2" DataType="System.String"/>
+      <Column Name="PhoneSubject" DataType="System.String"/>
+      <Column Name="EditDate" DataType="System.DateTime"/>
+      <Column Name="Editor" DataType="System.String"/>
+      <Column Name="secret" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="Bonded" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="Description" DataType="System.String"/>
+      <Column Name="DeclaretionName" DataType="System.String"/>
+      <Column Name="financeType" DataType="System.String"/>
+      <Column Name="PrepressFinishDate" DataType="System.DateTime"/>
+      <Column Name="PlateFinishDate" DataType="System.DateTime"/>
+      <Column Name="CheckDate" DataType="System.DateTime"/>
+      <Column Name="Checker" DataType="System.String"/>
+      <Column Name="FSC" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="kCode" DataType="System.String"/>
+      <Column Name="EstRdsNo" DataType="System.String"/>
+      <Column Name="Specs" DataType="System.String"/>
+      <Column Name="FinanceTypeName" DataType="System.String"/>
+      <Column Name="mTypeName" DataType="System.String"/>
+      <Column Name="AOD" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="UnfoldSize" DataType="System.String"/>
+      <Column Name="Bond" DataType="System.String"/>
+      <Column Name="HasPhotoImage" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="PriceUnit" DataType="System.String"/>
+      <Column Name="PurchaseUnit" DataType="System.String"/>
+      <Column Name="PurchaseUnitConvertRatio" DataType="System.Decimal"/>
+      <Column Name="LeadTime" DataType="System.Int32"/>
+      <Column Name="EXperiod" DataType="System.Int32"/>
+      <Column Name="MOQ" DataType="System.Decimal"/>
+      <Column Name="isNoStock" DataType="System.Byte"/>
+      <Column Name="isExpenses" DataType="System.Byte"/>
+      <Column Name="PackingType" DataType="System.Byte"/>
+      <Column Name="InStockType" DataType="System.String"/>
+      <Column Name="NumberInteger" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="LastOutStockDate" DataType="System.DateTime"/>
+      <Column Name="InventoryTurnOverDays" DataType="System.Int32"/>
+      <Column Name="CGUID" DataType="System.Guid"/>
+      <Column Name="PriceUnitConvertRatio" DataType="System.Decimal"/>
+      <Column Name="IdelPeriod" DataType="System.Int32"/>
+    </TableDataSource>
+    <TableDataSource Name="BOM" ReferenceName="BOM" DataType="System.Int32" Enabled="true">
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="code" DataType="System.String"/>
+      <Column Name="type" DataType="System.String"/>
+      <Column Name="inputdate" DataType="System.DateTime"/>
+      <Column Name="userid" DataType="System.Int32"/>
+      <Column Name="inputer" DataType="System.String"/>
+      <Column Name="status" DataType="System.Int16"/>
+      <Column Name="remark" DataType="System.String"/>
+      <Column Name="FlagCode" DataType="System.String"/>
+      <Column Name="mType" DataType="System.String"/>
+      <Column Name="kCode" DataType="System.String"/>
+      <Column Name="mPart" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="VesionNo" DataType="System.Int16"/>
+      <Column Name="checker" DataType="System.String"/>
+      <Column Name="checkdate" DataType="System.DateTime"/>
+      <Column Name="DM" DataType="System.String"/>
+      <Column Name="Smp" DataType="System.String"/>
+      <Column Name="SmpDate" DataType="System.DateTime"/>
+      <Column Name="lState" DataType="System.Int32"/>
+      <Column Name="HotPlateCode" DataType="System.String"/>
+      <Column Name="ScreenPlate" DataType="System.String"/>
+      <Column Name="_ID" DataType="System.Int32"/>
+      <Column Name="MPDate" DataType="System.DateTime"/>
+      <Column Name="MPRemark" DataType="System.String"/>
+      <Column Name="MPMan" DataType="System.String"/>
+    </TableDataSource>
+    <TableDataSource Name="BomPaper" ReferenceName="BomPaper" DataType="System.Int32" Enabled="true">
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="code" DataType="System.String"/>
+      <Column Name="remark" DataType="System.String"/>
+      <Column Name="partID" DataType="System.String"/>
+      <Column Name="mType" DataType="System.Int32"/>
+      <Column Name="Length" DataType="System.Double"/>
+      <Column Name="Widght" DataType="System.Double"/>
+      <Column Name="ZW" DataType="System.String"/>
+      <Column Name="pageNumb" DataType="System.Int32"/>
+      <Column Name="kNumb" DataType="System.Single"/>
+      <Column Name="pNumb" DataType="System.Single"/>
+      <Column Name="CutLength" DataType="System.Single"/>
+      <Column Name="_ID" DataType="System.Int32"/>
+      <Column Name="ProcID" DataType="System.Int32"/>
+      <Column Name="ProcCode" DataType="System.String"/>
+      <Column Name="Numb" DataType="System.Single"/>
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="Name" DataType="System.String"/>
+      <Column Name="Weight" DataType="System.Decimal"/>
+      <Column Name="ProcName" DataType="System.String"/>
+      <Column Name="PrintPartID" DataType="System.String"/>
+    </TableDataSource>
+    <TableDataSource Name="BomWavePaper" ReferenceName="BomWavePaper" DataType="System.Int32" Enabled="true">
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="code" DataType="System.String"/>
+      <Column Name="remark" DataType="System.String"/>
+      <Column Name="partID" DataType="System.String"/>
+      <Column Name="mType" DataType="System.Int32"/>
+      <Column Name="Length" DataType="System.Double"/>
+      <Column Name="Widght" DataType="System.Double"/>
+      <Column Name="ZW" DataType="System.String"/>
+      <Column Name="pageNumb" DataType="System.Int32"/>
+      <Column Name="kNumb" DataType="System.Single"/>
+      <Column Name="pNumb" DataType="System.Single"/>
+      <Column Name="CutLength" DataType="System.Single"/>
+      <Column Name="_ID" DataType="System.Int32"/>
+      <Column Name="ProcID" DataType="System.Int32"/>
+      <Column Name="ProcCode" DataType="System.String"/>
+      <Column Name="Numb" DataType="System.Single"/>
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="Name" DataType="System.String"/>
+      <Column Name="ProcName" DataType="System.String"/>
+      <Column Name="PrintPartID" DataType="System.String"/>
+    </TableDataSource>
+    <TableDataSource Name="BomMaterial" ReferenceName="BomMaterial" DataType="System.Int32" Enabled="true">
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="code" DataType="System.String"/>
+      <Column Name="Numb" DataType="System.Decimal"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="CacluateType" DataType="System.String"/>
+      <Column Name="BeginNumbType" DataType="System.String"/>
+      <Column Name="Cacluate" DataType="System.String"/>
+      <Column Name="PartID" DataType="System.String"/>
+      <Column Name="Length" DataType="System.Decimal"/>
+      <Column Name="Width" DataType="System.Decimal"/>
+      <Column Name="ProcID" DataType="System.Int32"/>
+      <Column Name="ProcCode" DataType="System.String"/>
+      <Column Name="KITSortID" DataType="System.String"/>
+      <Column Name="Name" DataType="System.String"/>
+      <Column Name="ProcName" DataType="System.String"/>
+      <Column Name="TypeName" DataType="System.String"/>
+      <Column Name="TPName" DataType="System.String"/>
+      <Column Name="TP" DataType="System.String"/>
+      <Column Name="Specs" DataType="System.String"/>
+    </TableDataSource>
+    <TableDataSource Name="BomPrint" ReferenceName="BomPrint" DataType="System.Int32" Enabled="true">
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="code" DataType="System.String"/>
+      <Column Name="machid" DataType="System.String"/>
+      <Column Name="pRemark" DataType="System.String"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="PartID" DataType="System.String"/>
+      <Column Name="ca1" DataType="System.Int32"/>
+      <Column Name="ca2" DataType="System.Int32"/>
+      <Column Name="cb1" DataType="System.Int32"/>
+      <Column Name="cb2" DataType="System.Int32"/>
+      <Column Name="catxt" DataType="System.String"/>
+      <Column Name="cbtxt" DataType="System.String"/>
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="rate" DataType="System.Double"/>
+      <Column Name="pType" DataType="System.Int32"/>
+      <Column Name="powerRate" DataType="System.Double"/>
+      <Column Name="jN" DataType="System.Decimal"/>
+      <Column Name="pN" DataType="System.Decimal"/>
+      <Column Name="ColNumb" DataType="System.Int32"/>
+      <Column Name="Length" DataType="System.Decimal"/>
+      <Column Name="Width" DataType="System.Decimal"/>
+      <Column Name="ProcessName" DataType="System.String"/>
+      <Column Name="MachineName" DataType="System.String"/>
+      <Column Name="WaitTimeSTD" DataType="System.Decimal"/>
+      <Column Name="StdCapcity" DataType="System.Decimal"/>
+      <Column Name="DepartmentName" DataType="System.String"/>
+      <Column Name="WaitTime" DataType="System.Decimal"/>
+      <Column Name="PrintPartID" DataType="System.String"/>
+      <Column Name="PaperColNumb" DataType="System.Int32"/>
+      <Column Name="PaperCutNumb" DataType="System.Int32"/>
+      <Column Name="PersonNumb" DataType="System.Decimal"/>
+    </TableDataSource>
+    <TableDataSource Name="BomPostpress" ReferenceName="BomPostpress" DataType="System.Int32" Enabled="true">
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="code" DataType="System.String"/>
+      <Column Name="machid" DataType="System.String"/>
+      <Column Name="pRemark" DataType="System.String"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="PartID" DataType="System.String"/>
+      <Column Name="ca1" DataType="System.Int32"/>
+      <Column Name="ca2" DataType="System.Int32"/>
+      <Column Name="cb1" DataType="System.Int32"/>
+      <Column Name="cb2" DataType="System.Int32"/>
+      <Column Name="catxt" DataType="System.String"/>
+      <Column Name="cbtxt" DataType="System.String"/>
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="rate" DataType="System.Double"/>
+      <Column Name="pType" DataType="System.Int32"/>
+      <Column Name="powerRate" DataType="System.Double"/>
+      <Column Name="jN" DataType="System.Decimal"/>
+      <Column Name="pN" DataType="System.Decimal"/>
+      <Column Name="ColNumb" DataType="System.Int32"/>
+      <Column Name="Length" DataType="System.Decimal"/>
+      <Column Name="Width" DataType="System.Decimal"/>
+      <Column Name="ProcessName" DataType="System.String"/>
+      <Column Name="MachineName" DataType="System.String"/>
+      <Column Name="WaitTimeSTD" DataType="System.Decimal"/>
+      <Column Name="StdCapcity" DataType="System.Decimal"/>
+      <Column Name="DepartmentName" DataType="System.String"/>
+      <Column Name="PartSortID" DataType="System.Int32"/>
+      <Column Name="WaitTime" DataType="System.Decimal"/>
+      <Column Name="PrintPartID" DataType="System.String"/>
+      <Column Name="PaperColNumb" DataType="System.Int32"/>
+      <Column Name="PaperCutNumb" DataType="System.Int32"/>
+      <Column Name="PersonNumb" DataType="System.Decimal"/>
+    </TableDataSource>
+    <TableDataSource Name="Customer" ReferenceName="Customer" DataType="System.Int32" Enabled="true">
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="code" DataType="System.String"/>
+      <Column Name="name" DataType="System.String"/>
+      <Column Name="type" DataType="System.String"/>
+      <Column Name="rate" DataType="System.Double"/>
+      <Column Name="paytime" DataType="System.String"/>
+      <Column Name="moneytype" DataType="System.String"/>
+      <Column Name="address" DataType="System.String"/>
+      <Column Name="tel" DataType="System.String"/>
+      <Column Name="fax" DataType="System.String"/>
+      <Column Name="postcode" DataType="System.String"/>
+      <Column Name="connecter" DataType="System.String"/>
+      <Column Name="inteladdress" DataType="System.String"/>
+      <Column Name="email" DataType="System.String"/>
+      <Column Name="setdate" DataType="System.DateTime"/>
+      <Column Name="status" DataType="System.Byte"/>
+      <Column Name="remark" DataType="System.String"/>
+      <Column Name="SendAddress" DataType="System.String"/>
+      <Column Name="BankNo" DataType="System.String"/>
+      <Column Name="BankName" DataType="System.String"/>
+      <Column Name="SendType" DataType="System.String"/>
+      <Column Name="BusinessMan" DataType="System.String"/>
+      <Column Name="rate2" DataType="System.Double"/>
+      <Column Name="Assistant" DataType="System.String"/>
+      <Column Name="Bond" DataType="System.String"/>
+      <Column Name="OEMCustomer" DataType="System.String"/>
+    </TableDataSource>
+    <Parameter Name="Inputer" DataType="System.String" Description="制表人"/>
+    <Parameter Name="InputDate" DataType="System.DateTime" Description="制表时间"/>
+    <Parameter Name="Checker" DataType="System.String" Description="审核人"/>
+    <Parameter Name="CheckDate" DataType="System.DateTime" Description="审核时间"/>
+    <Parameter Name="Author" DataType="System.String" Description="列印人"/>
+    <Parameter Name="PrintTimes" DataType="System.Int32" Description="列印次数"/>
+    <Parameter Name="StatusWord" DataType="System.String" Description="单据状态"/>
+  </Dictionary>
+  <ReportPage Name="Page1">
+    <ReportTitleBand Name="ReportTitle1" Width="718.2" Height="28.35">
+      <TextObject Name="Text5" Left="85.05" Width="548.1" Height="28.35" Text="明揚彩色印刷包裝有限公司（蘇州）" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 18pt"/>
+    </ReportTitleBand>
+    <PageHeaderBand Name="PageHeader1" Top="32.35" Width="718.2" Height="66.15">
+      <TextObject Name="Text1" Left="396.9" Top="37.8" Width="321.3" Height="28.35" Border.Lines="Right, Top" Text="[Product.name]" VertAlign="Center" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+      <TextObject Name="Text2" Top="37.8" Width="85.05" Height="28.35" Border.Lines="Left, Top" Text="產品編號：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text3" Left="85.05" Top="37.8" Width="226.8" Height="28.35" Border.Lines="Top" Text="[Product.code]" Format="Date" Format.Format="d" VertAlign="Center" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+      <TextObject Name="Text4" Left="311.85" Top="37.8" Width="85.05" Height="28.35" Border.Lines="Top" Text="料號：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text6" Left="245.7" Top="11" Width="226.8" Height="28.35" Text="產品BOM档案" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 16pt"/>
+      <TextObject Name="Text7" Width="122.85" Height="37.8" Text="[IIf([Product.Bonded],&quot;保稅&quot;,&quot;&quot;)]" Font="Microsoft Sans Serif, 24pt, style=Bold"/>
+      <TextObject Name="Text69" Left="85.05" Width="94.5" Height="37.8" Text="[IIf([Product.secret],&quot;BK&quot;,&quot;&quot;)]" Font="MS Reference Sans Serif, 24pt, style=Bold"/>
+      <TextObject Name="Text70" Left="510.3" Width="75.6" Height="37.8" Text="[IIf([Product.FSC],&quot;FSC&quot;,&quot;&quot;)]" Font="Microsoft Sans Serif, 24pt, style=Bold"/>
+      <TextObject Name="Text71" Left="585.9" Width="85.05" Height="37.8" Text="HSF" Font="Microsoft Sans Serif, 24pt, style=Bold"/>
+    </PageHeaderBand>
+    <DataBand Name="Data7" Top="102.5" Width="718.2" Height="28.35" CanGrow="true" DataSource="Product" KeepTogether="true">
+      <TextObject Name="Text162" Width="85.05" Height="28.35" Border.Lines="Left" CanGrow="true" GrowToBottom="true" Text="机种：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text161" Left="396.9" Width="321.3" Height="28.35" Border.Lines="Right" CanGrow="true" GrowToBottom="true" Text="[Product.Description]" VertAlign="Center" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+      <TextObject Name="Text163" Left="85.05" Width="226.8" Height="28.35" CanGrow="true" GrowToBottom="true" Text="[Product.PhoneSubject]" Format="Date" Format.Format="d" VertAlign="Center" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+      <TextObject Name="Text164" Left="311.85" Width="85.05" Height="28.35" CanGrow="true" GrowToBottom="true" Text="品名描述：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+    </DataBand>
+    <DataBand Name="Data8" Top="134.85" Width="718.2" Height="28.35" CanGrow="true" DataSource="Customer" KeepTogether="true">
+      <TextObject Name="Text8" Width="85.05" Height="28.35" Border.Lines="Left" CanGrow="true" GrowToBottom="true" Text="客戶名稱：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text9" Left="85.05" Width="226.8" Height="28.35" CanGrow="true" GrowToBottom="true" Text="[Customer.code] " Format="Date" Format.Format="d" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+      <TextObject Name="Text10" Left="604.8" Width="113.4" Height="28.35" Border.Lines="Right" CanGrow="true" GrowToBottom="true" Text="[Customer.BusinessMan]/[Customer.Assistant]" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+      <TextObject Name="Text11" Left="510.3" Width="94.5" Height="28.35" CanGrow="true" GrowToBottom="true" Text="業務/業助：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text165" Left="311.85" Width="85.05" Height="28.35" CanGrow="true" GrowToBottom="true" Text="客户料号：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text166" Left="396.9" Width="113.4" Height="28.35" CanGrow="true" GrowToBottom="true" Text="[Product.mCustNO]" Format="Date" Format.Format="d" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+    </DataBand>
+    <DataBand Name="Data9" Top="167.2" Width="718.2" Height="28.35" CanGrow="true" DataSource="Product" KeepTogether="true">
+      <TextObject Name="Text12" Width="85.05" Height="28.35" Border.Lines="Left" CanGrow="true" GrowToBottom="true" Text="成品尺寸：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text13" Left="85.05" Width="141.75" Height="28.35" CanGrow="true" GrowToBottom="true" Text="[Product.Specs2](mm)" Format="Date" Format.Format="d" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+      <TextObject Name="Text16" Left="226.8" Width="85.05" Height="28.35" CanGrow="true" GrowToBottom="true" Text="展開尺寸：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text17" Left="311.85" Width="141.75" Height="28.35" CanGrow="true" GrowToBottom="true" Text="[Product.pLength]x[Product.pWidth](mm)" VertAlign="Center" Font="Microsoft Sans Serif, 11pt">
+        <Formats>
+          <NumberFormat UseLocale="false" NegativePattern="1"/>
+          <NumberFormat UseLocale="false"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text19" Left="453.6" Width="56.7" Height="28.35" CanGrow="true" GrowToBottom="true" Text="[IIf([Product.CoverPage]+[Product.ContentPage]&gt;0,&quot;頁數：&quot;,&quot;類型：&quot;)]" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text20" Left="510.3" Width="207.9" Height="28.35" Border.Lines="Right" CanGrow="true" GrowToBottom="true" Text="[IIf([Product.CoverPage]+[Product.ContentPage]&gt;0,&quot;共：&quot; + ToString([Product.CoverPage]+[Product.ContentPage]) + &quot;P(封面：&quot; + ToString([Product.CoverPage]) + &quot;内文：&quot; + ToString([Product.ContentPage]) + &quot;P)&quot;,[Product.typename])]" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+    </DataBand>
+    <DataBand Name="Data10" Top="199.55" Width="718.2" Height="28.35" CanGrow="true" DataSource="Product" KeepTogether="true">
+      <TextObject Name="Text167" Width="85.05" Height="28.35" Border.Lines="Left" CanGrow="true" GrowToBottom="true" Text="装订方式：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text168" Left="85.05" Width="283.5" Height="28.35" CanGrow="true" GrowToBottom="true" Text="[Product.PackType]" Format="Date" Format.Format="d" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+      <TextObject Name="Text169" Left="368.55" Width="85.05" Height="28.35" CanGrow="true" GrowToBottom="true" Text="颜色标准：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text170" Left="453.6" Width="264.6" Height="28.35" Border.Lines="Right" CanGrow="true" GrowToBottom="true" Text="[Product.color]" Format="Date" Format.Format="d" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+    </DataBand>
+    <DataBand Name="Data11" Top="231.9" Width="718.2" Height="28.35" CanGrow="true" DataSource="BOM" KeepTogether="true">
+      <TextObject Name="Text21" Width="85.05" Height="28.35" Border.Lines="Left, Bottom" CanGrow="true" GrowToBottom="true" Text="版號：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text22" Left="85.05" Width="94.5" Height="28.35" Border.Lines="Bottom" CanGrow="true" GrowToBottom="true" Text="[Product.PN]" Format="Date" Format.Format="d" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+      <TextObject Name="Text23" Left="179.55" Width="85.05" Height="28.35" Border.Lines="Bottom" CanGrow="true" GrowToBottom="true" Text="刀模版號：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text24" Left="264.6" Width="103.95" Height="28.35" Border.Lines="Bottom" CanGrow="true" GrowToBottom="true" Text="[BOM.DM]" VertAlign="Center" Font="Microsoft Sans Serif, 11pt">
+        <Formats>
+          <NumberFormat UseLocale="false" NegativePattern="1"/>
+          <NumberFormat UseLocale="false"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text25" Left="368.55" Width="85.05" Height="28.35" Border.Lines="Bottom" CanGrow="true" GrowToBottom="true" Text="燙金版號：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text26" Left="453.6" Width="85.05" Height="28.35" Border.Lines="Bottom" CanGrow="true" GrowToBottom="true" Text="[BOM.HotPlateCode]" Format="Date" Format.Format="d" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+      <TextObject Name="Text27" Left="538.65" Width="85.05" Height="28.35" Border.Lines="Bottom" CanGrow="true" GrowToBottom="true" Text="網版號：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text28" Left="623.7" Width="94.5" Height="28.35" Border.Lines="Right, Bottom" CanGrow="true" GrowToBottom="true" Text="[BOM.ScreenPlate]" VertAlign="Center" Font="Microsoft Sans Serif, 11pt">
+        <Formats>
+          <NumberFormat UseLocale="false" NegativePattern="1"/>
+          <NumberFormat UseLocale="false"/>
+        </Formats>
+      </TextObject>
+    </DataBand>
+    <DataBand Name="Data1" Top="323.95" Width="718.2" Height="37.8" CanGrow="true" DataSource="BomPaper" KeepTogether="true">
+      <TextObject Name="Text39" Left="85.05" Width="179.55" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPaper.partID] [BomPaper.Name]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text40" Left="406.35" Width="37.8" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPaper.kNumb]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text41" Left="444.15" Width="37.8" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPaper.pNumb]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text42" Left="368.55" Width="37.8" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPaper.pageNumb]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text44" Width="85.05" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPaper.code]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text45" Left="566" Width="152.75" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPaper.remark]" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text46" Left="482.4" Width="83.16" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPaper.ProcName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text67" Left="264.6" Width="103.95" Height="37.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPaper.Length]x[BomPaper.Widght]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt">
+        <Formats>
+          <NumberFormat UseLocale="false" NegativePattern="1"/>
+          <NumberFormat UseLocale="false"/>
+        </Formats>
+      </TextObject>
+      <DataHeaderBand Name="DataHeader2" Top="264.25" Width="718.2" Height="55.7" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true">
+        <TextObject Name="Text29" Width="718.2" Height="28.35" Border.Lines="All" Text="用紙信息：" VertAlign="Bottom" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+        <TextObject Name="Text30" Left="85.05" Top="28.35" Width="179.55" Height="27.35" Border.Lines="All" Text="紙張名稱（原紙尺寸）" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt, style=Bold"/>
+        <TextObject Name="Text31" Left="406.35" Top="28.35" Width="37.8" Height="27.35" Border.Lines="All" Text="開數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt, style=Bold"/>
+        <TextObject Name="Text32" Left="444.15" Top="28.35" Width="37.8" Height="27.35" Border.Lines="All" Text="模數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt, style=Bold"/>
+        <TextObject Name="Text33" Left="368.55" Top="28.35" Width="37.8" Height="27.35" Border.Lines="All" Text="版數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt, style=Bold"/>
+        <TextObject Name="Text35" Top="28.35" Width="85.05" Height="27.35" Border.Lines="All" Text="物料編號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt, style=Bold"/>
+        <TextObject Name="Text36" Left="566" Top="28.35" Width="152.75" Height="27.35" Border.Lines="All" Text="説明" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt, style=Bold"/>
+        <TextObject Name="Text37" Left="482.4" Top="28.35" Width="83.16" Height="27.35" Border.Lines="All" Text="所屬工序" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt, style=Bold"/>
+        <TextObject Name="Text68" Left="264.6" Top="28.35" Width="103.95" Height="27.35" Border.Lines="All" Text="裁切尺寸" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 9pt, style=Bold"/>
+      </DataHeaderBand>
+      <Sort>
+        <Sort Expression="[BomPaper.partID]"/>
+        <Sort Expression="[BomPaper.id]"/>
+      </Sort>
+    </DataBand>
+    <DataBand Name="Data2" Top="425.45" Width="718.2" Height="36.8" CanGrow="true" DataSource="BomWavePaper" KeepTogether="true">
+      <TextObject Name="Text94" Left="85.05" Width="179.55" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomWavePaper.partID] [BomWavePaper.Name]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text96" Left="406.35" Width="75.6" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomWavePaper.pNumb]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text98" Width="85.05" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomWavePaper.code]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text99" Left="566" Width="152.75" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomWavePaper.remark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text100" Left="482.4" Width="83.16" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomWavePaper.ProcName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text102" Left="264.6" Width="141.75" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomWavePaper.Length]x[BomWavePaper.Widght]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt">
+        <Formats>
+          <NumberFormat UseLocale="false" NegativePattern="1"/>
+          <NumberFormat UseLocale="false"/>
+        </Formats>
+      </TextObject>
+      <DataHeaderBand Name="DataHeader1" Top="365.75" Width="718.2" Height="55.7" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true">
+        <TextObject Name="Text84" Left="85.05" Top="28.35" Width="179.55" Height="27.35" Border.Lines="All" Text="浪紙名稱（浪紙規格）" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text86" Left="406.35" Top="28.35" Width="75.6" Height="27.35" Border.Lines="All" Text="模數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text89" Top="28.35" Width="85.05" Height="27.35" Border.Lines="All" Text="物料編號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text90" Left="566" Top="28.35" Width="152.75" Height="27.35" Border.Lines="All" Text="説明" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text91" Left="482.4" Top="28.35" Width="83.16" Height="27.35" Border.Lines="All" Text="所屬工序" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text93" Left="264.6" Top="28.35" Width="141.75" Height="27.35" Border.Lines="All" Text="尺寸" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text103" Width="718.2" Height="28.35" Border.Lines="All" Text="浪紙信息：" VertAlign="Center" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+      </DataHeaderBand>
+      <Sort>
+        <Sort Expression="[BomWavePaper.partID]"/>
+        <Sort Expression="[BomWavePaper.id]"/>
+      </Sort>
+    </DataBand>
+    <DataBand Name="Data3" Top="525.95" Width="718.2" Height="36.8" CanGrow="true" DataSource="BomMaterial" KeepTogether="true">
+      <TextObject Name="Text104" Left="85.05" Width="179.55" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomMaterial.Name]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text107" Left="406.35" Width="75.6" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomMaterial.Numb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="6" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text108" Width="85.05" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomMaterial.code]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text109" Left="566" Width="152.75" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomMaterial.Remark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text110" Left="482.4" Width="83.16" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomMaterial.ProcName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text123" Left="264.6" Width="141.75" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomMaterial.Specs]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt">
+        <Formats>
+          <NumberFormat UseLocale="false" NegativePattern="1"/>
+          <NumberFormat UseLocale="false"/>
+        </Formats>
+      </TextObject>
+      <DataHeaderBand Name="DataHeader3" Top="466.25" Width="718.2" Height="55.7" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true">
+        <TextObject Name="Text120" Width="718.2" Height="28.35" Border.Lines="All" Text="其他物料：" VertAlign="Bottom" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+        <TextObject Name="Text112" Left="85.05" Top="28.35" Width="179.55" Height="27.35" Border.Lines="All" Text="物料名稱（規格尺寸）" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text115" Left="406.35" Top="28.35" Width="75.6" Height="27.35" Border.Lines="All" Text="用量" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text116" Top="28.35" Width="85.05" Height="27.35" Border.Lines="All" Text="物料編號" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text117" Left="566" Top="28.35" Width="152.75" Height="27.35" Border.Lines="All" Text="説明" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text118" Left="482.4" Top="28.35" Width="83.16" Height="27.35" Border.Lines="All" Text="所屬工序" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text124" Left="264.6" Top="28.35" Width="141.75" Height="27.35" Border.Lines="All" Text="规格尺寸" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+      </DataHeaderBand>
+      <Sort>
+        <Sort Expression="[BomMaterial.PartID]"/>
+        <Sort Expression="[BomMaterial.id]"/>
+      </Sort>
+    </DataBand>
+    <DataBand Name="Data4" Top="626.45" Width="718.2" Height="36.8" CanGrow="true" DataSource="BomPrint" KeepTogether="true">
+      <TextObject Name="Text125" Width="85.05" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPrint.PartID] [BomPrint.ProcessName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text128" Left="85.05" Width="179.55" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPrint.MachineName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text132" Left="305.4" Width="40.7" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPrint.PaperCutNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text136" Left="566" Width="152.75" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPrint.pRemark] [BomPrint.Remark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt">
+        <Formats>
+          <NumberFormat UseLocale="false" NegativePattern="1"/>
+          <NumberFormat UseLocale="false"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text140" Left="346.1" Width="60.15" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[[BomPrint.pN]*[BomPrint.StdCapcity]]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text130" Left="406.35" Width="159.65" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[IIf([BomPrint.ca1]+[BomPrint.ca2]&gt;0,&quot;正：&quot; + [BomPrint.catxt],&quot;&quot;)][IIf([BomPrint.cb1]+[BomPrint.cb2]&gt;0,IIf([BomPrint.ca1]+[BomPrint.ca2]&gt;0,&quot;，反：&quot;,&quot;反：&quot;) + [BomPrint.cbtxt],&quot;&quot;)]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt">
+        <Formats>
+          <NumberFormat UseLocale="false" NegativePattern="1"/>
+          <NumberFormat UseLocale="false"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text176" Left="264.6" Width="40.7" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPrint.ColNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <DataHeaderBand Name="DataHeader4" Top="566.75" Width="718.2" Height="55.7" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true">
+        <TextObject Name="Text127" Top="28.35" Width="85.05" Height="27.35" Border.Lines="All" Text="工序" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text126" Width="718.2" Height="28.35" Border.Lines="All" Text="印刷工序：" VertAlign="Bottom" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+        <TextObject Name="Text129" Left="85.05" Top="28.35" Width="179.55" Height="27.35" Border.Lines="All" Text="预定机台" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text131" Left="405.91" Top="28.35" Width="159.65" Height="27.35" Border.Lines="All" Text="印刷颜色" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text133" Left="305.4" Top="28.35" Width="40.7" Height="27.35" Border.Lines="All" Text="开数" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text137" Left="566" Top="28.35" Width="152.75" Height="27.35" Border.Lines="All" Text="加工说明" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text141" Left="346.1" Top="28.35" Width="60.15" Height="27.35" Border.Lines="All" Text="產能(/H)" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text177" Left="264.6" Top="28.35" Width="40.7" Height="27.35" Border.Lines="All" Text="模數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+      </DataHeaderBand>
+      <Sort>
+        <Sort Expression="[BomPrint.PartID]"/>
+        <Sort Expression="[BomPrint.id]"/>
+      </Sort>
+    </DataBand>
+    <DataBand Name="Data5" Top="738.4" Width="718.2" Height="36.8" CanGrow="true" DataSource="BomPostpress" KeepTogether="true">
+      <TextObject Name="Text134" Left="85.05" Width="55.6" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPostpress.DepartmentName]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="6" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text144" Width="85.05" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPostpress.PartID] [BomPostpress.ProcessName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text145" Left="140.75" Width="124.4" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPostpress.MachineName]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text146" Left="264.6" Width="40.7" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPostpress.ColNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text147" Left="566" Width="152.75" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPostpress.Remark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt">
+        <Formats>
+          <NumberFormat UseLocale="false" NegativePattern="1"/>
+          <NumberFormat UseLocale="false"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text149" Left="346.1" Width="60.15" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[[BomPostpress.pN]*[BomPostpress.StdCapcity]]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <TextObject Name="Text151" Left="406.35" Width="159.65" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPostpress.pRemark]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt">
+        <Formats>
+          <NumberFormat UseLocale="false" NegativePattern="1"/>
+          <NumberFormat UseLocale="false"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text178" Left="304.85" Width="40.7" Height="36.8" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[BomPostpress.PaperColNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+      <DataHeaderBand Name="DataHeader5" Top="667.25" Width="718.2" Height="67.15" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true">
+        <TextObject Name="Text135" Left="85.05" Top="28.8" Width="55.6" Height="38.35" Border.Lines="All" Text="部门" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text152" Top="28.8" Width="85.05" Height="38.35" Border.Lines="All" Text="工序" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text153" Left="140.75" Top="28.8" Width="124.4" Height="38.35" Border.Lines="All" Text="预定机台" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text154" Left="406.35" Top="28.8" Width="159.65" Height="38.35" Border.Lines="All" Text="加工说明" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text155" Left="264.6" Top="28.8" Width="40.7" Height="38.35" Border.Lines="All" Text="模數" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text156" Left="566" Top="28.8" Width="152.75" Height="38.35" Border.Lines="All" Text="其他说明" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text158" Left="346.1" Top="28.8" Width="60.15" Height="38.35" Border.Lines="All" Text="產能(/H)" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+        <TextObject Name="Text160" Width="718.2" Height="28.35" Border.Lines="All" Text="后道加工：" VertAlign="Bottom" Font="Microsoft Sans Serif, 11pt, style=Bold"/>
+        <TextObject Name="Text179" Left="304.85" Top="28.8" Width="40.7" Height="38.35" Border.Lines="All" Text="纸张模数" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+      </DataHeaderBand>
+      <Sort>
+        <Sort Expression="[BomPostpress.PartSortID]"/>
+        <Sort Expression="[BomPostpress.PartID]"/>
+        <Sort Expression="[BomPostpress.id]"/>
+      </Sort>
+    </DataBand>
+    <DataBand Name="Data6" Top="779.2" Width="718.2" Height="66.15" CanGrow="true" DataSource="BOM" KeepTogether="true">
+      <TextObject Name="Text14" Top="9.45" Width="718.2" Height="56.7" CanGrow="true" GrowToBottom="true" Text="BOM备注说明：" Font="Microsoft Sans Serif, 14pt, style=Bold"/>
+      <TextObject Name="Text15" Left="75.6" Top="13.45" Width="633.15" Height="47.25" CanGrow="true" GrowToBottom="true" Text="            [BOM.remark]" Font="Microsoft Sans Serif, 14pt"/>
+    </DataBand>
+    <DataBand Name="Data12" Top="849.35" Width="718.2" Height="32.35" CanGrow="true" KeepTogether="true" KeepDetail="true">
+      <TextObject Name="Text171" Width="718.2" Height="28.35" CanGrow="true" GrowToBottom="true" Text="加工要求：" Font="Microsoft Sans Serif, 14pt, style=Bold"/>
+      <TextObject Name="Text172" Left="56.7" Top="4" Width="652.05" Height="28.35" CanGrow="true" GrowToBottom="true" Text="            [Product.ProdRemark]" Font="Microsoft Sans Serif, 12pt"/>
+    </DataBand>
+    <DataBand Name="Data13" Top="885.7" Width="718.2" Height="28.35" CanGrow="true" KeepTogether="true" KeepDetail="true">
+      <TextObject Name="Text173" Width="718.2" Height="28.35" CanGrow="true" GrowToBottom="true" Text="包装方式：" Font="Microsoft Sans Serif, 14pt, style=Bold"/>
+      <TextObject Name="Text174" Left="56.7" Top="4" Width="652.05" Height="18.9" CanGrow="true" GrowToBottom="true" Text="            [Product.remark2]" Font="Microsoft Sans Serif, 12pt"/>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="918.05" Width="718.2" Height="28.02" CanGrow="true">
+      <TextObject Name="Text63" Width="238.45" Height="15.12" Text="輸入人:[BOM.inputer],創建時間:[BOM.inputdate]" VertAlign="Center" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text62" Left="343.85" Top="12.9" Width="362.1" Height="15.12" CanGrow="true" GrowToBottom="true" Text="列印人:[Author] 列印時間：[Date](第[[PrintTimes]+1]次)第[Page]頁共[TotalPages#]頁" HorzAlign="Right" VertAlign="Center" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text175" Left="239.15" Width="238.45" Height="15.12" Text="審核人:[BOM.checker],審核時間:[BOM.checkdate]" VertAlign="Center" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+        </Formats>
+      </TextObject>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

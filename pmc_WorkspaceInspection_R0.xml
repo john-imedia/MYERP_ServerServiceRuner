@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="03/04/2016 18:33:49" ReportInfo.Modified="03/11/2016 11:39:16" ReportInfo.CreatorVersion="2013.2.2.0">
+  <Dictionary>
+    <TableDataSource Name="View" ReferenceName="View" DataType="System.Int32" Enabled="true">
+      <Column Name="_id" DataType="System.Int32"/>
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="Type" DataType="System.Int32"/>
+      <Column Name="RdsNo" DataType="System.String"/>
+      <Column Name="CGUID" DataType="System.Guid"/>
+      <Column Name="Inputer" DataType="System.String"/>
+      <Column Name="InputDate" DataType="System.DateTime"/>
+      <Column Name="Checker" DataType="System.String"/>
+      <Column Name="CheckDate" DataType="System.DateTime"/>
+      <Column Name="Status" DataType="System.Int32"/>
+      <Column Name="Department" DataType="System.String"/>
+      <Column Name="InspectMan" DataType="System.String"/>
+      <Column Name="InspectDate" DataType="System.DateTime"/>
+      <Column Name="ClassType" DataType="System.Int32"/>
+      <Column Name="Remark" DataType="System.String"/>
+    </TableDataSource>
+    <TableDataSource Name="Detial" ReferenceName="Detial" DataType="System.Int32" Enabled="true">
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="PlanRdsNo" DataType="System.String"/>
+      <Column Name="DepartmentCode" DataType="System.String"/>
+      <Column Name="DepartmentName" DataType="System.String"/>
+      <Column Name="ProcessCode" DataType="System.String"/>
+      <Column Name="ProcessName" DataType="System.String"/>
+      <Column Name="MachineCode" DataType="System.String"/>
+      <Column Name="MachineName" DataType="System.String"/>
+      <Column Name="ItemCode" DataType="System.Guid"/>
+      <Column Name="ProjName" DataType="System.String"/>
+      <Column Name="ItemName" DataType="System.String"/>
+      <Column Name="LevelNumber" DataType="System.Int32"/>
+      <Column Name="Result1Value" DataType="System.Int32"/>
+      <Column Name="Result2Value" DataType="System.Int32"/>
+      <Column Name="Result3Value" DataType="System.Int32"/>
+      <Column Name="SortID" DataType="System.Int32"/>
+      <Column Name="FullSortID" DataType="System.String"/>
+      <Column Name="ResultRemark" DataType="System.String"/>
+      <Column Name="InspectMemo" DataType="System.String"/>
+      <Column Name="ResultValue" DataType="System.Decimal"/>
+      <Column Name="ResultName" DataType="System.String"/>
+      <Column Name="Result1Name" DataType="System.Int32"/>
+      <Column Name="Result2Name" DataType="System.Int32"/>
+      <Column Name="Result3Name" DataType="System.Int32"/>
+    </TableDataSource>
+    <Parameter Name="Inputer" DataType="System.String" Description="制表人"/>
+    <Parameter Name="InputDate" DataType="System.DateTime" Description="制表时间"/>
+    <Parameter Name="Checker" DataType="System.String" Description="审核人"/>
+    <Parameter Name="CheckDate" DataType="System.DateTime" Description="审核时间"/>
+    <Parameter Name="Author" DataType="System.String" Description="列印人"/>
+    <Parameter Name="PrintTimes" DataType="System.Int32" Description="列印次数"/>
+    <Parameter Name="StatusWord" DataType="System.String" Description="单据状态"/>
+  </Dictionary>
+  <ReportPage Name="Page1" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" FirstPageSource="4" OtherPagesSource="4">
+    <PageHeaderBand Name="PageHeader1" Width="1047.06" Height="40.8">
+      <TextObject Name="Text23" Left="75.6" Top="19.45" Width="217.35" Height="18.9" Text="[View.InspectDate]" Format="Date" Format.Format="d" VertAlign="Center" Font="MS Reference Sans Serif, 12pt"/>
+      <TextObject Name="Text24" Left="166.1" Top="21.45" Width="94.5" Height="18.9" Text="[IIf([View.ClassType] == 2,&quot;夜班&quot;,&quot;白班&quot;)]" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 10pt"/>
+      <TextObject Name="Text25" Left="708.75" Top="21.45" Width="151.2" Height="18.9" Text="查檢部門：[View.Department]" Format="Date" Format.Format="d" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 10pt"/>
+      <TextObject Name="Text26" Left="850.5" Top="21.45" Width="151.2" Height="18.9" Text="查檢人：[View.InspectMan]" Format="Date" Format.Format="d" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 10pt"/>
+      <TextObject Name="Text22" Left="273.11" Width="500.85" Height="29.9" Text="紀律稽核檢查報表" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 18pt, style=Bold"/>
+      <TextObject Name="Text30" Left="3.45" Top="21.9" Width="94.5" Height="18.9" Text="查檢日期：" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+    </PageHeaderBand>
+    <GroupHeaderBand Name="GroupHeader1" Top="44.8" Width="1047.06" Condition="[Detial.DepartmentName]" SortOrder="None">
+      <GroupHeaderBand Name="GroupHeader2" Top="48.8" Width="1047.06" Condition="[Detial.ProcessName]" SortOrder="None">
+        <GroupHeaderBand Name="GroupHeader3" Top="52.8" Width="1047.06" Height="35.9" CanGrow="true" StartNewPage="true" KeepWithData="true" RepeatOnEveryPage="true" Condition="[Detial.MachineName]" SortOrder="None" KeepTogether="true">
+          <TextObject Name="Text2" Top="12" Width="1047.85" Height="23.9" Border.Lines="All" CanGrow="true" GrowToBottom="true" Font="Microsoft Sans Serif, 12pt"/>
+          <TextObject Name="Text1" Top="15" Width="94.5" Height="19.9" Text="部門：" VertAlign="Center" Font="Microsoft Sans Serif, 12pt, style=Bold"/>
+          <TextObject Name="Text5" Left="47.25" Top="15" Width="94.5" Height="19.9" Text="[Detial.DepartmentName]" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+          <TextObject Name="Text6" Left="122.85" Top="15" Width="94.5" Height="19.9" Text="工序：" VertAlign="Center" Font="Microsoft Sans Serif, 12pt, style=Bold"/>
+          <TextObject Name="Text7" Left="170.1" Top="15" Width="103.95" Height="19.9" Text="[Detial.ProcessName]" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+          <TextObject Name="Text8" Left="463.05" Top="15" Width="94.5" Height="19.9" Text="機臺：" VertAlign="Center" Font="Microsoft Sans Serif, 12pt, style=Bold"/>
+          <TextObject Name="Text9" Left="510.3" Top="15" Width="217.35" Height="19.9" Text="[Detial.MachineName]" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+          <TextObject Name="Text10" Left="284.95" Top="15" Width="94.5" Height="19.9" Text="排程號：" VertAlign="Center" Font="Microsoft Sans Serif, 12pt, style=Bold"/>
+          <TextObject Name="Text11" Left="350.65" Top="15" Width="109.95" Height="19.9" Text="[Detial.PlanRdsNo]" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+          <GroupHeaderBand Name="GroupHeader4" Top="92.7" Width="1047.06" Height="43.8" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true" Condition="[Detial.ProjName]" SortOrder="None" KeepTogether="true">
+            <TextObject Name="Text3" Width="1047.95" Height="22.9" Border.Lines="All" Font="Microsoft Sans Serif, 12pt"/>
+            <TextObject Name="Text4" Left="7.45" Top="2" Width="255.15" Height="18.9" Text="[[Detial.ProjName]]" VertAlign="Center" Font="Microsoft Sans Serif, 11pt"/>
+            <TextObject Name="Text12" Top="22.9" Width="31.8" Height="20.9" Border.Lines="All" Text="序" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+            <TextObject Name="Text13" Left="32.35" Top="22.9" Width="457.05" Height="20.9" Border.Lines="All" Text="檢查明細" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+            <TextObject Name="Text15" Left="488.6" Top="22.9" Width="189.1" Height="20.9" Border.Lines="All" Text="判定" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+            <TextObject Name="Text16" Left="678.4" Top="22.9" Width="371" Height="20.9" Border.Lines="All" Text="備注" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt, style=Bold"/>
+            <DataBand Name="Data1" Top="140.5" Width="1047.06" Height="24.9" CanGrow="true" DataSource="Detial" KeepTogether="true" KeepDetail="true">
+              <TextObject Name="Text17" Width="31.8" Height="20.9" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Row#]" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+              <TextObject Name="Text18" Left="32.35" Width="457.05" Height="20.9" Border.Lines="All" CanGrow="true" GrowToBottom="true" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+              <TextObject Name="Text20" Left="488.6" Width="189.1" Height="20.9" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="良      尚可       不佳" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+              <TextObject Name="Text21" Left="678.4" Width="371" Height="20.9" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.InspectMemo]" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+              <TextObject Name="Text27" Left="496.4" Width="47.25" Height="18.9" CanGrow="true" GrowToBottom="true" Text="[IIf([Detial.Result1Name]==1,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 16pt"/>
+              <TextObject Name="Text28" Left="536.2" Width="47.25" Height="18.9" CanGrow="true" GrowToBottom="true" Text="[IIf([Detial.Result2Name]==1,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 16pt"/>
+              <TextObject Name="Text29" Left="590.9" Width="47.25" Height="18.9" CanGrow="true" GrowToBottom="true" Text="[IIf([Detial.Result3Name]==1,&quot;&quot;,&quot;&quot;)]" VertAlign="Center" Font="Wingdings, 16pt"/>
+              <TextObject Name="Text31" Left="42.25" Top="3" Width="444.15" Height="21.9" CanGrow="true" GrowToBottom="true" Text="[Detial.ItemName]" VertAlign="Center" Font="Microsoft Sans Serif, 10pt"/>
+            </DataBand>
+            <GroupFooterBand Name="GroupFooter4" Top="169.4" Width="1047.06"/>
+          </GroupHeaderBand>
+          <GroupFooterBand Name="GroupFooter3" Top="173.4" Width="1047.06"/>
+        </GroupHeaderBand>
+        <GroupFooterBand Name="GroupFooter2" Top="177.4" Width="1047.06"/>
+      </GroupHeaderBand>
+      <GroupFooterBand Name="GroupFooter1" Top="181.4" Width="1047.06"/>
+    </GroupHeaderBand>
+    <PageFooterBand Name="PageFooter1" Top="185.4" Width="1047.06" Height="18.9"/>
+  </ReportPage>
+</Report>

@@ -1,0 +1,208 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="10/26/2015 11:01:54" ReportInfo.Modified="03/30/2016 15:52:35" ReportInfo.CreatorVersion="2013.2.2.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+    private void Text175_BeforePrint(object sender, EventArgs e)
+    {
+      if(((String)Report.GetColumnValue(&quot;Main.checker&quot;)).Length &gt; 0 )
+      {
+        Text175.Visible = true;
+        Text178.Visible = false;
+      }
+      else 
+      {
+        Text175.Visible = false;
+        Text178.Visible = true;
+      }
+    }    
+
+    private void txtNumbR_BeforePrint(object sender, EventArgs e)
+    {
+        bool v= ((Boolean)Report.GetColumnValue(&quot;Detial.NumberInteger&quot;));
+        string sUnit=((String)Report.GetColumnValue(&quot;Detial.Unit&quot;));
+      　if(sUnit== &quot;PCS&quot; || sUnit== &quot;張&quot; || sUnit == &quot;個&quot;) v= true;
+        txtNumbR.Visible = !v;
+        txtNumbZ.Visible = v;
+    }
+  }
+}
+</ScriptText>
+  <Styles>
+    <Style Name="bk" Fill.Color="White" Font="MS Reference Sans Serif, 9pt"/>
+  </Styles>
+  <Dictionary>
+    <TableDataSource Name="Main" ReferenceName="Main" DataType="System.Int32" Enabled="true">
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="Rdsno" DataType="System.String"/>
+      <Column Name="inputdate" DataType="System.DateTime"/>
+      <Column Name="inputer" DataType="System.String"/>
+      <Column Name="checkdate" DataType="System.DateTime"/>
+      <Column Name="checker" DataType="System.String"/>
+      <Column Name="Requester" DataType="System.String"/>
+      <Column Name="RequestDate" DataType="System.DateTime"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="Status" DataType="System.Int32"/>
+      <Column Name="Part" DataType="System.String"/>
+      <Column Name="DepartmentCode" DataType="System.String"/>
+      <Column Name="MaterialType" DataType="System.String"/>
+      <Column Name="_ID" DataType="System.Int32"/>
+      <Column Name="CGuid" DataType="System.Guid"/>
+      <Column Name="DepartmentName" DataType="System.String"/>
+      <Column Name="MaterialTypeName" DataType="System.String"/>
+    </TableDataSource>
+    <TableDataSource Name="Detial" ReferenceName="Detial" DataType="System.Int32" Enabled="true">
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="ReqType" DataType="System.Int32"/>
+      <Column Name="Code" DataType="System.String"/>
+      <Column Name="ProdNo" DataType="System.String"/>
+      <Column Name="ReqNumb" DataType="System.Decimal"/>
+      <Column Name="StockNumb" DataType="System.Decimal"/>
+      <Column Name="StockMax" DataType="System.Decimal"/>
+      <Column Name="StockMin" DataType="System.Decimal"/>
+      <Column Name="ProdUsed" DataType="System.Decimal"/>
+      <Column Name="PurchProvide" DataType="System.Decimal"/>
+      <Column Name="ProdAOut" DataType="System.Decimal"/>
+      <Column Name="Numb" DataType="System.Decimal"/>
+      <Column Name="Specs" DataType="System.String"/>
+      <Column Name="Status" DataType="System.Int32"/>
+      <Column Name="pDate" DataType="System.DateTime"/>
+      <Column Name="remark" DataType="System.String"/>
+      <Column Name="ReqNumb2" DataType="System.Decimal"/>
+      <Column Name="Numb2" DataType="System.Decimal"/>
+      <Column Name="CloseDate" DataType="System.DateTime"/>
+      <Column Name="SortID" DataType="System.Int32"/>
+      <Column Name="PurchaseUnitNumb" DataType="System.Decimal"/>
+      <Column Name="Name" DataType="System.String"/>
+      <Column Name="Size" DataType="System.String"/>
+      <Column Name="Unit" DataType="System.String"/>
+      <Column Name="PurchaseUnit" DataType="System.String"/>
+      <Column Name="PurchaseUnitConvertRatio" DataType="System.Decimal"/>
+      <Column Name="StatusName" DataType="System.String"/>
+      <Column Name="NumberInteger" DataType="System.Boolean" BindableControl="CheckBox"/>
+    </TableDataSource>
+    <Parameter Name="Inputer" DataType="System.String" Description="制表人"/>
+    <Parameter Name="InputDate" DataType="System.DateTime" Description="制表时间"/>
+    <Parameter Name="Checker" DataType="System.String" Description="审核人"/>
+    <Parameter Name="CheckDate" DataType="System.DateTime" Description="审核时间"/>
+    <Parameter Name="Author" DataType="System.String" Description="列印人"/>
+    <Parameter Name="PrintTimes" DataType="System.Int32" Description="列印次数"/>
+    <Parameter Name="StatusWord" DataType="System.String" Description="单据状态"/>
+  </Dictionary>
+  <ReportPage Name="Page1" PaperHeight="140" LeftMargin="5" TopMargin="5" RightMargin="5" BottomMargin="5" FirstPageSource="15" OtherPagesSource="15">
+    <PageHeaderBand Name="PageHeader1" Width="756" Height="66.15" Fill.Color="White" CanGrow="true">
+      <TextObject Name="Text10" Left="9.45" Top="5.45" Width="198.45" Height="28.35" Text="明泰彩色包裝印刷有限公司&#13;&#10;單據編號：F-P-001 Rev A2" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text183" Left="269.33" Top="0.9" Width="217.35" Height="47.25" Text="請  購  單" HorzAlign="Center" VertAlign="Center" Font="Microsoft Sans Serif, 26pt, style=Bold"/>
+      <TextObject Name="Text179" Left="521.65" Top="14.9" Width="148.3" Height="18.9" CanGrow="true" GrowToBottom="true" Text="[Main.Rdsno]" Font="Microsoft Sans Serif, 16pt"/>
+      <TextObject Name="Text180" Left="470.95" Top="17.9" Width="94.5" Height="22.9" CanGrow="true" GrowToBottom="true" Text="單號：" Font="MS Reference Sans Serif, 12pt"/>
+      <TextObject Name="Text182" Left="652.05" Width="66.15" Height="18.9" Text="[IIf([Page]&gt;1,&quot;續上頁&quot;,&quot;首頁&quot;)]" HorzAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text2" Left="88.05" Top="40.8" Width="94.5" Height="20.9" CanGrow="true" GrowToBottom="true" Text="[Main.DepartmentName]" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+      <TextObject Name="Text3" Left="9.45" Top="40.8" Width="103.95" Height="20.9" CanGrow="true" GrowToBottom="true" Text="請購部門：" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+      <TextObject Name="Text4" Left="259.15" Top="40.8" Width="170.1" Height="20.9" CanGrow="true" GrowToBottom="true" Text="[Main.MaterialTypeName]" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+      <TextObject Name="Text5" Left="179.55" Top="40.8" Width="101.5" Height="20.9" CanGrow="true" GrowToBottom="true" Text="請購類型：" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+      <TextObject Name="Text6" Left="604.8" Top="40.8" Width="141.75" Height="20.9" CanGrow="true" GrowToBottom="true" Text="[Main.RequestDate]" Format="Custom" Format.Format="yy/MM/dd HH:mm" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+      <TextObject Name="Text7" Left="516.3" Top="40.8" Width="103.95" Height="20.9" CanGrow="true" GrowToBottom="true" Text="請購日期：" VertAlign="Center" Font="Microsoft Sans Serif, 12pt"/>
+      <TextObject Name="Text13" Left="696.3" Top="13.45" Width="94.5" Height="37.8" Text="HSF" Font="宋体, 18pt, style=Bold"/>
+    </PageHeaderBand>
+    <DataBand Name="Data1" Top="106.5" Width="756" Height="28.35" Fill.Color="White" CanGrow="true" CanBreak="true" DataSource="Detial" KeepTogether="true" KeepDetail="true">
+      <TextObject Name="txtNumbZ" Left="299.4" Width="96.05" Height="28.35" Visible="false" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.Numb][Detial.Unit]" HorzAlign="Right" VertAlign="Center" Font="MS Reference Sans Serif, 9pt">
+        <Formats>
+          <NumberFormat UseLocale="false" DecimalDigits="0" NegativePattern="1"/>
+          <GeneralFormat/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="txtNumbR" Left="299.4" Width="96.05" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtNumbR_BeforePrint" Text="[Detial.Numb][Detial.Unit]" HorzAlign="Right" VertAlign="Center" Font="MS Reference Sans Serif, 9pt">
+        <Formats>
+          <NumberFormat UseLocale="false" NegativePattern="1"/>
+          <GeneralFormat/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text190" Left="224.35" Width="75.05" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[IIf([Detial.Size].Length&gt;0,[Detial.Size],&quot;- -&quot;)]" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 9pt"/>
+      <TextObject Name="Text187" Left="122.5" Width="101.85" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.Name]" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 9pt"/>
+      <TextObject Name="Text193" Left="18.9" Width="103.6" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.Code]" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 9pt"/>
+      <TextObject Name="Text195" Left="395.45" Width="70.15" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.pDate]" Format="Custom" Format.Format="yy/MM/dd HH:mm" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 9pt"/>
+      <TextObject Name="Text197" Left="539.2" Width="73.6" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.StockNumb][Detial.Unit]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 9pt"/>
+      <TextObject Name="Text199" Width="18.9" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Row#]" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 9pt"/>
+      <TextObject Name="Text203" Left="612.8" Width="66.6" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.StockMax]/[Detial.StockMin]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 9pt"/>
+      <TextObject Name="Text205" Left="679.4" Width="77.95" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.remark]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 9pt"/>
+      <TextObject Name="Text209" Left="465.6" Width="73.6" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.ProdUsed] / [Detial.PurchProvide]" HorzAlign="Center" VertAlign="Center" Font="MS Reference Sans Serif, 9pt">
+        <Formats>
+          <NumberFormat UseLocale="false" DecimalDigits="0" NegativePattern="1"/>
+          <NumberFormat UseLocale="false" DecimalDigits="0"/>
+        </Formats>
+      </TextObject>
+      <DataHeaderBand Name="DataHeader1" Top="70.15" Width="756" Height="32.35" Fill.Color="White" CanGrow="true" KeepWithData="true" RepeatOnEveryPage="true">
+        <TextObject Name="Text200" Left="299.4" Width="96.05" Height="32.35" Border.Lines="All" Text="数量(单位)" HorzAlign="Center" VertAlign="Center" Font="宋体, 10pt"/>
+        <TextObject Name="Text8" Left="122.5" Width="101.85" Height="32.35" Border.Lines="All" Text="料號/品名" HorzAlign="Center" VertAlign="Center" Font="宋体, 10pt"/>
+        <TextObject Name="Text188" Left="224.35" Width="75.05" Height="32.35" Border.Lines="All" Text="規格" HorzAlign="Center" VertAlign="Center" Font="宋体, 10pt"/>
+        <TextObject Name="Text192" Left="18.9" Width="103.6" Height="32.35" Border.Lines="All" Text="編號" HorzAlign="Center" VertAlign="Center" Font="宋体, 10pt"/>
+        <TextObject Name="Text194" Left="395.45" Width="70.15" Height="32.35" Border.Lines="All" Text="要求交期" HorzAlign="Center" VertAlign="Center" Font="宋体, 10pt"/>
+        <TextObject Name="Text196" Left="539.2" Width="73.6" Height="32.35" Border.Lines="All" Text="當前庫存" HorzAlign="Center" VertAlign="Center" Font="宋体, 10pt"/>
+        <TextObject Name="Text198" Width="18.9" Height="32.35" Border.Lines="All" Text="序" HorzAlign="Center" VertAlign="Center" Font="宋体, 10pt"/>
+        <TextObject Name="Text202" Left="612.8" Width="66.6" Height="32.35" Border.Lines="All" Text="上/下限" HorzAlign="Center" VertAlign="Center" Font="宋体, 10pt"/>
+        <TextObject Name="Text204" Left="679.4" Width="77.95" Height="32.35" Border.Lines="All" Text="説明" HorzAlign="Center" VertAlign="Center" Font="宋体, 10pt"/>
+        <TextObject Name="Text210" Left="465.6" Width="73.6" Height="32.35" Border.Lines="All" Text="工單占用/采購未入" HorzAlign="Center" VertAlign="Center" Font="宋体, 10pt"/>
+      </DataHeaderBand>
+      <DataFooterBand Name="DataFooter1" Top="138.85" Width="756" Height="37.35" Fill.Color="White" CanGrow="true" KeepWithData="true">
+        <TextObject Name="Text12" Left="4" Top="4" Width="94.5" Height="18.9" Text="其他説明：" Font="宋体, 9pt"/>
+        <TextObject Name="Text11" Left="6.45" Top="16.45" Width="737.1" Height="20.9" CanGrow="true" CanBreak="false" Text="[Main.Remark]" Font="MS Reference Sans Serif, 10pt"/>
+        <TextObject Name="Text9" Width="757" Height="36.8" Border.Lines="All" CanGrow="true" CanBreak="false" Font="MS Reference Sans Serif, 9pt"/>
+      </DataFooterBand>
+    </DataBand>
+    <ReportSummaryBand Name="ReportSummary1" Top="180.2" Width="756" Height="63.15" Fill.Color="White" KeepWithData="true">
+      <TextObject Name="Text1" Left="5.45" Top="6.45" Width="94.5" Height="22.9" Text="核准：" VertAlign="Bottom" Font="MS Reference Sans Serif, 11pt"/>
+      <TextObject Name="Text184" Left="200.42" Top="6.45" Width="94.5" Height="22.9" Text="審核：" VertAlign="Bottom" Font="MS Reference Sans Serif, 11pt"/>
+      <TextObject Name="Text185" Left="395.39" Top="6.45" Width="94.5" Height="22.9" Text="采購者：" VertAlign="Bottom" Font="MS Reference Sans Serif, 11pt"/>
+      <TextObject Name="Text186" Left="590.35" Top="6.45" Width="94.5" Height="22.9" Text="申請人：" VertAlign="Bottom" Font="MS Reference Sans Serif, 11pt"/>
+      <TextObject Name="Text206" Left="4" Top="40.25" Width="737.1" Height="22.9" Text="注：以下爲空白。（請購内容、數量塗抹無效）    此请购单如未采購，将于[AddMonths([Main.RequestDate],3).ToString(&quot;yyyy年MM月dd日&quot;)]过期。" VertAlign="Bottom" Font="宋体, 8pt"/>
+      <TextObject Name="Text207" Left="650.05" Top="8" Width="94.5" Height="32.35" Text="[Main.Requester]" Font="MS Reference Sans Serif, 11pt"/>
+      <TextObject Name="Text208" Left="586.35" Top="26.35" Width="94.5" Height="22.9" Text="（签字）" VertAlign="Bottom" Font="宋体, 11pt"/>
+    </ReportSummaryBand>
+    <PageFooterBand Name="PageFooter1" Top="247.35" Width="756" Height="28.35" Fill.Color="White">
+      <TextObject Name="Text176" Top="9.45" Width="252" Height="18.9" CanGrow="true" GrowToBottom="true" Text="輸入人:[Main.inputer],建單時間:[Main.inputdate]" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text175" Left="213.8" Top="9.45" Width="276.25" Height="18.9" CanGrow="true" GrowToBottom="true" BeforePrintEvent="Text175_BeforePrint" Text="審核人:[Main.checker],審核時間:[Main.CheckDate]" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text177" Left="414" Top="9.45" Width="343.2" Height="18.9" CanGrow="true" GrowToBottom="true" Text="列印人:[Author] 列印時間：[Date](第[[PrintTimes]+1]次)第[Page]頁共[TotalPages#]頁" HorzAlign="Right" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM/dd HH:mm"/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text178" Left="285.5" Top="9.45" Width="77.8" Height="18.9" CanGrow="true" GrowToBottom="true" BeforePrintEvent="Text175_BeforePrint" Text="未審核" VertAlign="Bottom" Font="Microsoft Sans Serif, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+          <CustomFormat Format="yy.MM.dd HH:mm"/>
+        </Formats>
+      </TextObject>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

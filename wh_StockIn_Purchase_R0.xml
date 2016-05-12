@@ -1,0 +1,148 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="12/22/2015 09:48:35" ReportInfo.Modified="04/06/2016 17:08:27" ReportInfo.CreatorVersion="2013.2.2.0">
+  <Dictionary>
+    <TableDataSource Name="Master" ReferenceName="Master" DataType="System.Int32" Enabled="true">
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="rdsno" DataType="System.String"/>
+      <Column Name="code" DataType="System.String"/>
+      <Column Name="moneytype" DataType="System.String"/>
+      <Column Name="enterdate" DataType="System.DateTime"/>
+      <Column Name="handno" DataType="System.String"/>
+      <Column Name="checker" DataType="System.String"/>
+      <Column Name="inputdate" DataType="System.DateTime"/>
+      <Column Name="inputer" DataType="System.String"/>
+      <Column Name="remark" DataType="System.String"/>
+      <Column Name="isono" DataType="System.String"/>
+      <Column Name="worker" DataType="System.String"/>
+      <Column Name="checkdate" DataType="System.DateTime"/>
+      <Column Name="status" DataType="System.Byte"/>
+      <Column Name="userid" DataType="System.Int32"/>
+      <Column Name="stManger " DataType="System.String"/>
+      <Column Name="stManager" DataType="System.String"/>
+      <Column Name="mType" DataType="System.Byte"/>
+      <Column Name="Amount" DataType="System.Double"/>
+      <Column Name="SendNote" DataType="System.String"/>
+      <Column Name="StockDate" DataType="System.DateTime"/>
+      <Column Name="CGUID" DataType="System.Guid"/>
+      <Column Name="_id" DataType="System.Int32"/>
+      <Column Name="Type" DataType="System.String"/>
+      <Column Name="statusname" DataType="System.String"/>
+      <Column Name="TypeName" DataType="System.String"/>
+      <Column Name="SupplierName" DataType="System.String"/>
+    </TableDataSource>
+    <TableDataSource Name="Detial" ReferenceName="Detial" DataType="System.Int32" Enabled="true">
+      <Column Name="id" DataType="System.Int32"/>
+      <Column Name="zbid" DataType="System.Int32"/>
+      <Column Name="code" DataType="System.String"/>
+      <Column Name="numb" DataType="System.Decimal"/>
+      <Column Name="Remark" DataType="System.String"/>
+      <Column Name="LotNo" DataType="System.String"/>
+      <Column Name="Lid" DataType="System.String"/>
+      <Column Name="OriginalRdsNo" DataType="System.String"/>
+      <Column Name="CtnQty" DataType="System.Decimal"/>
+      <Column Name="CtnNumb" DataType="System.Decimal"/>
+      <Column Name="Remainder" DataType="System.Decimal"/>
+      <Column Name="Gw" DataType="System.Decimal"/>
+      <Column Name="Gwt" DataType="System.Decimal"/>
+      <Column Name="Name" DataType="System.String"/>
+      <Column Name="Unit" DataType="System.String"/>
+      <Column Name="LocationName" DataType="System.String"/>
+      <Column Name="InstockDate" DataType="System.DateTime"/>
+      <Column Name="Pid" DataType="System.Int32"/>
+      <Column Name="PurchaseRdsNo" DataType="System.String"/>
+      <Column Name="DeliveryNoteRdsNo" DataType="System.String"/>
+      <Column Name="Size" DataType="System.String"/>
+      <Column Name="PureName" DataType="System.String"/>
+      <Column Name="UnitNumb" DataType="System.Decimal"/>
+      <Column Name="PurchaseUnitNumb" DataType="System.Decimal"/>
+      <Column Name="PriceUnitNumb" DataType="System.Decimal"/>
+      <Column Name="PriceUnit" DataType="System.String"/>
+      <Column Name="PurchaseUnit" DataType="System.String"/>
+      <Column Name="RequestRdsNo" DataType="System.String"/>
+      <Column Name="RequestDepartment" DataType="System.String"/>
+      <Column Name="NumberInteger" DataType="System.Boolean" BindableControl="CheckBox"/>
+    </TableDataSource>
+    <Parameter Name="Inputer" DataType="System.String" Description="制表人"/>
+    <Parameter Name="InputDate" DataType="System.DateTime" Description="制表时间"/>
+    <Parameter Name="Checker" DataType="System.String" Description="审核人"/>
+    <Parameter Name="CheckDate" DataType="System.DateTime" Description="审核时间"/>
+    <Parameter Name="Author" DataType="System.String" Description="列印人"/>
+    <Parameter Name="PrintTimes" DataType="System.Int32" Description="列印次数"/>
+    <Parameter Name="StatusWord" DataType="System.String" Description="单据状态"/>
+  </Dictionary>
+  <ReportPage Name="Page1" PaperHeight="140">
+    <PageHeaderBand Name="PageHeader1" Width="718.2" Height="66.15">
+      <TextObject Name="Text1" Left="236.25" Width="207.9" Height="47.25" Text="采購入庫單" HorzAlign="Center" VertAlign="Center" Font="宋体, 26pt, style=Bold"/>
+      <TextObject Name="Text2" Left="642.6" Width="75.6" Height="37.8" Text="HSF" HorzAlign="Center" Font="宋体, 16pt, style=Bold"/>
+      <TextObject Name="Text182" Left="595.35" Width="66.15" Height="18.9" Text="[IIf([Page]&gt;1,&quot;續上頁&quot;,&quot;首頁&quot;)]" HorzAlign="Center" Font="Microsoft Sans Serif, 9pt"/>
+      <TextObject Name="Text3" Width="160.65" Height="18.9" Text="明揚彩色包裝印刷有限公司" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text4" Left="434.7" Width="207.9" Height="47.25" Text="單號：[Master.rdsno]" HorzAlign="Center" VertAlign="Bottom" Font="宋体, 14pt, style=Bold"/>
+      <TextObject Name="Text5" Left="75.6" Top="47.25" Width="292.95" Height="18.9" Text="[Master.code] [Master.SupplierName]" VertAlign="Center" Font="宋体, 10pt"/>
+      <TextObject Name="Text6" Top="37.8" Width="85.05" Height="28.35" Text="廠商名稱：" HorzAlign="Center" VertAlign="Bottom" Font="宋体, 11pt, style=Bold"/>
+      <TextObject Name="Text7" Left="395.35" Top="47.25" Width="122.85" Height="18.9" Text="[Master.TypeName]" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text8" Left="311.85" Top="37.8" Width="94.5" Height="28.35" Text="入庫類型：" HorzAlign="Center" VertAlign="Bottom" Font="宋体, 11pt, style=Bold"/>
+      <TextObject Name="Text9" Left="500.85" Top="37.8" Width="94.5" Height="28.35" Text="入庫日期：" HorzAlign="Center" VertAlign="Bottom" Font="宋体, 11pt, style=Bold"/>
+      <TextObject Name="Text10" Left="595.35" Top="47.25" Width="122.85" Height="18.9" Text="[Master.StockDate]" Format="Custom" Format.Format="yyyy/MM/dd HH:mm" VertAlign="Center" Font="宋体, 9pt"/>
+    </PageHeaderBand>
+    <DataBand Name="Data1" Top="105.5" Width="718.2" Height="28.35" CanGrow="true" CanBreak="true" Guides="9.45,0,0" DataSource="Detial" KeepTogether="true" KeepDetail="true">
+      <TextObject Name="Text190" Width="47.25" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Row#]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text191" Left="47.25" Width="66.15" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.code]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text192" Left="113.4" Width="71.6" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.PureName]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text193" Left="491.4" Width="75.6" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.PurchaseRdsNo]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text194" Left="330.75" Width="47.25" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.LocationName]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text195" Left="250.15" Width="47.8" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.UnitNumb]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="2" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Right" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text196" Left="297.95" Width="32.8" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.Unit]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text197" Left="652.05" Width="66.15" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.Remark]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text208" Left="567" Width="85.05" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.DeliveryNoteRdsNo]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text209" Left="378" Width="37.8" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.RequestDepartment]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text210" Left="415.8" Width="75.6" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.RequestRdsNo]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <TextObject Name="Text211" Left="185" Width="64.6" Height="28.35" Border.Lines="All" CanGrow="true" GrowToBottom="true" Text="[Detial.Size]" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      <DataHeaderBand Name="DataHeader1" Top="70.15" Width="718.2" Height="31.35" Guides="28.35">
+        <TextObject Name="Text13" Width="47.25" Height="31.35" Border.Lines="All" Text="序號" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+        <TextObject Name="Text183" Left="47.25" Width="66.15" Height="31.35" Border.Lines="All" Text="物料編號" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+        <TextObject Name="Text184" Left="113.4" Width="71.6" Height="31.35" Border.Lines="All" Text="料號" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+        <TextObject Name="Text186" Left="330.75" Width="47.25" Height="31.35" Border.Lines="All" Text="庫位" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+        <TextObject Name="Text188" Left="297.95" Width="32.8" Height="31.35" Border.Lines="All" Text="單位" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+        <TextObject Name="Text189" Left="652.05" Width="66.15" Height="31.35" Border.Lines="All" Text="入庫單號" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+        <TextObject Name="Text187" Left="250.15" Width="47.8" Height="31.35" Border.Lines="All" Text="入庫&#13;&#10;數量" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+        <TextObject Name="Text185" Left="491.4" Width="75.6" Height="31.35" Border.Lines="All" Text="采購單號" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+        <TextObject Name="Text207" Left="567" Width="85.05" Height="31.35" Border.Lines="All" Text="送貨單號" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+        <TextObject Name="Text18" Left="378" Width="37.8" Height="31.35" Border.Lines="All" Text="請購部門" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+        <TextObject Name="Text16" Left="415.8" Width="75.6" Height="31.35" Border.Lines="All" Text="請購單號" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+        <TextObject Name="Text212" Left="185" Width="64.6" Height="31.35" Border.Lines="All" Text="規格" HorzAlign="Center" VertAlign="Center" Font="宋体, 9pt"/>
+      </DataHeaderBand>
+      <DataFooterBand Name="DataFooter1" Top="137.85" Width="718.2" Height="89.05">
+        <TextObject Name="Text15" Top="37.8" Width="47.25" Height="28.35" Border.Lines="All" Text="IQC" HorzAlign="Center" VertAlign="Center" Font="宋体, 12pt, style=Bold"/>
+        <TextObject Name="Text14" Width="47.25" Height="37.8" Border.Lines="All" Text="備註" HorzAlign="Center" VertAlign="Center" Font="宋体, 12pt, style=Bold"/>
+        <TextObject Name="Text198" Left="47.25" Top="37.8" Width="274.05" Height="28.35" Border.Lines="All" Text="[Master.worker]" VertAlign="Center" Font="宋体, 12pt, style=Bold"/>
+        <TextObject Name="Text199" Left="321.3" Top="37.8" Width="47.25" Height="28.35" Border.Lines="All" Text="倉管" HorzAlign="Center" VertAlign="Bottom" Font="宋体, 12pt, style=Bold"/>
+        <TextObject Name="Text200" Left="368.55" Top="37.8" Width="349.65" Height="28.35" Border.Lines="All" Text="[Master.stManager]" VertAlign="Center" Font="宋体, 12pt, style=Bold"/>
+        <TextObject Name="Text206" Top="66.15" Width="378" Height="22.9" Text="TIP：以下爲空白。（訂購内容手寫、數量塗抹，單據無效）" VertAlign="Bottom" Font="宋体, 8pt"/>
+        <TextObject Name="Text17" Left="47.25" Width="670.95" Height="37.8" Border.Lines="All" Text="[Master.remark]" VertAlign="Center" Font="宋体, 9pt"/>
+      </DataFooterBand>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="230.9" Width="718.2" Height="44.25" Guides="0">
+      <TextObject Name="Text11" Top="25.35" Width="292.95" Height="18.9" Text="輸入人：[Master.inputer]，創建時間：[Master.inputdate]" VertAlign="Center" Font="宋体, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM.dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text12" Left="217.35" Top="25.35" Width="264.6" Height="18.9" Text="審核人：[Master.checker]，審核時間：[Master.checkdate]" VertAlign="Center" Font="宋体, 9pt">
+        <Formats>
+          <GeneralFormat/>
+          <CustomFormat Format="MM.dd HH:mm"/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text177" Left="453.6" Top="28.35" Width="381" Height="15.9" CanGrow="true" GrowToBottom="true" Text="列印人:[Author] 列印時間：[Date]第[Page]頁共[TotalPages#]頁" VertAlign="Center" Font="宋体, 9pt">
+        <Formats>
+          <CustomFormat/>
+          <CustomFormat Format="MM.dd HH:mm"/>
+          <GeneralFormat/>
+          <GeneralFormat/>
+        </Formats>
+      </TextObject>
+      <TextObject Name="Text19" Top="-4" Width="103.95" Height="28.35" Text="審核：                                 " VertAlign="Center" Font="宋体, 11pt, style=Bold"/>
+    </PageFooterBand>
+  </ReportPage>
+</Report>
