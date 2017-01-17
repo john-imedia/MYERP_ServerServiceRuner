@@ -12,6 +12,7 @@ using MYERP_ServerServiceRuner.Base;
 
 namespace MYERP_ServerServiceRuner
 {
+    [Serializable]
     public class MyData
     {
         /// <summary>
@@ -34,18 +35,19 @@ namespace MYERP_ServerServiceRuner
                         {
                             using (SqlCommand SCMD = new SqlCommand(Convert.ToString(MyConvert.LCDB(SQL)), cnn) { CommandTimeout = 60000 })
                             {
-
                                 try
                                 {
                                     SCMD.Parameters.Clear();
                                     if (args != null) SCMD.Parameters.AddRange(args.Select(a => a.sqlparam).ToArray());
-                                    SqlDataReader sdr = SCMD.ExecuteReader(CommandBehavior.SingleResult);
+                                    SqlDataReader sdr = SCMD.ExecuteReader(CommandBehavior.SingleResult | CommandBehavior.CloseConnection);
                                     Load(sdr);
+                                    //st.Commit();
+                                    _MyRows = new MyDataRowCollection(Rows);
                                     sdr.Close();
-                                    _MyRows = new MyDataRowColl(Rows);
                                 }
                                 catch (Exception eex)
                                 {
+                                    //st.Rollback();
                                     throw eex;
                                 }
                                 finally
@@ -64,13 +66,12 @@ namespace MYERP_ServerServiceRuner
                 {
                     MyRecord.Say(e, SQL, LogT);
                 }
-
             }
 
             /// <summary>
             /// 从一个DataTable创建
             /// </summary>
-            /// <param name="sourcedatatable"></param>
+            /// <param Name="sourcedatatable"></param>
             public MyDataTable(DataTable sourcedatatable)
             {
                 foreach (DataColumn sdi in sourcedatatable.Columns)
@@ -88,8 +89,8 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 创建后返回SQL语句结果，传入参数。
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="SPI">各个参数</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="SPI">各个参数</param>
             public MyDataTable(string SQL, params MyParameter[] SPI)
             {
                 ExecuteSQL(SQL, SPI, 3);
@@ -99,8 +100,8 @@ namespace MYERP_ServerServiceRuner
             /// 创建后返回SQL语句结果，传入参数是语句中{0}的参数。
             /// 会自动调用string.Format来处理SQL语句。注意数据类型。
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="strArgs">字符串参数序列</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="strArgs">字符串参数序列</param>
             public MyDataTable(string SQL, params string[] strArgs)
             {
                 ExecuteSQL(string.Format(SQL, strArgs), null, 3);
@@ -109,7 +110,7 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 创建的时候，就按照返回SQL语句为准
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
+            /// <param Name="SQL">SQL语句</param>
             public MyDataTable(string SQL)
             {
                 #region 详细的运行方式，测试用
@@ -131,8 +132,8 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 创建后返回SQL语句结果，传入参数。
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="SPI">各个参数</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="SPI">各个参数</param>
             public MyDataTable(string SQL, int Interval, params MyParameter[] SPI)
             {
                 ExecuteSQL(SQL, SPI, Interval);
@@ -142,8 +143,8 @@ namespace MYERP_ServerServiceRuner
             /// 创建后返回SQL语句结果，传入参数是语句中{0}的参数。
             /// 会自动调用string.Format来处理SQL语句。注意数据类型。
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="strArgs">字符串参数序列</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="strArgs">字符串参数序列</param>
             public MyDataTable(string SQL, int Interval, params string[] strArgs)
             {
                 ExecuteSQL(string.Format(SQL, strArgs), null, Interval);
@@ -152,7 +153,7 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 创建的时候，就按照返回SQL语句为准
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
+            /// <param Name="SQL">SQL语句</param>
             public MyDataTable(string SQL, int Interval)
             {
                 #region 详细的运行方式，测试用
@@ -192,21 +193,23 @@ namespace MYERP_ServerServiceRuner
             #endregion 构造函数，直接会运行执行SQL读取。
 
             #region 属性
-            private MyDataRowColl _MyRows;
+            private MyDataRowCollection _MyRows;
 
-            public MyDataRowColl MyRows
+            public MyDataRowCollection MyRows
             {
                 get
                 {
                     //这样就可以把DateTable直接赋值过来了。
                     if (_MyRows == null)
                     {
-                        _MyRows = new MyDataRowColl(Rows);
+                        _MyRows = new MyDataRowCollection(Rows);
                     }
 
                     return _MyRows;
                 }
             }
+
+
 
             #endregion 属性
         }
@@ -218,28 +221,30 @@ namespace MYERP_ServerServiceRuner
         public class MyDataRow : IEnumerable, IEnumerator
         {
             #region 存储器
-            private readonly DataRow RowData;
+            private readonly DataRow _RowData;
             private int CurID = -1;
             #endregion 存储器
-
+            /// <summary>
+            /// 直接的后台数据
+            /// </summary>
             public DataRow DataRow
             {
                 get
                 {
-                    return RowData;
+                    return _RowData;
                 }
             }
 
             public bool Contains(string ColumnName)
             {
-                return RowData.Table.Columns.Contains(ColumnName);
+                return _RowData.Table.Columns.Contains(ColumnName);
             }
 
             #region 构造器
 
             public MyDataRow(DataRow DataRowForConvert)
             {
-                RowData = DataRowForConvert;
+                _RowData = DataRowForConvert;
             }
 
             #endregion 构造器
@@ -250,36 +255,13 @@ namespace MYERP_ServerServiceRuner
             {
                 get
                 {
-                    try
+                    if (_RowData.Table.Columns.Contains(columnName))
                     {
-                        if (RowData.Table.Columns.Contains(columnName))
-                        {
-                            return this[RowData.Table.Columns[columnName]];
-                        }
-                        else
-                        {
-                            return null;
-                        }
+                        return this[_RowData.Table.Columns[columnName]];
                     }
-                    catch (Exception e)
+                    else
                     {
-                        MyRecord.Say(e);
                         return null;
-                    }
-                }
-                set
-                {
-                    try
-                    {
-                        if (!RowData.Table.Columns.Contains(columnName))
-                        {
-                            return;
-                        }
-                        this[RowData.Table.Columns[columnName]] = value;
-                    }
-                    catch (Exception e)
-                    {
-                        MyRecord.Say(e);
                     }
                 }
             }
@@ -288,73 +270,28 @@ namespace MYERP_ServerServiceRuner
             {
                 get
                 {
-                    try
+                    string name = column.ColumnName;
+                    Type colType = column.DataType;
+                    object xValue = _RowData[column];
+                    if (xValue != DBNull.Value)
                     {
-                        if (RowData[column] == DBNull.Value)
-                        {
-                            if (column.DataType == typeof(bool))
-                            {
-                                return false;
-                            }
-                            else
-                            {
-                                return null;
-                            }
-                        }
+                        if (colType == typeof(string))
+                            return StringValue(name);
+                        else if (colType == typeof(bool))
+                            return BooleanValue(name);
+                        else if (colType == typeof(Guid))
+                            return Value<Guid>(name);
+                        else if (colType == typeof(DateTime))
+                            return Value<DateTime>(name);
                         else
-                        {
-                            if (column.DataType == typeof(string))
-                            {
-                                return MyConvert.DBLC(RowData[column]);
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    if (column.DataType == typeof(byte) || column.DataType == typeof(Int16) || column.DataType == typeof(int))
-                                        return Convert.ToInt32(RowData[column]);
-                                    else if (column.DataType == typeof(bool))
-                                        return Convert.ToBoolean(RowData[column]);
-                                    else
-                                        return RowData[column];
-                                }
-                                catch (Exception ex)
-                                {
-                                    MyRecord.Say(ex);
-                                    return RowData[column];
-                                }
-                            }
-                        }
+                            return xValue;
                     }
-                    catch (Exception e)
+                    else
                     {
-                        MyRecord.Say(e);
-                        return null;
-                    }
-                }
-                set
-                {
-                    try
-                    {
-                        if (value == null)
-                        {
-                            RowData[column] = DBNull.Value;
-                        }
+                        if (colType == typeof(bool))
+                            return false;
                         else
-                        {
-                            if (column.DataType == typeof(string))
-                            {
-                                RowData[column] = MyConvert.LCDB(value);
-                            }
-                            else
-                            {
-                                RowData[column] = value;
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        MyRecord.Say(e);
+                            return null;
                     }
                 }
             }
@@ -363,41 +300,112 @@ namespace MYERP_ServerServiceRuner
             {
                 get
                 {
-                    try
+                    if (columnIndex > 0 && columnIndex < _RowData.Table.Columns.Count)
                     {
-                        if (columnIndex > 0 && columnIndex < RowData.Table.Columns.Count)
-                        {
-                            return this[RowData.Table.Columns[columnIndex]];
-                        }
-                        else
-                        {
-                            return null;
-                        }
+                        return this[_RowData.Table.Columns[columnIndex]];
                     }
-                    catch (Exception e)
+                    else
                     {
-                        MyRecord.Say(e);
                         return null;
                     }
                 }
-                set
+            }
+
+            public TSource Value<TSource>(string ColumnName)
+            {
+                try
                 {
-                    try
+                    if (_RowData.Table.Columns.Contains(ColumnName))
                     {
-                        if (columnIndex > 0 && columnIndex < RowData.Table.Columns.Count)
+                        DataColumn colItem = _RowData.Table.Columns[ColumnName];
+                        object xValue = _RowData[colItem];
+                        Type SourceType = typeof(TSource);
+                        Type ColumnType = colItem.DataType;
+                        if (xValue != DBNull.Value)
                         {
-                            this[RowData.Table.Columns[columnIndex]] = value;
+                            if (SourceType == typeof(Guid))
+                            {
+                                string x = xValue.ConvertTo<string>(string.Empty, true);
+                                Guid r;
+                                if (Guid.TryParse(x, out r))
+                                {
+                                    return (TSource)(object)r;
+                                }
+                                else
+                                {
+                                    return (TSource)(object)Guid.Empty;
+                                }
+                            }
+                            else if (SourceType == typeof(string))
+                            {
+                                string x = xValue.ConvertTo<string>(string.Empty, true) ?? string.Empty;
+                                return (TSource)(object)MyConvert.DBLC(x);
+                            }
+                            else if (SourceType == typeof(bool))
+                            {
+                                if (colItem.DataType == typeof(bool))
+                                {
+                                    return (TSource)(object)xValue.ConvertTo<bool>(false, true);
+                                }
+                                else if (xValue.ToString().IsNumeric())
+                                {
+                                    return (TSource)(object)(xValue.ConvertTo<double>(0, true) != 0);
+                                }
+                            }
+                            else if (SourceType == typeof(int))
+                            {
+                                double dValue = 0;
+                                string dValueStr = xValue.ConvertTo<string>("0", true);
+                                if (!double.TryParse(dValueStr, out dValue)) dValue = 0;
+                                return (TSource)(object)Convert.ToInt32(Math.Round(dValue));
+                            }
+                            else
+                            {
+                                return xValue.ConvertTo<TSource>(default(TSource), true);
+                            }
                         }
-                        else
+                        else if (ColumnType == typeof(string))
                         {
-                            return;
+                            if (SourceType == typeof(string)) return (TSource)(object)string.Empty;
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        MyRecord.Say(e);
                     }
                 }
+                catch (Exception e)
+                {
+                    MyRecord.Say(e);
+                }
+
+                return default(TSource);
+            }
+
+            public string Value(string ColumnName)
+            {
+                return Value<string>(ColumnName);
+            }
+
+            public string StringValue(string ColumnName)
+            {
+                return Value<string>(ColumnName);
+            }
+
+            public int IntValue(string ColumnName)
+            {
+                return Value<int>(ColumnName);
+            }
+
+            public bool BooleanValue(string ColumnName)
+            {
+                return Value<bool>(ColumnName);
+            }
+
+            public Guid GuidValue(string ColumnName)
+            {
+                return Value<Guid>(ColumnName);
+            }
+
+            public DateTime DateTimeValue(string ColumnName)
+            {
+                return Value<DateTime>(ColumnName);
             }
 
             #endregion 索引器
@@ -417,16 +425,16 @@ namespace MYERP_ServerServiceRuner
             public bool MoveNext()
             {
                 CurID++;
-                return CurID >= 0 && CurID < RowData.ItemArray.Length;
+                return CurID >= 0 && CurID < _RowData.ItemArray.Length;
             }
 
             public object Current
             {
                 get
                 {
-                    if (CurID >= 0 && CurID < RowData.ItemArray.Length)
+                    if (CurID >= 0 && CurID < _RowData.ItemArray.Length)
                     {
-                        return MyConvert.DBLC(RowData[CurID].ToString());
+                        return MyConvert.DBLC(_RowData[CurID].ToString());
                     }
                     else
                     {
@@ -435,9 +443,9 @@ namespace MYERP_ServerServiceRuner
                 }
                 set
                 {
-                    if (CurID >= 0 && CurID < RowData.ItemArray.Length)
+                    if (CurID >= 0 && CurID < _RowData.ItemArray.Length)
                     {
-                        RowData[CurID] = value;
+                        _RowData[CurID] = value;
                     }
                 }
             }
@@ -446,7 +454,7 @@ namespace MYERP_ServerServiceRuner
             {
                 get
                 {
-                    return RowData.ItemArray.Length;
+                    return _RowData.ItemArray.Length;
                 }
             }
 
@@ -457,19 +465,17 @@ namespace MYERP_ServerServiceRuner
         /// 很多自定义的数据行，可以直接实现带着简繁体和去掉DBNull后的行。
         /// </summary>
         [Serializable]
-        public class MyDataRowColl : IEnumerable<MyDataRow>, IEnumerator<MyDataRow>
+        public class MyDataRowCollection : MyBase.MyEnumerable<MyDataRow>, IDisposable
         {
             #region 存储器
-            private readonly DataRowCollection Rows;
-            //private readonly DataRow[] Rows;
-            private int CurID = -1;
+            private DataRowCollection _DataRows;
             #endregion 存储器
 
             public DataRowCollection DataRows
             {
                 get
                 {
-                    return Rows;
+                    return _DataRows;
                 }
             }
 
@@ -480,8 +486,8 @@ namespace MYERP_ServerServiceRuner
             {
                 get
                 {
-                    if (Rows != null && Rows.Count > 0)
-                        return new MyDataRow(Rows[0]);
+                    if (_data != null && _data.Count() > 0)
+                        return _data.FirstOrDefault();
                     else
                         return null;
                 }
@@ -494,21 +500,23 @@ namespace MYERP_ServerServiceRuner
             {
                 get
                 {
-                    if (Rows != null)
-                        return (Rows.Count > 0);
+                    if (_DataRows != null)
+                        return (_DataRows.Count > 0);
                     else
                         return false;
                 }
             }
 
+
             #region 构造器
 
-            public MyDataRowColl(DataRowCollection xRows)
+            public MyDataRowCollection(DataRowCollection xRows)
             {
-                Rows = xRows;
+                _DataRows = xRows;
+                LoadDataSource();
             }
 
-            public MyDataRowColl(DataRow[] ArrayDataRow)
+            public MyDataRowCollection(DataRow[] ArrayDataRow)
             {
                 if (ArrayDataRow.Length > 0)
                 {
@@ -523,7 +531,6 @@ namespace MYERP_ServerServiceRuner
                             xar[i] = new DataColumn(dCol.ColumnName, dCol.DataType, dCol.Expression) { AllowDBNull = true };
                         }
                         dt.Columns.AddRange(xar);
-                        Rows = dt.Rows;
                         foreach (DataRow xaw in ArrayDataRow)
                         {
                             DataRow xxa = dt.NewRow();
@@ -531,107 +538,40 @@ namespace MYERP_ServerServiceRuner
                             {
                                 xxa[dCol.ColumnName] = xaw[dCol];
                             }
-                            Rows.Add(xxa);
+                            dt.Rows.Add(xxa);
                         }
+                        _DataRows = dt.Rows;
+                        LoadDataSource();
                     }
                 }
             }
 
-            public MyDataRowColl(DataTable xTable)
+            public MyDataRowCollection(DataTable xTable)
             {
                 if (xTable != null)
                 {
-                    Rows = xTable.Rows;
+                    _DataRows = xTable.Rows;
+                    LoadDataSource();
                 }
             }
+
+            private void LoadDataSource()
+            {
+                var v = from DataRow a in _DataRows
+                        select new MyDataRow(a);
+                _data = v.ToList();
+            }
+
 
             #endregion 构造器
 
-            #region 索引器
 
-            public MyDataRow this[int Index]
+            #region 实现接口
+            public new int Count
             {
                 get
                 {
-                    CurID = Index;
-                    return new MyDataRow(Rows[Index]);
-                }
-            }
-
-            #endregion 索引器
-
-            #region 实现枚举接口
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                CurID = -1;
-                return (IEnumerator)this;
-            }
-
-            public IEnumerator<MyDataRow> GetEnumerator()
-            {
-                CurID = -1;
-                return (IEnumerator<MyDataRow>)this;
-            }
-
-            public void Reset()
-            {
-                CurID = -1;
-            }
-
-            public bool MoveNext()
-            {
-                CurID++;
-                if (Rows != null && CurID >= 0 && CurID < Rows.Count)
-                {
-                    return true;
-                }
-                else
-                {
-                    CurID = -1;
-                    return false;
-                }
-            }
-
-            object IEnumerator.Current
-            {
-                get
-                {
-                    if (CurID >= 0 && CurID < Rows.Count)
-                    {
-                        return new MyDataRow(Rows[CurID]);
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-            }
-
-            public MyDataRow Current
-            {
-                get
-                {
-                    if (CurID >= 0 && CurID < Rows.Count)
-                        return new MyDataRow(Rows[CurID]);
-                    else
-                        return null;
-                }
-            }
-
-            public int Length
-            {
-                get
-                {
-                    return Rows == null ? -1 : Rows.Count;
-                }
-            }
-
-            public int Count
-            {
-                get
-                {
-                    return Length;
+                    return Count();
                 }
             }
 
@@ -639,16 +579,17 @@ namespace MYERP_ServerServiceRuner
             {
             }
 
-            #endregion 实现枚举接口
+            #endregion 实现接口
         }
 
+        [Serializable]
         /// <summary>
         /// 运行SQL语句命令。
         /// </summary>
         public class MyCommand
         {
             #region 存储器
-            private MyCommandColl _myCmdColl;
+            private MyDataCmdCollection _myCmdColl;
             #endregion 存储器
 
             #region 运行无有返回值的SQL语句
@@ -660,11 +601,11 @@ namespace MYERP_ServerServiceRuner
             /// 注意：这将覆盖SQLCmdColl属性，将会使SQLCmdColl属性变成新的只有一条SQL的序列。
             /// 出错会回滚操作。
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
+            /// <param Name="SQL">SQL语句</param>
             /// <returns>会返回是否出错。</returns>
             public bool Execute(string SQL)
             {
-                SQLCmdColl = new MyCommandColl();
+                SQLCmdColl = new MyDataCmdCollection();
                 SQLCmdColl.Add(SQL);
                 return Execute();
             }
@@ -674,13 +615,13 @@ namespace MYERP_ServerServiceRuner
             /// 注意：这将覆盖SQLCmdColl属性，将会使SQLCmdColl属性变成新的只有一条SQL的序列。
             /// 出错会回滚操作。可以很多参数
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="Params">很多参数，或者一个数组</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="Parameters">很多参数，或者一个数组</param>
             /// <returns></returns>
-            public bool Execute(string SQL, params MyParameter[] Params)
+            public bool Execute(string SQL, params MyParameter[] Parameters)
             {
-                SQLCmdColl = new MyCommandColl();
-                SQLCmdColl.Add(SQL, "Main", Params);
+                SQLCmdColl = new MyDataCmdCollection();
+                SQLCmdColl.Add(SQL, "Main", Parameters);
                 return Execute();
             }
 
@@ -689,8 +630,8 @@ namespace MYERP_ServerServiceRuner
             /// 注意：这将覆盖SQLCmdColl属性，将会使SQLCmdColl属性变成新的只有一条SQL的序列。
             /// 出错会回滚操作。固定一个参数。
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="param0">固定一个参数</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="param0">固定一个参数</param>
             /// <returns></returns>
             public bool Execute(string SQL, SqlParameter param0)
             {
@@ -709,9 +650,9 @@ namespace MYERP_ServerServiceRuner
             /// 注意：这将覆盖SQLCmdColl属性，将会使SQLCmdColl属性变成新的只有一条SQL的序列。
             /// 出错会回滚操作。固定两个参数。
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="param0">第一个参数</param>
-            /// <param name="param1">第二个参数</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="param0">第一个参数</param>
+            /// <param Name="param1">第二个参数</param>
             /// <returns></returns>
             public bool Execute(string SQL, MyParameter param0, MyParameter param1)
             {
@@ -724,10 +665,10 @@ namespace MYERP_ServerServiceRuner
             /// 注意：这将覆盖SQLCmdColl属性，将会使SQLCmdColl属性变成新的只有一条SQL的序列。
             /// 出错会回滚操作。固定三个参数
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="param0">第一个参数</param>
-            /// <param name="param1">第二个参数</param>
-            /// <param name="param2">第三个参数</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="param0">第一个参数</param>
+            /// <param Name="param1">第二个参数</param>
+            /// <param Name="param2">第三个参数</param>
             /// <returns></returns>
             public bool Execute(string SQL, MyParameter param0, MyParameter param1, MyParameter param2)
             {
@@ -741,9 +682,9 @@ namespace MYERP_ServerServiceRuner
             /// SQLList会覆盖SQLCmdColl属性。
             /// 运行语句是有事务的，出错会回滚操作。
             /// </summary>
-            /// <param name="SQLList">设置要运行的语句序列，会覆盖SQLCmdColl属性</param>
+            /// <param Name="SQLList">设置要运行的语句序列，会覆盖SQLCmdColl属性</param>
             /// <returns>运行是否正确，不正确将RollBack</returns>
-            public bool Execute(MyCommandColl SQLList)
+            public bool Execute(MyDataCmdCollection SQLList)
             {
                 SQLCmdColl = SQLList;
                 return Execute();
@@ -766,80 +707,79 @@ namespace MYERP_ServerServiceRuner
                     using (SqlConnection sn = new SqlConnection(MyBase.ConnectionString))
                     {
                         sn.Open();
-                        using (SqlTransaction st = sn.BeginTransaction())
+                        SqlTransaction st = null;
+                        if (SQLCmdColl.Count > 1) st = sn.BeginTransaction();
+                        using (SqlCommand sc = new SqlCommand() { CommandType = CommandType.Text, Connection = sn, CommandTimeout = 60000 })
                         {
-                            using (SqlCommand sc = new SqlCommand() { CommandType = CommandType.Text, Connection = sn, Transaction = st, CommandTimeout = 60000 })
+                            try
                             {
-                                try
+                                if (st != null) sc.Transaction = st;
+                                SQLCmdColl.Reset();
+                                int i = 0, l = SQLCmdColl.Count;
+                                foreach (MyDataCmdItem mc in SQLCmdColl)
                                 {
-                                    SQLCmdColl.Reset();
-                                    int i = 0, l = SQLCmdColl.Count;
-                                    foreach (MyCommandItem mc in SQLCmdColl)
+                                    try
                                     {
-                                        try
+                                        if (mc.SQL.Trim().Length <= 0)
                                         {
-                                            if (mc.SQL.Trim().Length <= 0)
-                                            {
-                                                throw new Exception(string.Format("没有给SQL设置语句！,第{0}句。Key={1}", mc.index, mc.key));
-                                            }
-                                            i++;
-                                            sc.CommandText = MyConvert.LCDB(mc.SQL).ToString(); //设置SQL语句，要进行简繁体转换；
+                                            throw new Exception(string.Format("没有给SQL设置语句！,第{0}句。Key={1}", mc.index, mc.key));
+                                        }
+                                        i++;
+                                        sc.CommandText = MyConvert.LCDB(mc.SQL).ToString(); //设置SQL语句，要进行简繁体转换；
+                                        sc.Parameters.Clear();
+                                        if (mc.SQLParamCollection != null)
+                                        {
                                             sc.Parameters.Clear();
-                                            if (mc.Param != null)
-                                            {
-                                                sc.Parameters.Clear();
-                                                sc.Parameters.AddRange(mc.Param);
-                                            }
-                                            mc.EffectRows = sc.ExecuteNonQuery(); //运行SQL语句。
-                                            mc.ExecuteOK = true;
+                                            sc.Parameters.AddRange(mc.SQLParamCollection);
                                         }
-                                        catch (Exception e)
-                                        {
-                                            MyRecord.Say(e, string.Format("SQLKey={0}", mc.key));
-                                            mc.ExecuteOK = false;
-                                            mc.ExecuteExp = e;
-                                            throw e;
-                                        }
+                                        mc.EffectRows = sc.ExecuteNonQuery(); //运行SQL语句。
+                                        mc.ExecuteOK = true;
                                     }
-                                    st.Commit();
-                                    ExecOK = true;
+                                    catch (Exception e)
+                                    {
+                                        MyRecord.Say(e, string.Format("SQLKey={0}", mc.key), LogT);
+                                        mc.ExecuteOK = false;
+                                        mc.ExecuteExp = e;
+                                        throw e;
+                                    }
                                 }
-                                catch (Exception e)
-                                {
-                                    st.Rollback();
-                                    throw e;
-                                }
-                                finally
-                                {
-                                    sc.Parameters.Clear();
-                                }
+                                Thread.Sleep(100);
+                                if (st != null) st.Commit();
+                                ExecOK = true;
+                            }
+                            catch (Exception e)
+                            {
+                                if (st != null) st.Rollback();
+                                throw e;
+                            }
+                            finally
+                            {
+                                sc.Parameters.Clear();
                             }
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    MyRecord.Say(e, "", LogT);
+                    MyRecord.Say(e, "运行批量SQL出错。", LogT);
                     ExecOK = false;
                 }
-
                 return ExecOK;
             }
 
             #endregion 运行无有返回值的SQL语句
 
             #region 多条SQL语句
-
             /// <summary>
             /// SQL语句序列
             /// </summary>
-            public MyCommandColl SQLCmdColl
+            public MyDataCmdCollection SQLCmdColl
             {
                 get
                 {
                     if (_myCmdColl == null)
                     {
-                        _myCmdColl = new MyCommandColl();
+                        _myCmdColl = new MyDataCmdCollection();
                     }
                     return _myCmdColl;
                 }
@@ -854,9 +794,9 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 加一个SQL语句
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="Key">KEY</param>
-            /// <param name="args">参数序列</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="Key">KEY</param>
+            /// <param Name="args">参数序列</param>
             public void Add(string SQL, string Key, params MyParameter[] args)
             {
                 SQLCmdColl.Add(SQL, Key, args);
@@ -865,8 +805,8 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 加一个SQL语句
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="Key">KEY</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="Key">KEY</param>
             public void Add(string SQL, string Key)
             {
                 SQLCmdColl.Add(SQL, Key);
@@ -875,7 +815,7 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 加入一个SQL语句，没有KEY，出错时将不知道哪里错误。
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
+            /// <param Name="SQL">SQL语句</param>
             public void Add(string SQL)
             {
                 SQLCmdColl.Add(SQL);
@@ -884,8 +824,8 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 加入一个SQL语句对象
             /// </summary>
-            /// <param name="SQLItem">SQL语句对象</param>
-            public void Add(MyCommandItem SQLItem)
+            /// <param Name="SQLItem">SQL语句对象</param>
+            public void Add(MyDataCmdItem SQLItem)
             {
                 SQLCmdColl.Add(SQLItem);
             }
@@ -895,11 +835,11 @@ namespace MYERP_ServerServiceRuner
             #endregion 多条SQL语句
 
             #region 多条SQL语句存储类
-
+            [Serializable]
             /// <summary>
             /// 要运行的一条SQL命令。
             /// </summary>
-            public class MyCommandItem
+            public class MyDataCmdItem
             {
                 #region 存储器
 
@@ -915,142 +855,139 @@ namespace MYERP_ServerServiceRuner
 
                 public int EffectRows { get; set; }
 
-                public SqlParameter[] Param { get; set; }
+                public SqlParameter[] SQLParamCollection { get; set; }
 
-                public MyParameter[] myParam { get; set; }
+                public MyParameter[] MyDataParamCollection { get; set; }
 
                 #endregion 存储器
 
                 #region 构造器
 
-                public MyCommandItem()
+                public MyDataCmdItem()
                 {
                     index = -1;
                 }
 
-                public MyCommandItem(string sql)
+                public MyDataCmdItem(string sql)
                 {
                     SQL = sql;
                     key = string.Empty;
                     index = -1;
                 }
 
-                public MyCommandItem(string sql, string Key)
+                public MyDataCmdItem(string sql, string Key)
                 {
                     SQL = sql;
                     key = Key;
                     index = -1;
                 }
 
-                public MyCommandItem(string sql, string Key, params MyParameter[] args)
+                public MyDataCmdItem(string sql, string Key, params MyParameter[] args)
                 {
                     SQL = sql;
                     key = Key;
                     index = -1;
-                    myParam = args;
-                    Param = new SqlParameter[args.Length];
-                    for (int i = 0; i < args.Length; i++)
+                    MyDataParamCollection = args;
+                    //Param = new SqlParameter[args.Length];
+                    //for (int i = 0; i < args.Length; i++)
+                    //{
+                    //    Param[i] = args[i].sqlparam;
+                    //}
+                    if (args.IsNotNull() && args.Length > 0)
                     {
-                        Param[i] = args[i].sqlparam;
+                        var v = from a in args
+                                select a.sqlparam;
+                        SQLParamCollection = v.ToArray();
+                    }
+                }
+
+                public MyDataCmdItem(string sql, params MyParameter[] args)
+                {
+                    SQL = sql;
+                    index = -1;
+                    MyDataParamCollection = args;
+                    if (args.IsNotNull() && args.Length > 0)
+                    {
+                        var v = from a in args
+                                select a.sqlparam;
+                        SQLParamCollection = v.ToArray();
                     }
                 }
 
                 #endregion 构造器
             }
 
+
+            [Serializable]
             /// <summary>
             /// 保持要运行的SQL集合。
             /// </summary>
-            public class MyCommandColl : IEnumerator, IEnumerable
+            public class MyDataCmdCollection : MyBase.MyEnumerable<MyDataCmdItem>
             {
-                #region 存储器
-                private readonly ArrayList IDPointer;
-                private int Cid = -1;
-                private readonly Dictionary<string, MyCommandItem> MyColl;
-                #endregion 存储器
-
                 #region 构造器
 
-                public MyCommandColl()
+                public MyDataCmdCollection()
                 {
-                    MyColl = new Dictionary<string, MyCommandItem>();
-                    IDPointer = new ArrayList();
                 }
 
                 #endregion 构造器
 
                 #region 加减元素
 
-                public void Add(MyCommandItem SQLCmdItem)
+                public MyDataCmdItem Add(string SQL, string Key, params MyParameter[] args)
                 {
-                    MyColl.Add(SQLCmdItem.key, SQLCmdItem);
-                    IDPointer.Add(SQLCmdItem.key);
-                    Cid++;
-                    SQLCmdItem.index = Cid;
+                    MyDataCmdItem cItem = new MyDataCmdItem(SQL, Key, args);
+                    Add(cItem);
+                    return cItem;
                 }
 
-                public void Add(string SQL, string KEY, params MyParameter[] args)
+                public MyDataCmdItem Add(string SQL, string Key)
                 {
-                    Add(new MyCommandItem(SQL, KEY, args));
+                    MyDataCmdItem cItem = new MyDataCmdItem(SQL, Key);
+                    Add(cItem);
+                    return cItem;
                 }
 
-                public void Add(string SQL, string KEY)
+                public MyDataCmdItem Add(string SQL)
                 {
-                    Add(new MyCommandItem(SQL, KEY));
+                    MyDataCmdItem cItem = new MyDataCmdItem(SQL);
+                    Add(cItem);
+                    return cItem;
                 }
 
-                public void Add(string SQL)
+                public MyDataCmdItem Add(string SQL, params MyParameter[] args)
                 {
-                    Add(new MyCommandItem(SQL));
-                }
-
-                public int Count
-                {
-                    get
-                    {
-                        return MyColl.Count;
-                    }
+                    MyDataCmdItem cItem = new MyDataCmdItem(SQL, args);
+                    Add(cItem);
+                    return cItem;
                 }
 
                 public void Remove(string KEY)
                 {
-                    MyColl.Remove(KEY);
-                    IDPointer.Remove(KEY);
+                    try
+                    {
+                        var v = from a in _data
+                                where a.key == KEY
+                                select a;
+                        if (v.IsNotNull() && v.Count() > 0)
+                        {
+                            RemoveItem(v.FirstOrDefault());
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MyRecord.Say(ex);
+                    }
                 }
-
                 #endregion 加减元素
 
-                #region 实现枚举接口
-
-                public IEnumerator GetEnumerator()
-                {
-                    return (IEnumerator)this;
-                }
-
-                public void Reset()
-                {
-                    Cid = -1;
-                }
-
-                public bool MoveNext()
-                {
-                    Cid++;
-                    return Cid < MyColl.Count;
-                }
-
-                public object Current
+                public new int Count
                 {
                     get
                     {
-                        return MyColl[(string)IDPointer[Cid]];
-                    }
-                    set
-                    {
-                        MyColl[(string)IDPointer[Cid]] = (MyCommandItem)value;
+                        return Count();
                     }
                 }
-
-                #endregion 实现枚举接口
             }
 
             #endregion 多条SQL语句存储类
@@ -1060,8 +997,8 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 从数据库返回一个值
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="paramArgs">参数序列</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="paramArgs">参数序列</param>
             /// <returns>一个值，注意要（类型）objec强制类型转换</returns>
             public static object ExecuteScalar(string SQL, params MyData.MyParameter[] paramArgs)
             {
@@ -1070,7 +1007,7 @@ namespace MYERP_ServerServiceRuner
                 {
                     SqlConnection cnn = new SqlConnection(MyBase.ConnectionString);
                     cnn.Open();
-                    SQL =MyConvert.LCDB(SQL).ToString(); //进行繁简转换。
+                    SQL = MyConvert.LCDB(SQL).ToString(); //进行繁简转换。
                     SqlTransaction st = cnn.BeginTransaction();
                     SqlCommand SCMD = new SqlCommand(SQL, cnn, st);
                     SqlParameter[] sqlpa = null;
@@ -1089,7 +1026,6 @@ namespace MYERP_ServerServiceRuner
                     try
                     {
                         object _R = SCMD.ExecuteScalar();
-                        _R = _R == DBNull.Value ? null : _R;
                         st.Commit();
                         return _R;
                     }
@@ -1118,7 +1054,7 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 从数据库返回一个值
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
+            /// <param Name="SQL">SQL语句</param>
             /// <returns>一个值，注意要（类型）objec强制类型转换</returns>
             public static object ExecuteScalar(string SQL)
             {
@@ -1128,8 +1064,8 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 从数据库返回一个值，支持{0}参数，内部用string.Format自动格式化。
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="strArgs">字符串参数序列</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="strArgs">字符串参数序列</param>
             /// <returns>一个值，注意要（类型）objec强制类型转换</returns>
             public static object ExecuteScalar(string SQL, params string[] strArgs)
             {
@@ -1139,8 +1075,8 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 从数据库返回一个值。
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="strArg0">第一个参数</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="strArg0">第一个参数</param>
             /// <returns>一个值，注意要（类型）objec强制类型转换</returns>
             public static object ExecuteScalar(string SQL, string strArg0)
             {
@@ -1150,9 +1086,9 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 从数据库返回一个值。
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="strArg0">第一个参数</param>
-            /// <param name="strArg1">第二个参数</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="strArg0">第一个参数</param>
+            /// <param Name="strArg1">第二个参数</param>
             /// <returns></returns>
             public static object ExecuteScalar(string SQL, string strArg0, string strArg1)
             {
@@ -1162,10 +1098,10 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 从数据库返回一个值
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="strArg0">第一个参数</param>
-            /// <param name="strArg1">第二个参数</param>
-            /// <param name="strArg2">第三个参数</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="strArg0">第一个参数</param>
+            /// <param Name="strArg1">第二个参数</param>
+            /// <param Name="strArg2">第三个参数</param>
             /// <returns></returns>
             public static object ExecuteScalar(string SQL, string strArg0, string strArg1, string strArg2)
             {
@@ -1175,8 +1111,8 @@ namespace MYERP_ServerServiceRuner
             /// <summary>
             /// 从数据库返回一个值,用SQL参数的。
             /// </summary>
-            /// <param name="SQL">SQL语句</param>
-            /// <param name="paramArg0">第一个参数</param>
+            /// <param Name="SQL">SQL语句</param>
+            /// <param Name="paramArg0">第一个参数</param>
             /// <returns></returns>
             public static object ExecuteScalar(string SQL, MyData.MyParameter paramArg0)
             {
@@ -1201,7 +1137,8 @@ namespace MYERP_ServerServiceRuner
                 DateTime,
                 Int,
                 Numeric,
-                String
+                String,
+                UniqueIdentifier
             }
 
             private object _Value = null;
@@ -1221,8 +1158,8 @@ namespace MYERP_ServerServiceRuner
             /// 默认Type
             /// 是String；
             /// </summary>
-            /// <param name="name"></param>
-            /// <param name="value"></param>
+            /// <param Name="Name"></param>
+            /// <param Name="value"></param>
             public MyParameter(string name, object value)
             {
                 sqlparam = new SqlParameter();
@@ -1331,89 +1268,113 @@ namespace MYERP_ServerServiceRuner
                                         {
                                             if (_MyDbType == MyDataType.Numeric)
                                             {
-                                                _Value = Convert.ToDouble(value);
+                                                double tValue = Convert.ToDouble(value);
+                                                if ((tValue * 100) - Math.Floor(tValue * 100) == 0)    //判断两位小数
+                                                {
+                                                    sqlparam.SqlDbType = SqlDbType.Money;
+                                                    _Value = Convert.ToDecimal(Math.Round(tValue, 2));
+                                                }
+                                                else if ((tValue * 1000000) - Math.Floor(tValue * 1000000) == 0)    //判断4位小数
+                                                {
+                                                    sqlparam.SqlDbType = SqlDbType.Decimal;
+                                                    _Value = Convert.ToSingle(Math.Round(tValue, 12));
+                                                }
+                                                else
+                                                {
+                                                    _Value = tValue;
+                                                }
                                             }
                                         }
                                     }
                                 }
+                            }
+                        }
+                        else if (_MyDbType == MyDataType.Boolean)
+                        {
+                            if (value == null)
+                            {
+                                _Value = false;
+                            }
+                            else
+                            {
+                                if (value.GetType() == typeof(bool))
+                                {
+                                    _Value = (bool)value ? 1 : 0;
+                                }
+                                else
+                                {
+                                    if (value.GetType() == typeof(string))
+                                    {
+                                        _Value = value.ToString().ToLower() == "true";
+                                    }
+                                    else
+                                    {
+                                        try
+                                        {
+                                            _Value = Convert.ToBoolean(value);
+                                        }
+                                        catch
+                                        {
+                                            _Value = Convert.ToByte(value) == 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else if (_MyDbType == MyDataType.DateTime)
+                        {
+                            DateTime dv;
+                            if (value == null)
+                            {
+                                _Value = DBNull.Value;
+                            }
+                            else
+                            {
+                                if (DateTime.TryParse(Convert.ToString(value), out dv))
+                                {
+                                    if (dv == DateTime.MinValue || dv == DateTime.MaxValue)
+                                    {
+                                        _Value = DBNull.Value;
+                                    }
+                                    else
+                                    {
+                                        _Value = Convert.ToDateTime(value);
+                                    }
+                                }
+                                else
+                                {
+                                    _Value = DBNull.Value;
+                                }
+                            }
+                        }
+                        else if (_MyDbType == MyDataType.UniqueIdentifier)
+                        {
+                            if (value == null)
+                            {
+                                _Value = DBNull.Value;
+                            }
+                            else
+                            {
+                                Guid r;
+                                if (Guid.TryParse(value.ToString(), out r))
+                                    _Value = r;
+                                else
+                                    _Value = DBNull.Value;
                             }
                         }
                         else
                         {
-                            if (_MyDbType == MyDataType.Boolean)
+                            if (value == null)
                             {
-                                if (value == null)
-                                {
-                                    _Value = false;
-                                }
-                                else
-                                {
-                                    if (value.GetType() == typeof(bool))
-                                    {
-                                        _Value = (bool)value ? 1 : 0;
-                                    }
-                                    else
-                                    {
-                                        if (value.GetType() == typeof(string))
-                                        {
-                                            _Value = value.ToString().ToLower() == "true";
-                                        }
-                                        else
-                                        {
-                                            try
-                                            {
-                                                _Value = Convert.ToBoolean(value);
-                                            }
-                                            catch
-                                            {
-                                                _Value = Convert.ToByte(value) == 1;
-                                            }
-                                        }
-                                    }
-                                }
+                                _Value = DBNull.Value;
                             }
                             else
                             {
-                                if (_MyDbType == MyDataType.DateTime)
-                                {
-                                    DateTime dv;
-                                    if (value == null)
-                                    {
-                                        _Value = DBNull.Value;
-                                    }
-                                    else
-                                    {
-                                        if (DateTime.TryParse(Convert.ToString(value), out dv))
-                                        {
-                                            if (dv == DateTime.MinValue || dv == DateTime.MaxValue)
-                                            {
-                                                _Value = DBNull.Value;
-                                            }
-                                            else
-                                            {
-                                                _Value = Convert.ToDateTime(value);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            _Value = DBNull.Value;
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    if (value == null)
-                                    {
-                                        _Value = DBNull.Value;
-                                    }
-                                    else
-                                    {
-                                        _Value = MyConvert.LCDB(value);
-                                    }
-                                }
+                                _Value = MyConvert.LCDB(value);
                             }
                         }
                     }
+
                     sqlparam.Value = _Value;
                 }
             }
@@ -1446,6 +1407,8 @@ namespace MYERP_ServerServiceRuner
                         return SqlDbType.DateTime;
                     case MyDataType.Boolean:
                         return SqlDbType.Bit;
+                    case MyDataType.UniqueIdentifier:
+                        return SqlDbType.UniqueIdentifier;
                     default:
                         return SqlDbType.NVarChar;
                 }
@@ -1472,6 +1435,16 @@ namespace MYERP_ServerServiceRuner
             }
         }
 
+        /// <summary>
+        /// 返回计算的当前时间。不会有数据参数
+        /// </summary>
+        public static DateTime Now
+        {
+            get
+            {
+                return SysDate;
+            }
+        }
 
         #endregion 数据返回的固定信息。
     }

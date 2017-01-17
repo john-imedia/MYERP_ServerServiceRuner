@@ -14,5 +14,10 @@ namespace MYERP_ServerServiceRuner
         {
             InitializeComponent();
         }
+
+        private void serviceInstaller1_AfterInstall(object sender, InstallEventArgs e)
+        {
+
+        }
     }
 }

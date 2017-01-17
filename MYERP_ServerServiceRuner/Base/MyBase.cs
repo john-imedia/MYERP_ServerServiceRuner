@@ -21,7 +21,7 @@ using Microsoft.International.Converters.TraditionalChineseToSimplifiedConverter
 
 namespace MYERP_ServerServiceRuner.Base
 {
-    class MyBase
+    static public class MyBase
     {
         public static string ConnectionString
         {
@@ -72,39 +72,44 @@ namespace MYERP_ServerServiceRuner.Base
             }
         }
 
-
+        /// <summary>
+        /// 是空记录集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        public static bool IsEmptySet<T>(this IEnumerable<T> o)
+        {
+            if (o.IsNotNull())
+            {
+                return o.Count() <= 0;
+            }
+            return true;
+        }
+        /// <summary>
+        /// 不是空记录集。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        public static bool IsNotEmptySet<T>(this IEnumerable<T> o)
+        {
+            if (o.IsNotNull())
+            {
+                return o.Count() > 0;
+            }
+            return false;
+        }
 
 
 
         #region 集合类——泛型基类
 
+        #region 集合类——泛型基类
         /// <summary>
-        /// 集合类的ITEM基类
+        /// 必须重写索引器this[Key]
         /// </summary>
-        public abstract class MyItem
-        {
-            protected int _index = 0;
-
-            public virtual int Index
-            {
-                get { return _index; }
-                set { _index = value; }
-            }
-
-            protected string _name = string.Empty;
-
-            public virtual string name
-            {
-                get { return _name; }
-                set { _name = value; }
-            }
-
-        }
-
-        /// <summary>
-        /// 泛型集合类
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam Name="T"></typeparam>
         [Serializable]
         public abstract class MyEnumerable<T> : IEnumerable<T>, IEnumerator<T>, IDisposable
         {
@@ -129,6 +134,25 @@ namespace MYERP_ServerServiceRuner.Base
                 set
                 {
                     _data[index] = value;
+                }
+            }
+
+            public virtual T this[Func<T, bool> FindAction]
+            {
+                get
+                {
+                    var v = from a in _data
+                            where FindAction(a)
+                            select a;
+                    return v.FirstOrDefault();
+                }
+                set
+                {
+                    var v = from a in _data
+                            where FindAction(a)
+                            select a;
+                    T x = v.FirstOrDefault();
+                    x = value;
                 }
             }
 
@@ -180,13 +204,13 @@ namespace MYERP_ServerServiceRuner.Base
             {
                 get
                 {
-                    return _data.Count;
+                    if (_data.IsNotNull()) return _data.Count; else return 0;
                 }
             }
 
             public virtual int Count()
             {
-                return _data.Count;
+                if (_data.IsNotNull()) return _data.Count; else return 0;
             }
 
             public bool MoveNext()
@@ -212,9 +236,10 @@ namespace MYERP_ServerServiceRuner.Base
             /// <summary>
             /// 增加一个元素
             /// </summary>
-            /// <param name="item">元素</param>
+            /// <param Name="item">元素</param>
             public virtual void Add(T item)
             {
+                if (_data.IsNull()) _data = new List<T>();
                 _data.Add(item);
             }
 
@@ -232,7 +257,7 @@ namespace MYERP_ServerServiceRuner.Base
             /// <summary>
             /// 增加很多元素
             /// </summary>
-            /// <param name="proditems"></param>
+            /// <param Name="proditems"></param>
             public virtual void AddRange(T[] ArrayItems)
             {
                 if (ArrayItems != null && ArrayItems.Length > 0)
@@ -256,14 +281,24 @@ namespace MYERP_ServerServiceRuner.Base
             /// <summary>
             /// 去掉一个元素
             /// </summary>
-            /// <param name="item">要去掉的元素</param>
+            /// <param Name="item">要去掉的元素</param>
             public virtual void RemoveItem(T item)
             {
                 _data.Remove(item);
             }
 
+            public bool Contains(Func<T, bool> FindAction)
+            {
+                var v = from a in _data
+                        where FindAction(a)
+                        select a;
+                return v.IsNotEmptySet();
+            }
+
             #endregion 操作函数
         }
+
+        #endregion 集合类——泛型基类
 
         #endregion 集合类——泛型基类
 
