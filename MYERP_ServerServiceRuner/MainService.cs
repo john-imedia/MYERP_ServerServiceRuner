@@ -31,6 +31,10 @@ namespace MYERP_ServerServiceRuner
 
         public string CompanyType = string.Empty;
         public double CheckStockTimers = 0;   //3.25;
+        /// <summary>
+        /// 计算达成率，向前计算多少天的设置。
+        /// </summary>
+        public int CacluatePlanRateDaySpanTimes = 6;
 
         public bool FirstStart = false;
 
@@ -52,10 +56,28 @@ namespace MYERP_ServerServiceRuner
         {
             try
             {
-                ConfigurationManager.RefreshSection("AppSettings");
+                ConfigurationManager.RefreshSection("appSettings");
 
-                CompanyType = ConfigurationManager.AppSettings.Get("CompanyType");
-                CheckStockTimers = ConfigurationManager.AppSettings.Get("CheckStockTimers").ConvertTo<double>(3, true);
+                if (ConfigurationManager.AppSettings.AllKeys.Contains("CompanyType"))
+                    CompanyType = ConfigurationManager.AppSettings.Get("CompanyType");
+                else
+                    CompanyType = "MY";
+
+                MyRecord.Say(string.Format("CompanyType = {0}", CompanyType));
+
+                if (ConfigurationManager.AppSettings.AllKeys.Contains("CheckStockTimers"))
+                    CheckStockTimers = ConfigurationManager.AppSettings.Get("CheckStockTimers").ConvertTo<double>(3, true);
+                else
+                    CheckStockTimers = 3.25;
+
+                MyRecord.Say(string.Format("CheckStockTimers = {0}", CacluatePlanRateDaySpanTimes));
+
+                if (ConfigurationManager.AppSettings.AllKeys.Contains("CacluatePlanRateDaySpanTimes"))
+                    CacluatePlanRateDaySpanTimes = ConfigurationManager.AppSettings.Get("CacluatePlanRateDaySpanTimes").ConvertTo<int>(6, true);
+                else
+                    CacluatePlanRateDaySpanTimes = 6;
+
+                MyRecord.Say(string.Format("CacluatePlanRateDaySpanTimes = {0}", CacluatePlanRateDaySpanTimes));
 
                 DateTime NowTime = DateTime.Now;
                 int h = NowTime.Hour, m = NowTime.Minute, s = NowTime.Second, d = NowTime.Day;
@@ -66,46 +88,30 @@ namespace MYERP_ServerServiceRuner
                     MyRecord.Say("首次启动，时间循环已经开启。");
                     ProduceFeedBackLastRunTime = new DateTime(2016, 12, 1);
                     #region 暂停
-                    //DeliverPlanFinishStatisticErrorSender();
-                    //Thread.Sleep(5000);   //等五秒。
-                    //SendProdPlanEmail(NowTime);
-                    //DateTime xDate = ((DateTime)NowTime).AddDays(-57).Date;
-                    //MyRecord.Say(string.Format("当前时间：{0:yyyy/MM/dd}，计算开始时间：{1:yyyy/MM/dd}", NowTime, xDate));
-                    //for (int i = 0; i <= 57; i++)
-                    //{
-                    //    if (_StopProdPlanForSaved) return;
-                    //    DateTime iDate = xDate.AddDays(i).Date;
-                    //    MyRecord.Say("--------------------------------------------------------");
-                    //    MyRecord.Say(string.Format("计算：{0:yyyy/MM/dd}，开始。", iDate));
-                    //    MyRecord.Say(string.Format("计算时间：{0:yyyy/MM/dd}，白班", iDate));
-                    //    ProdPlanForSave(iDate, 1);
-                    //    Thread.Sleep(5000);
-                    //    if (_StopProdPlanForSaved) return;
-                    //    MyRecord.Say(string.Format("计算时间：{0:yyyy/MM/dd}，夜班", iDate));
-                    //    ProdPlanForSave(iDate, 2);
-                    //    MyRecord.Say(string.Format("计算：{0:yyyy/MM/dd}，完成。", iDate));
-                    //    MyRecord.Say("--------------------------------------------------------");
-                    //    Thread.Sleep(5000);
-                    //}
-
-                    //int u = 23;
-                    //DateTime xDate = ((DateTime)NowTime).AddDays(-u).Date;
-                    //MyRecord.Say(string.Format("\r\n -----------------------------------------------------------------------------------------------"));
-                    //MyRecord.Say(string.Format("计算达成率，当前时间：{0}，计算开始时间：{1}", NowTime, xDate));
-                    //for (int i = 0; i < u; i++)
-                    //{
-                    //    DateTime iDate = xDate.AddDays(i).Date;
-                    //    MyRecord.Say(string.Format("计算时间：{0}，白班。", iDate));
-                    //    ProdPlanForSave(iDate, 1);
-
-                    //    MyRecord.Say(string.Format("\r\n-----------------------------------------------------------------------------------------------"));
-                    //    MyRecord.Say(string.Format("计算时间：{0}，夜班。", iDate));
-                    //    ProdPlanForSave(iDate, 2);
-                    //    MyRecord.Say(string.Format("{0}计算完成。", iDate));
-                    //    MyRecord.Say(string.Format("\r\n-----------------------------------------------------------------------------------------------\r\n"));
-                    //}
+                    ProdPlanForSaveLoader(NowTime);//保存达成率到月报表。
                     #endregion
                 }
+
+
+                if (ConfigurationManager.AppSettings.AllKeys.Contains("CheckStockNoteOnceTime"))
+                {
+                    string CheckStockNoteOnceTime= ConfigurationManager.AppSettings.Get("CheckStockNoteOnceTime").ConvertTo<string>("false", true).ToUpper().Trim();
+                    MyRecord.Say(string.Format("临时启动审核库存单据，CheckStockNoteOnceTime = {0}", CheckStockNoteOnceTime));
+                    if (CheckStockNoteOnceTime == "TRUE" || CheckStockNoteOnceTime == "1" || CheckStockNoteOnceTime == "T")
+                    {
+                        CheckStockStartTime = NowTime;
+                        if (!CheckStockRecordRunning)
+                        {
+                            MyRecord.Say("临时启动审核库存单据，已经启动");
+                            CheckStockRecordRunning = true;
+                            CheckStockRecordLoder();   //審核出入庫單。
+                            Thread.Sleep(500);
+                            ConfigurationManager.AppSettings.Set("CheckStockNoteOnceTime", "False");
+                        }
+                    }
+                }
+
+
 
                 if (h == 0 && m == 0 & s == 0) //计时器归零
                 {   ///每天0点对表，计时器归零。
@@ -123,7 +129,6 @@ namespace MYERP_ServerServiceRuner
                         Thread.Sleep(500);
                     }
                 }
-
                 //每隔1.4个小时计算一次采购数量
                 if ((NowTime - CalculatePruchaseStartTime).TotalHours > 1.4)
                 {
@@ -146,12 +151,12 @@ namespace MYERP_ServerServiceRuner
                     Thread.Sleep(500);
                 }
 
-                if ((h == 8 || h == 21) && m == 45 && s == 15) //审核排程，发达成率
+                if ((h == 8 || h == 21) && m == 45 && s == 15) //审核排程
                 {
                     ConfirmProcessPlan(); //每天10点定时审核单据，先审核单据。
                     Thread.Sleep(5000);   //等五秒。
                 }
-                if ((h == 9 || h == 22) && m == 5 && s == 15) //审核排程，发达成率
+                if ((h == 9 || h == 22) && m == 5 && s == 15) //发达成率
                 {
                     SendProdPlanEmail(NowTime);  //定時發送排程和達成率。
                     MyRecord.Say("发送排程完成。");
@@ -222,17 +227,11 @@ namespace MYERP_ServerServiceRuner
                     {
                         SendIPQCAndScrapBackEmailLoder();
                     }
+                    else if (h == 7 && m == 1 && s == 9) //发送每日出货计划量
+                    {
+                        DeliverPlanNumbSumSender();
+                    }
                 }
-
-                string DeliverPlanFinishStatisticErrorTempSender = ConfigurationManager.AppSettings.Get("DeliverPlanFinishStatisticErrorTempSender");
-
-                if (DeliverPlanFinishStatisticErrorTempSender == "GO")
-                {
-                    DeliverPlanFinishStatisticErrorSender();
-                    ConfigurationManager.AppSettings.Set("DeliverPlanFinishStatisticErrorTempSender", string.Format("{0:yy/MM/dd HH:mm} Runing Finished", DateTime.Now));
-                    ConfigurationManager.RefreshSection("AppSettings");
-                }
-
             }
             catch (Exception ex)
             {

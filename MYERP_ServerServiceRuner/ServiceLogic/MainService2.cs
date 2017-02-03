@@ -455,11 +455,11 @@ namespace MYERP_ServerServiceRuner
 
         void KanbanRecorderLoader()
         {
-            MyRecord.Say("开启库存后台计算..........");
+            MyRecord.Say("开启生产看板后台计算..........");
             Thread t = new Thread(new ThreadStart(KanbanRecorder));
             t.IsBackground = true;
             t.Start();
-            MyRecord.Say("开启库存后台计算成功。");
+            MyRecord.Say("开启生产看板后台计算成功。");
         }
 
         void KanbanRecorder()
@@ -488,7 +488,7 @@ Drop Table #T
 Drop Table #P
 ";
             string SaveRejectBackTimeSQL = @"
-Set NoCount On 
+Set NoCount On
 
 Select Convert(VarChar(10),(Case When DatePart(""HH"",a.RptDate) Between 0 And 7 Then DateAdd(DD,-1,a.RptDate) Else a.RptDate End),121) as [Date],
 	   (Case When DatePart(HH,a.RptDate) Between 8 And 19 Then 1 Else 2 End) as PlanType,
@@ -545,7 +545,7 @@ Drop Table #X
             mc.Add(SaveInspectScoreSQL, "X2", mps);
             mc.Add(SaveRejectBackTimeSQL, "X3", mps);
             MyRecord.Say("提交计算");
-            if ( mc.Execute())
+            if (mc.Execute())
             {
                 MyRecord.Say(string.Format("提交完成，计算三项共耗时：{0:0.0000}分钟", (DateTime.Now - dtBegin).TotalMinutes));
                 ProudctionKanBan_Reject rej = new ProudctionKanBan_Reject(xDateBegin, xDateEnd);

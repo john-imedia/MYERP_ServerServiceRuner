@@ -40,8 +40,8 @@
             // serviceInstaller1
             // 
             this.serviceInstaller1.Description = "自动审核出入库单，自动发邮件";
-            this.serviceInstaller1.DisplayName = "明扬ERP伺服程式";
-            this.serviceInstaller1.ServiceName = "MYERPServerService";
+            this.serviceInstaller1.DisplayName = "明揚ERP伺服器程式(彩印)";
+            this.serviceInstaller1.ServiceName = "MYERPServerService1";
             this.serviceInstaller1.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
             this.serviceInstaller1.AfterInstall += new System.Configuration.Install.InstallEventHandler(this.serviceInstaller1_AfterInstall);
             // 

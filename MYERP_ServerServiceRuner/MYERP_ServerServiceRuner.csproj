@@ -145,6 +145,9 @@
     <Compile Include="ServiceLogic\DeliveryPlan_Finish_Statistic.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ServiceLogic\DeliveryStatistics.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ServiceLogic\MainService2.cs">
       <SubType>Component</SubType>
     </Compile>
