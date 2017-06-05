@@ -23,7 +23,7 @@ namespace MYERP_ServerServiceRuner
         {
             #region 构造函数，直接会运行执行SQL读取。
 
-            private void ExecuteSQL(string SQL, MyParameter[] args, int Interval)
+            private void ExecuteSQL(string SQL, MyDataParameter[] args, int Interval)
             {
                 Type LogT = System.Reflection.MethodBase.GetCurrentMethod().DeclaringType;
                 try
@@ -91,7 +91,7 @@ namespace MYERP_ServerServiceRuner
             /// </summary>
             /// <param Name="SQL">SQL语句</param>
             /// <param Name="SPI">各个参数</param>
-            public MyDataTable(string SQL, params MyParameter[] SPI)
+            public MyDataTable(string SQL, params MyDataParameter[] SPI)
             {
                 ExecuteSQL(SQL, SPI, 3);
             }
@@ -134,7 +134,7 @@ namespace MYERP_ServerServiceRuner
             /// </summary>
             /// <param Name="SQL">SQL语句</param>
             /// <param Name="SPI">各个参数</param>
-            public MyDataTable(string SQL, int Interval, params MyParameter[] SPI)
+            public MyDataTable(string SQL, int Interval, params MyDataParameter[] SPI)
             {
                 ExecuteSQL(SQL, SPI, Interval);
             }
@@ -618,7 +618,7 @@ namespace MYERP_ServerServiceRuner
             /// <param Name="SQL">SQL语句</param>
             /// <param Name="Parameters">很多参数，或者一个数组</param>
             /// <returns></returns>
-            public bool Execute(string SQL, params MyParameter[] Parameters)
+            public bool Execute(string SQL, params MyDataParameter[] Parameters)
             {
                 SQLCmdColl = new MyDataCmdCollection();
                 SQLCmdColl.Add(SQL, "Main", Parameters);
@@ -654,9 +654,9 @@ namespace MYERP_ServerServiceRuner
             /// <param Name="param0">第一个参数</param>
             /// <param Name="param1">第二个参数</param>
             /// <returns></returns>
-            public bool Execute(string SQL, MyParameter param0, MyParameter param1)
+            public bool Execute(string SQL, MyDataParameter param0, MyDataParameter param1)
             {
-                MyParameter[] ps = new MyParameter[2] { param0, param1 };
+                MyDataParameter[] ps = new MyDataParameter[2] { param0, param1 };
                 return Execute(SQL, ps);
             }
 
@@ -670,9 +670,9 @@ namespace MYERP_ServerServiceRuner
             /// <param Name="param1">第二个参数</param>
             /// <param Name="param2">第三个参数</param>
             /// <returns></returns>
-            public bool Execute(string SQL, MyParameter param0, MyParameter param1, MyParameter param2)
+            public bool Execute(string SQL, MyDataParameter param0, MyDataParameter param1, MyDataParameter param2)
             {
-                MyParameter[] ps = new MyParameter[3] { param0, param1, param2 };
+                MyDataParameter[] ps = new MyDataParameter[3] { param0, param1, param2 };
                 return Execute(SQL, ps);
             }
 
@@ -797,7 +797,7 @@ namespace MYERP_ServerServiceRuner
             /// <param Name="SQL">SQL语句</param>
             /// <param Name="Key">KEY</param>
             /// <param Name="args">参数序列</param>
-            public void Add(string SQL, string Key, params MyParameter[] args)
+            public void Add(string SQL, string Key, params MyDataParameter[] args)
             {
                 SQLCmdColl.Add(SQL, Key, args);
             }
@@ -857,7 +857,7 @@ namespace MYERP_ServerServiceRuner
 
                 public SqlParameter[] SQLParamCollection { get; set; }
 
-                public MyParameter[] MyDataParamCollection { get; set; }
+                public MyDataParameter[] MyDataParamCollection { get; set; }
 
                 #endregion 存储器
 
@@ -882,7 +882,7 @@ namespace MYERP_ServerServiceRuner
                     index = -1;
                 }
 
-                public MyDataCmdItem(string sql, string Key, params MyParameter[] args)
+                public MyDataCmdItem(string sql, string Key, params MyDataParameter[] args)
                 {
                     SQL = sql;
                     key = Key;
@@ -901,7 +901,7 @@ namespace MYERP_ServerServiceRuner
                     }
                 }
 
-                public MyDataCmdItem(string sql, params MyParameter[] args)
+                public MyDataCmdItem(string sql, params MyDataParameter[] args)
                 {
                     SQL = sql;
                     index = -1;
@@ -934,7 +934,7 @@ namespace MYERP_ServerServiceRuner
 
                 #region 加减元素
 
-                public MyDataCmdItem Add(string SQL, string Key, params MyParameter[] args)
+                public MyDataCmdItem Add(string SQL, string Key, params MyDataParameter[] args)
                 {
                     MyDataCmdItem cItem = new MyDataCmdItem(SQL, Key, args);
                     Add(cItem);
@@ -955,7 +955,7 @@ namespace MYERP_ServerServiceRuner
                     return cItem;
                 }
 
-                public MyDataCmdItem Add(string SQL, params MyParameter[] args)
+                public MyDataCmdItem Add(string SQL, params MyDataParameter[] args)
                 {
                     MyDataCmdItem cItem = new MyDataCmdItem(SQL, args);
                     Add(cItem);
@@ -1000,7 +1000,7 @@ namespace MYERP_ServerServiceRuner
             /// <param Name="SQL">SQL语句</param>
             /// <param Name="paramArgs">参数序列</param>
             /// <returns>一个值，注意要（类型）objec强制类型转换</returns>
-            public static object ExecuteScalar(string SQL, params MyData.MyParameter[] paramArgs)
+            public static object ExecuteScalar(string SQL, params MyData.MyDataParameter[] paramArgs)
             {
                 Type LogT = System.Reflection.MethodBase.GetCurrentMethod().DeclaringType;
                 try
@@ -1058,7 +1058,7 @@ namespace MYERP_ServerServiceRuner
             /// <returns>一个值，注意要（类型）objec强制类型转换</returns>
             public static object ExecuteScalar(string SQL)
             {
-                return ExecuteScalar(SQL, (MyData.MyParameter[])null);
+                return ExecuteScalar(SQL, (MyData.MyDataParameter[])null);
             }
 
             /// <summary>
@@ -1069,7 +1069,7 @@ namespace MYERP_ServerServiceRuner
             /// <returns>一个值，注意要（类型）objec强制类型转换</returns>
             public static object ExecuteScalar(string SQL, params string[] strArgs)
             {
-                return ExecuteScalar(string.Format(SQL, strArgs), (MyData.MyParameter[])null);
+                return ExecuteScalar(string.Format(SQL, strArgs), (MyData.MyDataParameter[])null);
             }
 
             /// <summary>
@@ -1080,7 +1080,7 @@ namespace MYERP_ServerServiceRuner
             /// <returns>一个值，注意要（类型）objec强制类型转换</returns>
             public static object ExecuteScalar(string SQL, string strArg0)
             {
-                return ExecuteScalar(string.Format(SQL, strArg0), (MyData.MyParameter[])null);
+                return ExecuteScalar(string.Format(SQL, strArg0), (MyData.MyDataParameter[])null);
             }
 
             /// <summary>
@@ -1092,7 +1092,7 @@ namespace MYERP_ServerServiceRuner
             /// <returns></returns>
             public static object ExecuteScalar(string SQL, string strArg0, string strArg1)
             {
-                return ExecuteScalar(string.Format(SQL, strArg0, strArg1), (MyData.MyParameter[])null);
+                return ExecuteScalar(string.Format(SQL, strArg0, strArg1), (MyData.MyDataParameter[])null);
             }
 
             /// <summary>
@@ -1105,7 +1105,7 @@ namespace MYERP_ServerServiceRuner
             /// <returns></returns>
             public static object ExecuteScalar(string SQL, string strArg0, string strArg1, string strArg2)
             {
-                return ExecuteScalar(string.Format(SQL, strArg0, strArg1, strArg2), (MyData.MyParameter[])null);
+                return ExecuteScalar(string.Format(SQL, strArg0, strArg1, strArg2), (MyData.MyDataParameter[])null);
             }
 
             /// <summary>
@@ -1114,9 +1114,9 @@ namespace MYERP_ServerServiceRuner
             /// <param Name="SQL">SQL语句</param>
             /// <param Name="paramArg0">第一个参数</param>
             /// <returns></returns>
-            public static object ExecuteScalar(string SQL, MyData.MyParameter paramArg0)
+            public static object ExecuteScalar(string SQL, MyData.MyDataParameter paramArg0)
             {
-                MyData.MyParameter[] mp = new MyParameter[1];
+                MyData.MyDataParameter[] mp = new MyDataParameter[1];
                 mp[0] = paramArg0;
                 return ExecuteScalar(SQL, mp);
             }
@@ -1128,7 +1128,7 @@ namespace MYERP_ServerServiceRuner
         /// SQL语句参数类。
         /// </summary>
         [Serializable]
-        public class MyParameter
+        public class MyDataParameter
         {
             [Serializable]
             public enum MyDataType : uint
@@ -1146,7 +1146,7 @@ namespace MYERP_ServerServiceRuner
             private MyDataType _MyDbType = MyDataType.String;
             public SqlParameter sqlparam;
 
-            public MyParameter()
+            public MyDataParameter()
             {
                 sqlparam = new SqlParameter();
                 MyDbType = MyDataType.String;
@@ -1160,7 +1160,7 @@ namespace MYERP_ServerServiceRuner
             /// </summary>
             /// <param Name="Name"></param>
             /// <param Name="value"></param>
-            public MyParameter(string name, object value)
+            public MyDataParameter(string name, object value)
             {
                 sqlparam = new SqlParameter();
                 MyDbType = MyDataType.String;
@@ -1170,7 +1170,7 @@ namespace MYERP_ServerServiceRuner
                 //sqlparam = new SqlParameter(_Name, _Value);
             }
 
-            public MyParameter(string name, object value, MyDataType mtype)
+            public MyDataParameter(string name, object value, MyDataType mtype)
             {
                 sqlparam = new SqlParameter();
                 MyDbType = mtype;

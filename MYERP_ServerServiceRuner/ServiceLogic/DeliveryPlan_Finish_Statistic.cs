@@ -257,16 +257,16 @@ Drop Table #ProdList
 Set NoCount Off
 ";
             SQL = string.Format(SQL, ConfigurationManager.AppSettings["DeliveryPlanFinishStaticExceptProdTypes"]);
-            MyData.MyParameter[] mp = new MyData.MyParameter[]
+            MyData.MyDataParameter[] mp = new MyData.MyDataParameter[]
             {
-                new MyData.MyParameter("@ProdBegin",DateBegin, MyData.MyParameter.MyDataType.DateTime),
-                new MyData.MyParameter("@ProdEnd",DateEnd, MyData.MyParameter.MyDataType.DateTime),
-                new MyData.MyParameter("@Process",null),
-                new MyData.MyParameter("@DeptID",0, MyData.MyParameter.MyDataType.Int),
-                new MyData.MyParameter("@ProductRdsNo",null),
-                new MyData.MyParameter("@CustID",null),
-                new MyData.MyParameter("@ProdType",null),
-                new MyData.MyParameter("@ProdName",null)
+                new MyData.MyDataParameter("@ProdBegin",DateBegin, MyData.MyDataParameter.MyDataType.DateTime),
+                new MyData.MyDataParameter("@ProdEnd",DateEnd, MyData.MyDataParameter.MyDataType.DateTime),
+                new MyData.MyDataParameter("@Process",null),
+                new MyData.MyDataParameter("@DeptID",0, MyData.MyDataParameter.MyDataType.Int),
+                new MyData.MyDataParameter("@ProductRdsNo",null),
+                new MyData.MyDataParameter("@CustID",null),
+                new MyData.MyDataParameter("@ProdType",null),
+                new MyData.MyDataParameter("@ProdName",null)
             };
             DateTime StartTime = DateTime.Now;
             MyRecord.Say("1.0 准备开始...");

@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.ServiceProcess;
 using System.Text;
+using System.Windows.Forms;
 using MYERP_ServerServiceRuner.Base;
 using NPOI;
 using NPOI.Util;
@@ -34,9 +35,12 @@ namespace MYERP_ServerServiceRuner
         /// <summary>
         /// 计算达成率，向前计算多少天的设置。
         /// </summary>
-        public int CacluatePlanRateDaySpanTimes = 6;
+        public int CacluatePlanRateDaySpanTimes = 6,
+                   CacluateKanbanWeekSpanTimes = 3;
 
-        public bool FirstStart = false;
+        public bool FirstStart = false,
+                    CheckStockNoteOnceTimeSwitch = false,
+                    ProdKanbanSaveOnceTimeSwitch = false;
 
         protected override void OnStart(string[] args)
         {
@@ -63,21 +67,26 @@ namespace MYERP_ServerServiceRuner
                 else
                     CompanyType = "MY";
 
-                MyRecord.Say(string.Format("CompanyType = {0}", CompanyType));
+                //MyRecord.Say(string.Format("CompanyType = {0}", CompanyType));
 
                 if (ConfigurationManager.AppSettings.AllKeys.Contains("CheckStockTimers"))
                     CheckStockTimers = ConfigurationManager.AppSettings.Get("CheckStockTimers").ConvertTo<double>(3, true);
                 else
                     CheckStockTimers = 3.25;
 
-                MyRecord.Say(string.Format("CheckStockTimers = {0}", CacluatePlanRateDaySpanTimes));
+                //MyRecord.Say(string.Format("CheckStockTimers = {0}", CacluatePlanRateDaySpanTimes));
 
                 if (ConfigurationManager.AppSettings.AllKeys.Contains("CacluatePlanRateDaySpanTimes"))
                     CacluatePlanRateDaySpanTimes = ConfigurationManager.AppSettings.Get("CacluatePlanRateDaySpanTimes").ConvertTo<int>(6, true);
                 else
                     CacluatePlanRateDaySpanTimes = 6;
 
-                MyRecord.Say(string.Format("CacluatePlanRateDaySpanTimes = {0}", CacluatePlanRateDaySpanTimes));
+                if (ConfigurationManager.AppSettings.AllKeys.Contains("CacluateKanbanWeekSpanTimes"))
+                    CacluateKanbanWeekSpanTimes = ConfigurationManager.AppSettings.Get("CacluateKanbanWeekSpanTimes").ConvertTo<int>(6, true);
+                else
+                    CacluateKanbanWeekSpanTimes = 3;
+
+                //MyRecord.Say(string.Format("CacluatePlanRateDaySpanTimes = {0}", CacluatePlanRateDaySpanTimes));
 
                 DateTime NowTime = DateTime.Now;
                 int h = NowTime.Hour, m = NowTime.Minute, s = NowTime.Second, d = NowTime.Day;
@@ -86,32 +95,52 @@ namespace MYERP_ServerServiceRuner
                 {
                     FirstStart = false;
                     MyRecord.Say("首次启动，时间循环已经开启。");
-                    ProduceFeedBackLastRunTime = new DateTime(2016, 12, 1);
+                    CheckStockStartTime = NowTime;
+                    ProduceFeedBackLastRunTime = NowTime.AddDays(-5);
                     #region 暂停
-                    ProdPlanForSaveLoader(NowTime);//保存达成率到月报表。
+
                     #endregion
                 }
 
-
                 if (ConfigurationManager.AppSettings.AllKeys.Contains("CheckStockNoteOnceTime"))
                 {
-                    string CheckStockNoteOnceTime= ConfigurationManager.AppSettings.Get("CheckStockNoteOnceTime").ConvertTo<string>("false", true).ToUpper().Trim();
-                    MyRecord.Say(string.Format("临时启动审核库存单据，CheckStockNoteOnceTime = {0}", CheckStockNoteOnceTime));
+                    string CheckStockNoteOnceTime = ConfigurationManager.AppSettings.Get("CheckStockNoteOnceTime").ConvertTo<string>("false", true).ToUpper().Trim();
+                    //MyRecord.Say(string.Format("临时启动审核库存单据，CheckStockNoteOnceTime = {0}", CheckStockNoteOnceTime));
                     if (CheckStockNoteOnceTime == "TRUE" || CheckStockNoteOnceTime == "1" || CheckStockNoteOnceTime == "T")
                     {
                         CheckStockStartTime = NowTime;
-                        if (!CheckStockRecordRunning)
+                        if (!CheckStockRecordRunning && CheckStockNoteOnceTimeSwitch)
                         {
                             MyRecord.Say("临时启动审核库存单据，已经启动");
                             CheckStockRecordRunning = true;
                             CheckStockRecordLoder();   //審核出入庫單。
                             Thread.Sleep(500);
-                            ConfigurationManager.AppSettings.Set("CheckStockNoteOnceTime", "False");
                         }
+                        CheckStockNoteOnceTimeSwitch = false;
+                    }
+                    else
+                    {
+                        CheckStockNoteOnceTimeSwitch = true;
                     }
                 }
+                //临时计算月达成率和看板。计算限度根据设定。
+                if (ConfigurationManager.AppSettings.AllKeys.Contains("ProdKanbanSaveOnceTime"))
+                {
+                    string ProdKanbanSaveOnceTime = ConfigurationManager.AppSettings.Get("ProdKanbanSaveOnceTime").ConvertTo<string>("false", true).ToUpper().Trim();
 
-
+                    if (ProdKanbanSaveOnceTime == "TRUE" || ProdKanbanSaveOnceTime == "1" || ProdKanbanSaveOnceTime == "T")
+                    {
+                        if (ProdKanbanSaveOnceTimeSwitch)
+                        {
+                            ProdKanbanSaveOnceLoader(NowTime);
+                        }
+                        ProdKanbanSaveOnceTimeSwitch = false;
+                    }
+                    else
+                    {
+                        ProdKanbanSaveOnceTimeSwitch = true;
+                    }
+                }
 
                 if (h == 0 && m == 0 & s == 0) //计时器归零
                 {   ///每天0点对表，计时器归零。
@@ -144,55 +173,71 @@ namespace MYERP_ServerServiceRuner
                     Thread.Sleep(500);
                 }
                 //每隔9分钟跑一次审核30分钟撤销的排程
-                if ((NowTime - CheckPlanConfirmStartTime).TotalMinutes > 9)
+                if ((NowTime - CheckPlanConfirmStartTime).TotalMinutes > 13)
                 {
                     CheckPlanConfirmStartTime = NowTime;
                     ConfirmPlanHalfHour();
                     Thread.Sleep(500);
                 }
 
+                if (h == 17 || h == 5 || h == 8 || h == 11)  //保存达成率和计算看板
+                {
+                    if (m == 9 && s == 14)
+                    {
+                        MyRecord.Say("开启保存达成率线程");
+                        ProdPlanForSaveLoader(NowTime);//保存达成率到月报表。
+                    }
+                    else if (m == 33 && s == 17)
+                    {
+                        MyRecord.Say("每天定時審核纪律单");
+                        WorkspaceInspectCheckLoader(); //审核纪律单。
+                        Thread.Sleep(5000);   //等五秒。
+                        MyRecord.Say("开启计算看板");
+                        KanbanRecorderLoader();
+                    }
+                }
+                if (h == 13 && m == 15 && s == 15)
+                {
+                    MyRecord.Say("开启计算OEE线程");
+                    OEE_ForSaveLoader(NowTime);
+                }
                 if ((h == 8 || h == 21) && m == 45 && s == 15) //审核排程
                 {
-                    ConfirmProcessPlan(); //每天10点定时审核单据，先审核单据。
-                    Thread.Sleep(5000);   //等五秒。
+                    MyRecord.Say("每天定时審核排程");
+                    ConfirmProcessPlanLoader(); //每天定时审核单据，先审核单据。
                 }
                 if ((h == 9 || h == 22) && m == 5 && s == 15) //发达成率
                 {
                     SendProdPlanEmail(NowTime);  //定時發送排程和達成率。
                     MyRecord.Say("发送排程完成。");
                 }
-                else if ((h == 6 || h == 11 || h == 23) && m == 55 && s == 0) //保存达成率到月报表，审核纪律单。
+                else if ((h == 12 || h == 0) && m == 09 && s == 25) //自動計算完工數
                 {
-                    MyRecord.Say("开启保存达成率线程");
-                    ProdPlanForSaveLoader(NowTime);//保存达成率到月报表。
-                    MyRecord.Say("开启审核纪律单线程");
-                    WorkspaceInspectCheckLoader(); //审核纪律单。
-                }
-                else if ((h == 7 || h == 12 || h == 1) && m == 45 && s == 0)
-                {
-                    MyRecord.Say("开启计算看板");
-                    KanbanRecorderLoader();
-                }
-                else if (h == 4 && m == 2 && s == 1) //自动计算库存的最后出库日期，平均周转天数，反馈入库时间到出库表
-                {
-                    StockCalculateLoader();
-                }
-                else if ((h == 6 && m == 35 && s == 10)) //清理排程
-                {
-                    if (!PlanRecordCleanRuning) PlanRecordCleanLoder(); ///每天清理排程
-                }
-                else if ((h == 12 || h == 0) && m == 5 && s == 57) //自动计算完工数
-                {
-                    if (!ProduceFeedBackRuning)
+                    if (!ProduceFeedBackRuning) //自动计算完工数
                     {
                         ProduceFeedBackRuning = true;
                         ProduceFeedBackLoder();
                         Thread.Sleep(500);
                     }
                 }
-                else if (h == 20 && m == 15 && s == 8) //明扬导入考勤数据
+                else if (h == 4 && m == 2 && s == 1) //自动计算库存的最后出库日期，平均周转天数，反馈入库时间到出库表
                 {
-                    if (CompanyType == "MY") ImportEmployeeLoader();
+                    StockCalculateLoader();
+                }
+                else if (((h == 7 || h == 19) && m == 35 && s == 10)) //清理排程
+                {
+                    if (!PlanRecordCleanRuning) PlanRecordCleanLoder(); ///每天清理排程
+                }
+                else if (h == 20 && m == 15 && s == 8) //清理LOG
+                {
+                    //if (CompanyType == "MY") ImportEmployeeLoader();
+                    LogingFileCleanLoader();
+                }
+
+                if (d == 1 && h == 8 && m == 3 && s == 17)  //每月1日8点发送上个月的达成率和纪律
+                {
+                    SendKanbanEmail_Performance(NowTime);
+                    SendKanbanEmail_Inspect(NowTime);
                 }
 
                 if (w == DayOfWeek.Monday || w == DayOfWeek.Tuesday || w == DayOfWeek.Wednesday || w == DayOfWeek.Thursday || w == DayOfWeek.Friday || w == DayOfWeek.Saturday)
@@ -296,11 +341,11 @@ namespace MYERP_ServerServiceRuner
                                  (zbid,Author,[state],memo,rdsno,type,typeid,CheckIn,CheckOut)
                            Values(@zbid,'自動審核',1,@memo,@rdsno,'審核',2,1,1)
                            SET NOCOUNT OFF ";
-                MyData.MyParameter[] mp = new MyData.MyParameter[3]
+                MyData.MyDataParameter[] mp = new MyData.MyDataParameter[3]
                 {
-                    new MyData.MyParameter("@zbid", CurrentID, MyData.MyParameter.MyDataType.Int),
-                    new MyData.MyParameter("@memo", null),
-                    new MyData.MyParameter("@rdsno", CurrentRdsNO)
+                    new MyData.MyDataParameter("@zbid", CurrentID, MyData.MyDataParameter.MyDataType.Int),
+                    new MyData.MyDataParameter("@memo", null),
+                    new MyData.MyDataParameter("@rdsno", CurrentRdsNO)
                 };
                 MyData.MyCommand mc = new MyData.MyCommand();
                 return mc.Execute(SQL, mp);
@@ -346,7 +391,7 @@ namespace MYERP_ServerServiceRuner
             {
                 MyRecord.Say("审核产成品入库单——新ERP系统审核");
                 SQL = @"Select * from stProduceStock Where InputDate < @InputEnd And isNull(Status,0)=0 And isono='NEWERP'";
-                MyData.MyDataTable mTableProduceInStock = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                MyData.MyDataTable mTableProduceInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableProduceInStock != null && mTableProduceInStock.MyRows.Count > 0)
                 {
@@ -384,7 +429,7 @@ namespace MYERP_ServerServiceRuner
             {
                 MyRecord.Say("审核其他入库单——新ERP系统审核");
                 SQL = @"Select * from stOtherStock Where InputDate < @InputEnd And isNull(Status,0)=0 And otherno='NEWERP'";
-                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
                 {
@@ -422,7 +467,7 @@ namespace MYERP_ServerServiceRuner
             {
                 MyRecord.Say("审核生产领料单——新ERP系统审核");
                 SQL = @"Select * from stProduceOut Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO='NEWERP'";
-                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
                 {
@@ -460,7 +505,7 @@ namespace MYERP_ServerServiceRuner
             {
                 MyRecord.Say("审核产成品入库单——旧ERP系统审核");
                 SQL = @"Select * from stProduceStock Where InputDate < @InputEnd And isNull(Status,0)=0 And isNull(isono,'')=''";
-                MyData.MyDataTable mTableProduceInStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                MyData.MyDataTable mTableProduceInStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableProduceInStock_OLD != null && mTableProduceInStock_OLD.MyRows.Count > 0)
                 {
@@ -476,7 +521,7 @@ namespace MYERP_ServerServiceRuner
                         MyRecord.Say(memo);
                         string UpdateOLD_SQL = @"Update stProduceStock Set CheckDate=GetDate(),Checker='自動審核',Status=1 Where RdsNo=@RdsNo";
                         MyData.MyCommand mc = new MyData.MyCommand();
-                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyParameter("@rdsno", RdsNo)))
+                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
                         {
                             MyRecord.Say("审核错误！");
                         }
@@ -500,7 +545,7 @@ namespace MYERP_ServerServiceRuner
             {
                 MyRecord.Say("审核其他入库单——旧ERP系统审核");
                 SQL = @"Select * from stOtherStock Where InputDate < @InputEnd And isNull(Status,0)=0 And isNull(otherno,'')<>'NEWERP'";
-                MyData.MyDataTable mTableOtherInStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                MyData.MyDataTable mTableOtherInStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableOtherInStock_OLD != null && mTableOtherInStock_OLD.MyRows.Count > 0)
                 {
@@ -516,7 +561,7 @@ namespace MYERP_ServerServiceRuner
                         MyRecord.Say(memo);
                         string UpdateOLD_SQL = @"Update stOtherStock Set CheckDate=GetDate(),Checker2='自動審核',Status=1 Where RdsNo=@RdsNo";
                         MyData.MyCommand mc = new MyData.MyCommand();
-                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyParameter("@rdsno", RdsNo)))
+                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
                         {
                             MyRecord.Say("审核错误！");
                         }
@@ -540,7 +585,7 @@ namespace MYERP_ServerServiceRuner
             {
                 MyRecord.Say("审核产成品入库单——旧ERP系统审核");
                 SQL = @"Select * from coPurchStock Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO <> 'NEWERP'";
-                MyData.MyDataTable mTablePurchInStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                MyData.MyDataTable mTablePurchInStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTablePurchInStock_OLD != null && mTablePurchInStock_OLD.MyRows.Count > 0)
                 {
@@ -556,7 +601,7 @@ namespace MYERP_ServerServiceRuner
                         MyRecord.Say(memo);
                         string UpdateOLD_SQL = @"Update coPurchStock Set CheckDate=GetDate(),Checker='自動審核',Status=1 Where RdsNo=@RdsNo";
                         MyData.MyCommand mc = new MyData.MyCommand();
-                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyParameter("@rdsno", RdsNo)))
+                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
                         {
                             MyRecord.Say("审核错误！");
                         }
@@ -580,7 +625,7 @@ namespace MYERP_ServerServiceRuner
             {
                 MyRecord.Say("审核采购入库——新ERP系统审核");
                 SQL = @"Select * from coPurchStock Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO='NEWERP'";
-                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
                 {
@@ -618,7 +663,7 @@ namespace MYERP_ServerServiceRuner
             {
                 MyRecord.Say("审核生产领料——旧ERP系统审核");
                 SQL = @"Select * from stProduceOut Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO is Null ";
-                MyData.MyDataTable mTableProduceOutStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                MyData.MyDataTable mTableProduceOutStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableProduceOutStock_OLD != null && mTableProduceOutStock_OLD.MyRows.Count > 0)
                 {
@@ -634,7 +679,7 @@ namespace MYERP_ServerServiceRuner
                         MyRecord.Say(memo);
                         string UpdateOLD_SQL = @"Update stProduceOut Set CheckDate=GetDate(),Checker2='自動審核',Status=1 Where RdsNo=@RdsNo";
                         MyData.MyCommand mc = new MyData.MyCommand();
-                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyParameter("@rdsno", RdsNo)))
+                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
                         {
                             MyRecord.Say("审核错误！");
                         }
@@ -658,7 +703,7 @@ namespace MYERP_ServerServiceRuner
             {
                 MyRecord.Say("审核其他领料——旧ERP系统审核");
                 SQL = @"Select * from stOtherOut Where InputDate < @InputEnd And isNull(Status,0)=0 And handno is Null ";
-                MyData.MyDataTable mTableOthereOutStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                MyData.MyDataTable mTableOthereOutStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableOthereOutStock_OLD != null && mTableOthereOutStock_OLD.MyRows.Count > 0)
                 {
@@ -674,7 +719,7 @@ namespace MYERP_ServerServiceRuner
                         MyRecord.Say(memo);
                         string UpdateOLD_SQL = @"Update stOtherOut Set CheckDate=GetDate(),Checker2='自動審核',Status=1 Where RdsNo=@RdsNo";
                         MyData.MyCommand mc = new MyData.MyCommand();
-                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyParameter("@rdsno", RdsNo)))
+                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
                         {
                             MyRecord.Say("审核错误！");
                         }
@@ -698,7 +743,7 @@ namespace MYERP_ServerServiceRuner
             {
                 MyRecord.Say("审核其他入库单——新ERP系统审核");
                 SQL = @"Select * from stOtherOut Where InputDate < @InputEnd And isNull(Status,0)=0 And handno='NEWERP'";
-                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
                 {
@@ -732,13 +777,13 @@ namespace MYERP_ServerServiceRuner
             #endregion
 
             #region 審核送货单----新版
-            if (CompanyType == "MY")
+            if (CompanyType != "MT")
             {
                 try
                 {
                     MyRecord.Say("审核送货单——新ERP系统审核");
-                    SQL = @"Select * from coShip Where InputDate < @InputEnd And isNull(Status,0)=0 And Sender = 'NewERP'";
-                    MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                    SQL = @"Select * from coShip Where InputDate < @InputEnd And isNull(Status,0)=0 ";
+                    MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                     if (_StopAll) return;
                     if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
                     {
@@ -781,7 +826,7 @@ namespace MYERP_ServerServiceRuner
             {
                 MyRecord.Say("审核库存调整单——新ERP系统审核");
                 SQL = @"Select * from stAdjustStock Where InputDate < @InputEnd And isNull(Status,0)=0";
-                MyData.MyDataTable mTableAdjustStock = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                MyData.MyDataTable mTableAdjustStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableAdjustStock != null && mTableAdjustStock.MyRows.Count > 0)
                 {
@@ -821,1008 +866,6 @@ namespace MYERP_ServerServiceRuner
 
         #endregion
 
-        #region 排程达成率发邮件/排程达成率保存
-
-        #region 数据源
-
-        int _PlanExtendTime = 135;
-
-        private void Plan_LoadDataSource(DateTime NowTime, int classtype)
-        {
-            string SQLPlan = @"
-Select a.RdsNo,
-       a.Process,
-	   a.Department,
-       a.PlanBegin,
-       a.PlanEnd,
-	   a.Inputer,
-	   a.Checker,
-	   b.MachineCode,
-       b.ReqNumb,
-	   b.Edd,
-	   b.Bdd,
-	   b.ReqTime,
-	   b.wLevel as WorkLevel,
-	   b.capF as CapacityRate,
-	   b.PrepF as PrepRate,
-	   b.Capacity,
-	   b.PrepTime,
-	   b.HrNumb,
-	   b.PartNO as PartID,
-       b.ProdNo,
-       b.ProdCode as ProductCode,
-       b.Remark,
-       b.PN as ColNumb,
-	   b.Side,
-       b.AutoDuplexPrint,
-       MachineName = m.Name,
-       m.FinishMeasurement,m.StaticMeasurement,
-       ProcessName = mp.name,
-       ProductName = d.name,
-       DepartmentName = p.name,p.FullSortID,
-	   ProdSide=(Case When b.ProcNo='2000' Then (Select Case When (ca1+ca2)>0 And (Cb1+Cb2)>0 Then 2 Else 1 End from moProdProcedure mp Where mp.zbid=b.PRODID And mp.ID=b.ProcID) Else 1 END)
-from _PMC_ProdPlan a Inner Join _PMC_ProdPlan_List b ON a.[_ID]=b.zbid
-                    Left Outer Join moMachine m ON b.MachineCode = m.Code
-					Left Outer Join pbProduct d On b.ProdCode = d.Code
-					Left Outer Join moProcedure mp On a.Process = mp.Code
-					Left Outer Join pbDept p On a.[Department] = p.[_id]
-Where a.[Status] >=2 And isNull(b.YieldOff,0)=0
-  And a.PlanBegin > @DateBegin And a.PlanEnd < @DateEnd And b.Edd< DateAdd(mi,@PlanExtendTime,a.PlanEnd) And b.Bdd > '2000-01-01 00:00:00'
-Order by a.Department,a.Process,b.MachineCode,b.[_id]
-";
-            string SQLFinish = @"
-Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,ProduceNo,Inputdate,Inputer,Numb2,Operator,Remark,
-       PartID,Remark2,ColNumb,NAColNumb,AdjustNumb,SampleNumb,Rejector,RejectDate,PaperColNumb,ProductCode,AccNoteRdsNo,Side,AutoDuplexPrint,DestroySubLevelItemCode
- from prodDailyReport where RptDate Between @fBeginDate And @fEndDate
-";
-            DateTime TimeBegin = DateTime.MinValue, TimeEnd = DateTime.MinValue, fTimeBegin = DateTime.MinValue, fTimeEnd = DateTime.MinValue;
-            if (classtype == 1) //白班
-            {
-                fTimeBegin = NowTime.Date.AddHours(7).AddMinutes(55);
-                fTimeEnd = NowTime.Date.AddDays(3).AddHours(22);
-                TimeBegin = NowTime.Date.AddHours(7).AddMinutes(55);
-                TimeEnd = NowTime.Date.AddHours(22).AddMinutes(15);
-            }
-            else  //夜班
-            {
-                fTimeBegin = NowTime.Date.AddHours(19).AddMinutes(55);
-                fTimeEnd = NowTime.Date.AddDays(4).AddHours(10);
-                TimeBegin = NowTime.Date.AddHours(19).AddMinutes(55);
-                TimeEnd = NowTime.Date.AddDays(1).AddHours(8).AddMinutes(15);
-            }
-            MyData.MyParameter[] mfps = new MyData.MyParameter[]
-            {
-                new MyData.MyParameter("@DateBegin", TimeBegin, MyData.MyParameter.MyDataType.DateTime),
-                new MyData.MyParameter("@DateEnd",TimeEnd , MyData.MyParameter.MyDataType.DateTime),
-                new MyData.MyParameter("@fBeginDate", fTimeBegin, MyData.MyParameter.MyDataType.DateTime),
-                new MyData.MyParameter("@fEndDate", fTimeEnd, MyData.MyParameter.MyDataType.DateTime),
-                new MyData.MyParameter("@PlanExtendTime",_PlanExtendTime , MyData.MyParameter.MyDataType.Int)
-            };
-            DateTime _StartTime = DateTime.Now;
-            MyRecord.Say(string.Format("3.1.1排程起：{0}止：{1}，完工单起：{2}止：{3}。", TimeBegin, TimeEnd, fTimeBegin, fTimeEnd));
-            MyRecord.Say(string.Format("3.1.2正在读取生产计划。AT:{0}", DateTime.Now));
-            MyData.MyDataTable md1 = new MyData.MyDataTable(SQLPlan, 100, mfps);
-            var v1 = from a in md1.MyRows select new Plan_Item(a);
-            MyRecord.Say(string.Format("3.1.3生产计划已经获得，正在从服务器读取到本机。耗时：{0}", (DateTime.Now - _StartTime).TotalMinutes));
-            Plan_Lists = v1.ToList();
-            MyRecord.Say(string.Format("3.1.4正在读取生产完工单。AT:{0}", DateTime.Now));
-            _StartTime = DateTime.Now;
-            MyData.MyDataTable md2 = new MyData.MyDataTable(SQLFinish, 100, mfps);
-            var v2 = from a in md2.MyRows select new Plan_FinishItem(a);
-            MyRecord.Say(string.Format("3.1.5完工单已经获得，正在从服务器读取到本机。耗时：{0}", (DateTime.Now - _StartTime).TotalMinutes));
-            Plan_FinishLists = v2.ToList();
-            MyRecord.Say("3.1.6数据源读取完毕");
-        }
-
-        #endregion
-
-        #region 计算时使用的类。
-
-        List<Plan_Item> Plan_Lists = new List<Plan_Item>();
-        List<Plan_FinishItem> Plan_FinishLists = new List<Plan_FinishItem>();
-
-        class Plan_GridItem
-        {
-            public Plan_GridItem(IGrouping<object, Plan_Item> g)
-            {
-                if (g.Count() > 0)
-                {
-                    Plan_Item curItem = g.FirstOrDefault();
-                    RdsNo = curItem.RdsNo;
-                    DepartmentID = curItem.DepartmentID;
-                    ProcessCode = curItem.ProcessCode;
-                    ProcessName = curItem.ProcessName;
-                    MachineCode = curItem.MachineCode;
-                    MachineName = curItem.MachineName;
-                    DepartmentFullSortID = curItem.DepartmentFullSortID;
-                    DepartmentName = curItem.DepartmentName;
-
-                    hrNumb = g.Max(x => x.HrNumb);
-                    Inputer = curItem.Inputer;
-                    Checker = curItem.Checker;
-                    var vd = from a in g
-                             where (a.Bdd - a.PlanBegin).TotalMinutes > -5 && (a.Edd - a.PlanEnd).TotalMinutes < 5
-                             select a;
-                    if (vd != null && vd.Count() > 0)
-                    {
-                        BDD = vd.Min(x => x.Bdd);
-                        EDD = vd.Max(x => x.Edd);
-                        if (curItem.ProcessCode == "2000")
-                        {
-                            var vf = from a in g
-                                     where a.FinishSheetNumb > 0
-                                     select a;
-                            PlanCount = vd.Count();
-                            FinishCount = vf.Count();
-
-                            PlanSheetNumb = vd.Sum(x => x.ReqNumb);
-                            PlanProdNumb = vd.Sum(x => x.ReqNumb); // vd.Sum(m => m.ReqNumb * m.ColNumb);
-                            if (vf != null && vf.Count() > 0)
-                            {
-                                FinishSheetNumb = vf.Sum(x => x.FinishSheetNumb);
-                                FinishProdNumb = vf.Sum(x => x.FinishSheetNumb); //vf.Sum(m => m.FinishProdNumb);
-                            }
-                        }
-                        else
-                        {
-                            var vf = from a in g
-                                     where a.Side == 0 && a.FinishSheetNumb > 0
-                                     select a;
-                            PlanCount = vd.Count();
-                            FinishCount = vf.Count();
-
-                            PlanSheetNumb = vd.Sum(x => x.ReqNumb);
-                            if (curItem.FinishMeasurement == 1)
-                                PlanProdNumb = vd.Sum(m => m.ReqNumb);
-                            else
-                                PlanProdNumb = vd.Sum(m => m.ReqNumb * m.ColNumb);
-
-                            if (vf != null && vf.Count() > 0)
-                            {
-                                FinishSheetNumb = vf.Sum(x => x.FinishSheetNumb);
-                                if (curItem.FinishMeasurement == 1)
-                                    FinishProdNumb = Math.Ceiling(vf.Sum(x => (x.FinishProdNumb / x.ColNumb)));
-                                else
-                                    FinishProdNumb = vf.Sum(m => m.FinishProdNumb);
-                            }
-                        }
-                    }
-                }
-            }
-
-            public string RdsNo { get; set; }
-            public int DepartmentID { get; set; }
-            public string DepartmentName { get; set; }
-            public string ProcessCode { get; set; }
-            public string ProcessName { get; set; }
-            public string MachineCode { get; set; }
-            public string MachineName { get; set; }
-            public double hrNumb { get; set; }
-            public string Inputer { get; set; }
-            public string Checker { get; set; }
-            public DateTime BDD { get; set; }
-            public DateTime EDD { get; set; }
-            public int PlanCount { get; set; }
-            public int FinishCount { get; set; }
-            public double PlanSheetNumb { get; set; }
-            public double FinishSheetNumb { get; set; }
-            public double PlanProdNumb { get; set; }
-            public double FinishProdNumb { get; set; }
-            public string DepartmentFullSortID { get; set; }
-
-        }
-
-        class Plan_GroupKey : IComparable
-        {
-            public Plan_GroupKey(string rdsno, int deptID, string PCode, string MCode)
-            {
-                RdsNo = rdsno;
-                DepartmentID = deptID;
-                ProcessCode = PCode;
-                MachineCode = MCode;
-            }
-
-            public string RdsNo { get; set; }
-            public int DepartmentID { get; set; }
-            public string ProcessCode { get; set; }
-            public string MachineCode { get; set; }
-
-            public int CompareTo(Object obj)
-            {
-                Plan_GroupKey other = obj as Plan_GroupKey;
-                int result = RdsNo.CompareTo(other.RdsNo);
-                if (result == 0)
-                {
-                    result = DepartmentID.CompareTo(other.DepartmentID);
-                    if (result == 0)
-                    {
-                        result = DepartmentID.CompareTo(other.DepartmentID);
-                        if (result == 0)
-                        {
-                            result = ProcessCode.CompareTo(other.ProcessCode);
-                            if (result == 0)
-                            {
-                                result = MachineCode.CompareTo(other.MachineCode);
-                            }
-                        }
-                    }
-                }
-                return result;
-            }
-            public override string ToString()
-            {
-                return string.Format("{0},{1},{2},{3}", RdsNo, DepartmentID, ProcessCode, MachineCode);
-            }
-        }
-
-        class Plan_Item
-        {
-            /// <summary>
-            ///  加载工单计划类
-            /// </summary>
-            public Plan_Item(MyData.MyDataRow r)
-            {
-                RdsNo = Convert.ToString(r["RdsNo"]);
-                ProcessCode = Convert.ToString(r["Process"]);
-                DepartmentID = Convert.ToInt32(r["Department"]);
-                PlanBegin = Convert.ToDateTime(r["PlanBegin"]);
-                PlanEnd = Convert.ToDateTime(r["PlanEnd"]);
-                Inputer = Convert.ToString(r["Inputer"]);
-                Checker = Convert.ToString(r["Checker"]);
-                MachineCode = Convert.ToString(r["MachineCode"]);
-                ReqNumb = Convert.ToDouble(r["ReqNumb"]);
-                Edd = Convert.ToDateTime(r["Edd"]);
-                Bdd = Convert.ToDateTime(r["Bdd"]);
-                ReqTime = Convert.ToDouble(r["ReqTime"]);
-                WorkLevel = Convert.ToDouble(r["WorkLevel"]);
-                CapacityRate = Convert.ToDouble(r["CapacityRate"]);
-                PrepRate = Convert.ToDouble(r["PrepRate"]);
-                Capacity = Convert.ToDouble(r["Capacity"]);
-                PrepTime = Convert.ToDouble(r["PrepTime"]);
-                HrNumb = Convert.ToDouble(r["HrNumb"]);
-                PartID = Convert.ToString(r["PartID"]);
-                ProduceRdsNo = Convert.ToString(r["ProdNo"]);
-                ProductCode = Convert.ToString(r["ProductCode"]);
-                Remark = Convert.ToString(r["Remark"]);
-                ColNumb = Convert.ToInt32(r["ColNumb"]);
-                ProdSide = Convert.ToInt32(r["ProdSide"]);
-                Side = Convert.ToInt32(r["Side"]);
-                AutoDuplexPrint = Convert.ToBoolean(r["AutoDuplexPrint"]);
-                DepartmentName = Convert.ToString(r["DepartmentName"]);
-                DepartmentFullSortID = Convert.ToString(r["FullSortID"]);
-                ProcessName = Convert.ToString(r["ProcessName"]);
-                MachineName = Convert.ToString(r["MachineName"]);
-                FinishMeasurement = Convert.ToInt32(r["FinishMeasurement"]);
-                StaticMeasurement = Convert.ToInt32(r["StaticMeasurement"]);
-            }
-            public string RdsNo { get; set; }
-            public string ProduceRdsNo { get; set; }
-            public string ProductCode { get; set; }
-            public string ProcessCode { get; set; }
-            public string ProcessName { get; set; }
-            public int DepartmentID { get; set; }
-            public string DepartmentName { get; set; }
-            public string DepartmentFullSortID { get; set; }
-            public DateTime PlanBegin { get; set; }
-            public DateTime PlanEnd { get; set; }
-            public string Inputer { get; set; }
-            public string Checker { get; set; }
-            public string MachineCode { get; set; }
-            public string MachineName { get; set; }
-            public double ReqNumb { get; set; }
-            public DateTime Edd { get; set; }
-            public DateTime Bdd { get; set; }
-            public double ReqTime { get; set; }
-            public double WorkLevel { get; set; }
-            public double CapacityRate { get; set; }
-            public double PrepRate { get; set; }
-            public double Capacity { get; set; }
-            public double PrepTime { get; set; }
-            public double HrNumb { get; set; }
-            public string PartID { get; set; }
-            public string Remark { get; set; }
-            public int ColNumb { get; set; }
-            public int Side { get; set; }
-            public int ProdSide { get; set; }
-            public double FinishSheetNumb { get; set; }
-            public double FinishProdNumb { get; set; }
-            public bool AutoDuplexPrint { get; set; }
-            public string Type { get; set; }
-            public int FinishMeasurement { get; set; }
-            public int StaticMeasurement { get; set; }
-        }
-
-        class Plan_FinishItem
-        {
-            public Plan_FinishItem(MyData.MyDataRow r)
-            {
-                ProcessCode = Convert.ToString(r["ProcessCode"]);
-                FinishNumb = Convert.ToInt32(r["Numb1"]);
-                MachineCode = Convert.ToString(r["MachineCode"]);
-                StartTime = Convert.ToDateTime(r["StartTime"]);
-                EndTime = Convert.ToDateTime(r["EndTime"]);
-                ProduceRdsNo = Convert.ToString(r["ProduceNo"]);
-                InputDate = Convert.ToDateTime(r["Inputdate"]);
-                Inputer = Convert.ToString(r["Inputer"]);
-                RejectNumb = Convert.ToInt32(r["Numb2"]);
-                OP = Convert.ToString(r["Operator"]);
-                Remark = Convert.ToString(r["Remark"]);
-                PartID = Convert.ToString(r["PartID"]);
-                HandNo = Convert.ToString(r["Remark2"]);
-                FinishColNumb = Convert.ToInt32(r["ColNumb"]);
-                RejectColNumb = Convert.ToInt32(r["NAColNumb"]);
-                AdjustNumb = Convert.ToInt32(r["AdjustNumb"]);
-                SampleNumb = Convert.ToInt32(r["SampleNumb"]);
-                Rejector = Convert.ToString(r["Rejector"]);
-                RejectDate = Convert.ToDateTime(r["RejectDate"]);
-                PaperColNumb = Convert.ToInt32(r["PaperColNumb"]);
-                ProductCode = Convert.ToString(r["ProductCode"]);
-                AccNoteRdsNo = Convert.ToString(r["AccNoteRdsNo"]);
-                AutoDuplexPrint = Convert.ToBoolean(r["AutoDuplexPrint"]);
-                Side = Convert.ToInt32(r["Side"]);
-                DestroySubLevelItemCode = Convert.ToString(r["DestroySubLevelItemCode"]);
-            }
-
-            public string ProductCode { get; set; }
-
-            public string ProcessCode { get; set; }
-
-            public string MachineCode { get; set; }
-
-            public int FinishNumb { get; set; }
-
-            public int FinishProdNumb
-            {
-                get
-                {
-                    return FinishColNumb * FinishNumb;
-                }
-            }
-
-            public DateTime StartTime { get; set; }
-            public DateTime EndTime { get; set; }
-
-            public string ProduceRdsNo { get; set; }
-
-            public DateTime InputDate { get; set; }
-            public string Inputer { get; set; }
-
-            public int RejectNumb { get; set; }
-
-            public int RejectProdNumb
-            {
-                get
-                {
-                    return RejectColNumb * RejectNumb;
-                }
-            }
-
-            public int LossNumb
-            {
-                get
-                {
-                    return AdjustNumb + SampleNumb;
-                }
-            }
-
-            public int LossProdNumb
-            {
-                get
-                {
-                    return (AdjustNumb + SampleNumb) * PaperColNumb;
-                }
-            }
-            public string OP { get; set; }
-            public string Remark { get; set; }
-            public string PartID { get; set; }
-            public string HandNo { get; set; }
-            public int FinishColNumb { get; set; }
-            public int RejectColNumb { get; set; }
-            public int AdjustNumb { get; set; }
-            public int SampleNumb { get; set; }
-            public string Rejector { get; set; }
-            public DateTime RejectDate { get; set; }
-            public int PaperColNumb { get; set; }
-            public string AccNoteRdsNo { get; set; }
-            public bool iCalItem { get; set; }
-            public int Side { get; set; }
-            public bool AutoDuplexPrint { get; set; }
-
-            public string DestroySubLevelItemCode { get; set; }
-        }
-
-        /// <summary>
-        /// 用于保存加载时的顺序分配。
-        /// </summary>
-        class ProcessSumItemBkp
-        {
-            /// <summary>
-            /// 排程单号
-            /// </summary>
-            public string RdsNo { get; set; }
-            /// <summary>
-            /// 工单号
-            /// </summary>
-            public string ProduceRdsNo { get; set; }
-            public string ProductCode { get; set; }
-            public string ProcessCode { get; set; }
-            public string PartID { get; set; }
-            public int Side { get; set; }
-            public int DepartmentID { get; set; }
-            public string MachineCode { get; set; }
-            public double FinishSheetNumb { get; set; }
-            public double FinishProdNumb { get; set; }
-            public int SumTime { get; set; }
-        }
-
-        #endregion
-
-        #region 计算达成率
-        private List<Plan_GridItem> Plan_LoadFinishedRate(DateTime NowTime, int classtype)
-        {
-            MyRecord.Say("3.1 读取资料数据源,并保存到本机...");
-            Plan_LoadDataSource(NowTime, classtype);
-            MyRecord.Say("3.2 计算达成率和加载表格...\r\n                       设定各个条件。");
-            DateTime fTimeBegin = DateTime.MinValue, fTimeEnd = DateTime.MinValue;
-            if (classtype == 1) //白班
-            {
-                fTimeBegin = NowTime.Date.AddHours(7).AddMinutes(55);
-                fTimeEnd = NowTime.Date.AddDays(3).AddHours(22);
-            }
-            else  //夜班
-            {
-                fTimeBegin = NowTime.Date.AddHours(19).AddMinutes(55);
-                fTimeEnd = NowTime.Date.AddDays(4).AddHours(10);
-            }
-            List<Plan_GridItem> _GridData = new List<Plan_GridItem>();
-            MyRecord.Say(string.Format("3.2  完工单限定时间：fTimeBegin={0}，fTimeEnd={1}", fTimeBegin, fTimeEnd));
-            #region 印刷达成率
-            MyRecord.Say("3.3 计算印刷排程达成率。");
-            var vPrintProduceSource = from a in Plan_Lists
-                                      where (a.Bdd - a.PlanBegin).TotalMinutes > -5 && a.ProcessCode == "2000"
-                                         && (!(a.AutoDuplexPrint && a.ProdSide == 2 && a.Side == 1))
-                                      orderby a.DepartmentID, a.ProcessCode, a.MachineCode
-                                      select a;
-            List<Plan_Item> _LocalPringSource = vPrintProduceSource.ToList();
-            List<ProcessSumItemBkp> _FinishNumbBkp = new List<ProcessSumItemBkp>();
-            MyRecord.Say(string.Format("3.3.1 数据源已经获取，逐笔工单计算印刷排程完工数，共{0}笔。", _LocalPringSource.Count));
-            foreach (var item in _LocalPringSource)
-            {
-                var vpmt = from a in _LocalPringSource
-                           where a.RdsNo == item.RdsNo && a.MachineCode == item.MachineCode
-                           select a.Bdd;
-                DateTime StartTime = vpmt.Min();
-                var vf = from a in Plan_FinishLists
-                         where a.InputDate >= fTimeBegin && a.InputDate <= fTimeEnd && a.ProcessCode == "2000" && a.MachineCode == item.MachineCode
-                             && a.StartTime >= StartTime.AddMinutes(-1) && a.EndTime <= item.PlanEnd.AddMinutes(5)
-                             && a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID && a.Side == item.Side
-                         select a;
-                double finishProdNumb = vf.Sum(x => x.FinishProdNumb), finishNumb = vf.Sum(x => x.FinishNumb);
-                if (item.StaticMeasurement == 1)
-                {
-                    finishProdNumb = vf.Sum(x => (x.FinishProdNumb + x.RejectProdNumb + x.LossProdNumb));
-                    finishNumb = vf.Sum(x => x.FinishNumb + x.RejectNumb + x.LossNumb);
-                }
-
-                var vppt = from a in _LocalPringSource
-                           where a.RdsNo == item.RdsNo && a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID && a.Side == item.Side
-                           select a;
-                if (vppt != null && vppt.Count() > 1)
-                {
-                    var vbkp = from a in _FinishNumbBkp
-                               where a.RdsNo == item.RdsNo && a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID && a.MachineCode == item.MachineCode && a.Side == item.Side
-                               select a;
-                    if (vbkp != null && vbkp.Count() > 0)
-                    {
-                        ProcessSumItemBkp psp = vbkp.FirstOrDefault();
-                        if ((finishProdNumb - psp.FinishProdNumb) <= (item.ReqNumb * item.ColNumb) || psp.SumTime >= (vppt.Count() - 1))
-                        {
-                            finishProdNumb = finishProdNumb - psp.FinishProdNumb;
-                            finishNumb = finishNumb - psp.FinishSheetNumb;
-                        }
-                        else
-                        {
-                            finishProdNumb = item.ReqNumb * item.ColNumb;
-                            finishNumb = item.ReqNumb;
-                        }
-                        psp.FinishProdNumb += finishProdNumb;
-                        psp.FinishSheetNumb += finishNumb;
-                        psp.SumTime += 1;
-                        _FinishNumbBkp.Add(psp);
-                    }
-                    else
-                    {
-                        ProcessSumItemBkp psp = new ProcessSumItemBkp();
-                        if (finishProdNumb > item.ReqNumb * item.ColNumb)
-                        {
-                            finishProdNumb = item.ReqNumb * item.ColNumb;
-                            finishNumb = item.ReqNumb;
-                        }
-                        psp.RdsNo = item.RdsNo;
-                        psp.ProduceRdsNo = item.ProduceRdsNo;
-                        psp.PartID = item.PartID;
-                        psp.MachineCode = item.MachineCode;
-                        psp.Side = item.Side;
-                        psp.FinishProdNumb = finishProdNumb;
-                        psp.FinishSheetNumb = finishNumb;
-                        psp.SumTime = 1;
-                        _FinishNumbBkp.Add(psp);
-                    }
-                }
-                if (finishProdNumb <= 0) finishProdNumb = 0;
-                if (finishNumb <= 0) finishNumb = 0;
-                if (finishNumb > (item.ReqNumb * 1.10) && item.ReqNumb <= 500)   //印刷超数量，要按照需求数计算，不可以超出110%
-                {
-                    item.FinishProdNumb = item.ReqNumb * item.ColNumb * 1.10;
-                    item.FinishSheetNumb = item.ReqNumb * 1.10;
-                }
-                else
-                {
-                    item.FinishProdNumb = finishProdNumb;
-                    item.FinishSheetNumb = finishNumb;
-                }
-                item.Type = ((item.Bdd - item.PlanBegin).TotalMinutes > -5 && (item.Edd - item.PlanEnd).TotalMinutes < 5) ? MyConvert.ZHLC("正常") : MyConvert.ZHLC("超出");
-                if (finishProdNumb > 0) foreach (var iv in vf) iv.iCalItem = true;
-            }
-            MyRecord.Say("3.3.2 完工数已经计算，计算印刷达成率");
-            var vPrintGrid = from a in _LocalPringSource
-                             group a by new { a.RdsNo, a.DepartmentID, a.ProcessCode, a.MachineCode } into g
-                             orderby g.Key.MachineCode, g.Key.RdsNo
-                             select new Plan_GridItem(g);
-            _GridData = vPrintGrid.ToList();
-            MyRecord.Say("3.3.3 印刷达成率完成。");
-            #endregion
-            #region 后制达成率
-            MyRecord.Say("3.4 计算后制排程达成率。");
-            var vProduceSource = from a in Plan_Lists
-                                 where a.Side == 0 && (a.Bdd - a.PlanBegin).TotalMinutes > -5 && a.ProcessCode != "2000"
-                                 select a;
-            _FinishNumbBkp = null;
-            _FinishNumbBkp = new List<ProcessSumItemBkp>();
-            MyRecord.Say(string.Format("3.4.1 数据源已经获取，逐笔工单计算后制排程完工数，共{0}笔。", vProduceSource.Count()));
-            foreach (var item in vProduceSource)
-            {
-                var vpmt = from a in Plan_Lists
-                           where a.RdsNo == item.RdsNo && a.MachineCode == item.MachineCode
-                           select a.Bdd;
-                DateTime StartTime = vpmt.Min();
-                var vf = from a in Plan_FinishLists
-                         where a.InputDate >= fTimeBegin && a.InputDate <= fTimeEnd && a.ProcessCode == item.ProcessCode && a.MachineCode == item.MachineCode
-                               && a.StartTime >= StartTime.AddMinutes(-1) && a.EndTime <= item.PlanEnd.AddMinutes(15)
-                               && a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID
-                         select a;
-                double finishProdNumb = vf.Sum(x => x.FinishProdNumb), finishNumb = vf.Sum(x => x.FinishNumb);
-
-                if (item.StaticMeasurement == 1)
-                {
-                    finishProdNumb = vf.Sum(x => (x.FinishProdNumb + x.RejectProdNumb + x.LossProdNumb));
-                    finishNumb = vf.Sum(x => x.FinishNumb + x.RejectNumb + x.LossNumb);
-                }
-
-                if (item.ProcessCode != "9035")
-                {
-                    var vppt = from a in vProduceSource
-                               where a.RdsNo == item.RdsNo && a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID && a.Side == item.Side && a.MachineCode == item.MachineCode
-                               select a;
-                    if (vppt != null && vppt.Count() > 1)
-                    {
-                        var vbkp = from a in _FinishNumbBkp
-                                   where a.RdsNo == item.RdsNo && a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID && a.MachineCode == item.MachineCode
-                                   select a;
-                        if (vbkp != null && vbkp.Count() > 0)
-                        {
-                            ProcessSumItemBkp psp = vbkp.FirstOrDefault();
-                            if (((finishProdNumb - psp.FinishProdNumb) <= (item.ReqNumb * item.ColNumb)) || (psp.SumTime >= (vppt.Count() - 1)))
-                            {
-                                finishProdNumb = finishProdNumb - psp.FinishProdNumb;
-                                finishNumb = finishNumb - psp.FinishSheetNumb;
-                            }
-                            else
-                            {
-                                finishProdNumb = item.ReqNumb * item.ColNumb;
-                                finishNumb = item.ReqNumb;
-                            }
-                            psp.FinishProdNumb += finishProdNumb;
-                            psp.FinishSheetNumb += finishNumb;
-                            psp.SumTime += 1;
-                            _FinishNumbBkp.Add(psp);
-                        }
-                        else
-                        {
-                            ProcessSumItemBkp psp = new ProcessSumItemBkp();
-                            if (finishProdNumb > item.ReqNumb * item.ColNumb)
-                            {
-                                finishProdNumb = item.ReqNumb * item.ColNumb;
-                                finishNumb = item.ReqNumb;
-                            }
-                            psp.RdsNo = item.RdsNo;
-                            psp.ProduceRdsNo = item.ProduceRdsNo;
-                            psp.PartID = item.PartID;
-                            psp.MachineCode = item.MachineCode;
-                            psp.FinishProdNumb = finishProdNumb;
-                            psp.FinishSheetNumb = finishNumb;
-                            psp.SumTime = 1;
-                            _FinishNumbBkp.Add(psp);
-                        }
-                    }
-                }
-                else
-                {
-                    var v9035 = from a in vf
-                                group a by a.DestroySubLevelItemCode into g
-                                select new
-                                {
-                                    FinishProdNumb = g.Sum(x => (x.FinishProdNumb + x.RejectProdNumb)),
-                                    FinishNumb = g.Sum(x => (x.FinishNumb + x.RejectNumb))
-                                };
-                    if (v9035 != null && v9035.Count() > 0)
-                    {
-                        finishProdNumb = v9035.Max(x => x.FinishProdNumb);
-                        finishNumb = v9035.Max(x => x.FinishNumb);
-                    }
-                }
-                if (finishProdNumb <= 0) finishProdNumb = 0;
-                if (finishNumb <= 0) finishNumb = 0;
-                item.FinishProdNumb = finishProdNumb;
-                item.FinishSheetNumb = finishNumb;
-                item.Type = ((item.Bdd - item.PlanBegin).TotalMinutes > -5 && (item.Edd - item.PlanEnd).TotalMinutes < 5) ? MyConvert.ZHLC("正常") : MyConvert.ZHLC("超出");
-                if (finishProdNumb > 0) foreach (var iv in vf) iv.iCalItem = true;
-            }
-            MyRecord.Say("3.4.2 完工数计算完毕，计算后制达成率。");
-            var vProduceGrid = from a in vProduceSource
-                               group a by new { a.RdsNo, a.DepartmentID, a.ProcessCode, a.MachineCode } into g
-                               select new Plan_GridItem(g);
-            if (_GridData.Count > 0)
-                _GridData.AddRange(vProduceGrid);
-            else
-                _GridData = vProduceGrid.ToList();
-            MyRecord.Say("3.4.3 后制达成率完成。");
-            #endregion
-            return _GridData;
-
-
-        }
-        #endregion
-
-        void SendProdPlanEmail(DateTime NowTime)
-        {
-            try
-            {
-                MyRecord.Say("-----------开始计算排程达成率----------");
-                MyRecord.Say("1.加载邮件体。");
-                #region 表头
-                string body = MyConvert.ZH_TW(@"
-<HTML>
-<BODY style=""FONT-SIZE: 9pt; FONT-FAMILY: PMingLiU"" leftMargin=5 topMargin=5 bgColor=#ece4f3 #ffffff>
-<DIV><FONT size=3 face=PMingLiU>{4}ERP系统提示您：</FONT></DIV>
-<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {0:yy/MM/dd} {1} 所有排程及达成率。</FONT></DIV>
-<DIV><FONT size=2 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; （说明：完工数只计算良品数；只计算计划开始时间至{3:MM/dd HH时}之间的完工单。）</FONT></DIV>
-{2}
-<DIV><FONT face=PMingLiU><FONT size=2></FONT>&nbsp;</DIV>
-<DIV><FONT color=#0000ff size=4 face=PMingLiU><STRONG>&nbsp;&nbsp;此郵件由ERP系統自動發送，请勿在此郵件上直接回復。</STRONG></FONT></DIV>
-<DIV><FONT color=#800080 size=2><STRONG>&nbsp;&nbsp;&nbsp;</STRONG>
-<FONT color=#000000 face=PMingLiU>{3:yy/MM/dd HH:mm}，由ERP系统伺服器自动发送。<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;如自動發送功能有問題或者格式内容修改建議，請MailTo:<A href=""mailto:my80@my.imedia.com.tw"">JOHN</A><BR>
-</FONT></FONT></DIV></FONT></BODY></HTML>
-");
-                string gd = @"
-<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<TABLE style=""BORDER-COLLAPSE: collapse"" cellSpacing=0 cellPadding=0 width=""100%"" border=0>
-  <TBODY>
-    <TR>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    部门
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    工序
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    机台
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    生产计划单号
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    计划开始时间~结束时间
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    创建人/审核人
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    排期数（产品数）
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    完工数（产品数）
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    产量达成率
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    排单笔数
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    完成笔数
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    笔数达成率
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    达成率
-    </TD>
-    </TR>
-    {0}
-</TBODY></TABLE></FONT>
-</DIV>
-";
-                string sd = @"
-<DIV><FONT size=5 face=PMingLiU color=#ff0080>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;没有安排生产排程。</FONT>
-</DIV>
-";
-                #endregion
-                MyRecord.Say("2.加载表格行。");
-                #region 表格行
-                string br = @"
-    <TR>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {0}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {1}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {2}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {3}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {4}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {5}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {6}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {7}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {8}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {9}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {10}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {11}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {13}"" align=center >
-    {12}
-    </TD>
-    </TR>
-";
-                #endregion
-                int classtype = 1;
-                string byb = "";
-                if (NowTime.Hour < 12 && NowTime.Hour > 5) //10点发送昨日夜班排程
-                {
-                    classtype = 2;
-                    NowTime = NowTime.AddDays(-1);
-                    byb = "夜班";
-                }
-                else if (NowTime.Hour > 17 && NowTime.Hour < 23) //22点发送当日白天排程
-                {
-                    classtype = 1;
-                    byb = "白班";
-                }
-                MyRecord.Say(string.Format("3.处理条件，NowTime={0}，班次：{1}，班次ID：{2}", NowTime, byb, classtype));
-                string xLine = string.Empty; int iRow = 0; DateTime t1 = DateTime.Now;
-                if (NowTime > DateTime.MinValue && classtype > 0)
-                {
-                    MyRecord.Say("3.获取并计算达成率");
-                    List<Plan_GridItem> _GridData = (Plan_LoadFinishedRate(NowTime, classtype));
-                    var vGridDataSource = from a in _GridData
-                                          where a.BDD > DateTime.Parse("2000-01-01") && a.EDD > DateTime.Parse("2000-01-01") && a.PlanCount > 0
-                                          orderby a.DepartmentFullSortID, a.ProcessCode, a.MachineCode, a.RdsNo
-                                          select a;
-                    MyRecord.Say("4.达成率计算完毕，开始生成邮件内容。");
-                    string xbd = string.Empty;
-                    if (vGridDataSource.Count() > 0)
-                    {
-                        foreach (var item in vGridDataSource)
-                        {
-                            double y1 = item.PlanCount != 0 ? Convert.ToDouble(item.FinishCount) / Convert.ToDouble(item.PlanCount) : 0;
-                            double y2 = item.FinishProdNumb != 0 ? Convert.ToDouble(item.FinishProdNumb) / Convert.ToDouble(item.PlanProdNumb) : 0;
-                            string xbr = string.Format(br,
-                                item.DepartmentName,
-                                item.ProcessName,
-                                item.MachineName,
-                                item.RdsNo,
-                                string.Format("{0:MM/dd HH:mm}~{1:MM/dd HH:mm}", item.BDD, item.EDD),
-                                string.Format("{0}/{1}", item.Inputer, item.Checker),
-                                item.PlanProdNumb,
-                                item.FinishProdNumb,
-                                string.Format("{0:0.00%}", y2),
-                                item.PlanCount,
-                                item.FinishCount,
-                                string.Format("{0:0.00%}", y1),
-                                string.Format("{0:0.00%}", y1 * y2),
-                                y1 * y2 > 0.9 ? "transparent" : y1 * y2 > 0.75 ? "rgb(226, 234, 37)" : "rgb(243, 128, 153)"
-                                );
-                            MyRecord.Say(string.Format("4.1 - 第{0}行，部门：{1}，工序：{2}，机台：{3}，笔数达成率：{4}，产量达成率：{5}。", iRow, item.DepartmentName, item.ProcessName, item.MachineName, y1, y2));
-                            iRow++;
-                            xLine += xbr;
-                        }
-                        xbd = string.Format(gd, xLine);
-                    }
-                    else
-                    {
-                        xbd = sd;
-                    }
-                    MyRecord.Say(string.Format("表格一共：{0}行，已经生成。总耗时：{1}秒。", iRow, (DateTime.Now - t1).TotalSeconds));
-                    MyRecord.Say("创建SendMail。");
-                    MyBase.SendMail sm = new MyBase.SendMail();
-                    MyRecord.Say("加载邮件内容。");
-                    sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, NowTime, byb, xbd, DateTime.Now, MyBase.CompanyTitle));
-                    sm.Subject = MyConvert.ZH_TW(string.Format("{2}{0:yy年MM月dd日}{1}排程及达成率", NowTime, byb, MyBase.CompanyTitle));
-                    string MailTo = ConfigurationManager.AppSettings["PlanMailTo"], MailCC = ConfigurationManager.AppSettings["PlanMailCC"];
-                    MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", MailTo, MailCC));
-                    sm.MailTo = MailTo;
-                    sm.MailCC = MailCC;
-                    //sm.MailTo = "my80@my.imedia.com.tw";
-                    MyRecord.Say("发送邮件。");
-                    sm.SendOut();
-                    MyRecord.Say("已经发送。");
-                }
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            MyRecord.Say("-------计算排程达成率完成------");
-        }
-
-
-        Thread tProdPlanForSaveing;
-
-        bool _StopProdPlanForSaved = false;
-
-        void ProdPlanForSaveLoader(DateTime NowTime)
-        {
-            if (tProdPlanForSaveing != null && tProdPlanForSaveing.IsAlive)
-            {
-                _StopProdPlanForSaved = true;
-                DateTime xTime = DateTime.Now;
-                do
-                {
-                    _StopProdPlanForSaved = true;
-                } while (tProdPlanForSaveing.IsAlive && (DateTime.Now - xTime).TotalSeconds > 10);
-            }
-            _StopProdPlanForSaved = false;
-            tProdPlanForSaveing = new Thread(new ParameterizedThreadStart(ProdPlanForSaveRunner));
-            tProdPlanForSaveing.IsBackground = true;
-            tProdPlanForSaveing.Start(NowTime);
-        }
-
-        void ProdPlanForSaveRunner(object NowTime)
-        {
-            DateTime xDate = ((DateTime)NowTime).AddDays(-6).Date;
-            MyRecord.Say(string.Format("当前时间：{0}，计算开始时间：{1}", NowTime, xDate));
-            for (int i = 0; i <= 6; i++)
-            {
-                if (_StopProdPlanForSaved) return;
-                DateTime iDate = xDate.AddDays(i).Date;
-                MyRecord.Say("--------------------------------------------------------");
-                MyRecord.Say(string.Format("计算：{0}，开始。", iDate));
-                MyRecord.Say(string.Format("计算时间：{0}，白班", iDate));
-                ProdPlanForSave(iDate, 1);
-                Thread.Sleep(5000);
-                if (_StopProdPlanForSaved) return;
-                MyRecord.Say(string.Format("计算时间：{0}，夜班", iDate));
-                ProdPlanForSave(iDate, 2);
-                MyRecord.Say(string.Format("计算：{0}，完成。", iDate));
-                MyRecord.Say("--------------------------------------------------------");
-                Thread.Sleep(5000);
-            }
-        }
-
-        void ProdPlanForSave(DateTime NowTime, int classtype)
-        {
-            try
-            {
-                //MyRecord.Say("-----计算达成率-----");
-                string byb = "";
-                MyData.MyCommand xmcd = new MyData.MyCommand();
-                //if (NowTime.Hour == 11) //12点保存3日前夜班排程
-                //{
-                //    classtype = 2;
-                //    NowTime = NowTime.AddDays(-3);
-                //    byb = "夜班";
-                //}
-                //else if (NowTime.Hour == 23) //23点50保存2日前白天排程
-                //{
-                //    NowTime = NowTime.AddDays(-2);
-                //    classtype = 1;
-                //    byb = "白班";
-                //}
-                if (classtype == 1) byb = "白班";
-                else if (classtype == 2) byb = "夜班";
-
-                MyRecord.Say(string.Format("1.处理条件，NowTime={0}，班次：{1}，班次ID：{2}，开始计算数据源。", NowTime, byb, classtype));
-                if (NowTime > DateTime.MinValue && classtype > 0)
-                {
-                    MyRecord.Say(string.Format("2.删除当日当班达成率内容。PlanBegin = {0}，PlanType={1}", NowTime.Date, classtype));
-                    string SQLDeleteToday = "Delete From [_PMC_ProdPlan_YieldRate] Where Convert(VarChar(10),PlanBegin,121) = Convert(VarChar(10),@PlanBegin,121) And PlanType = @PlanType";
-                    MyData.MyParameter[] mpDelete = new MyData.MyParameter[]
-                    {
-                        new MyData.MyParameter("@PlanBegin",NowTime.Date, MyData.MyParameter.MyDataType.DateTime),
-                        new MyData.MyParameter("@PlanType",classtype, MyData.MyParameter.MyDataType.Int)
-                    };
-                    xmcd.Add(SQLDeleteToday, "DeleteAllDay", mpDelete);
-
-                    MyRecord.Say("3.获取并计算达成率");
-                    List<Plan_GridItem> _GridData = Plan_LoadFinishedRate(NowTime, classtype);
-                    var vGridDataSource = from a in _GridData
-                                          where a.BDD > DateTime.Parse("2000-01-01") && a.EDD > DateTime.Parse("2000-01-01") && a.PlanCount > 0
-                                          orderby a.DepartmentFullSortID, a.ProcessCode, a.MachineCode, a.RdsNo
-                                          select a;
-                    MyRecord.Say("4.达成率计算完毕，生成保存语句。");
-                    string xLine = string.Empty; int iRow = 0; DateTime t1 = DateTime.Now;
-                    foreach (var item in vGridDataSource)
-                    {
-                        if (_StopProdPlanForSaved) return;
-                        double y1 = item.PlanCount != 0 ? Convert.ToDouble(item.FinishCount) / Convert.ToDouble(item.PlanCount) : 0;
-                        double y2 = item.FinishProdNumb != 0 ? Convert.ToDouble(item.FinishProdNumb) / Convert.ToDouble(item.PlanProdNumb) : 0;
-                        string SQLSave = @"
-Delete from [_PMC_ProdPlan_YieldRate] Where PlanRdsNo=@PlanRdsNo And MachineCode=@MachineCode
-Insert Into [_PMC_ProdPlan_YieldRate](PlanRdsNo,PlanType,PlanBegin,PlanEnd,Inputer,Checker,DeaprtmentID,DepartmentHrNumb,ProcessCode,MachineCode,PlanSheetNumb,FinishSheetNumb,PlanNumb,FinishNumb,PlanProdNumb,FinishProdNumb)
-Values(@PlanRdsNo,@PlanType,@PlanBegin,@PlanEnd,@Inputer,@Checker,@DeaprtmentID,@DepartmentHrNumb,@ProcessCode,@MachineCode,@PlanSheetNumb,@FinishSheetNumb,@PlanNumb,@FinishNumb,@PlanProdNumb,@FinishProdNumb)";
-                        MyData.MyParameter[] amps = new MyData.MyParameter[]
-                        {
-                            new MyData.MyParameter("@PlanRdsNo",item.RdsNo),
-                            new MyData.MyParameter("@PlanType",classtype, MyData.MyParameter.MyDataType.Int ),
-                            new MyData.MyParameter("@PlanBegin",item.BDD, MyData.MyParameter.MyDataType.DateTime),
-                            new MyData.MyParameter("@PlanEnd",item.EDD, MyData.MyParameter.MyDataType.DateTime),
-                            new MyData.MyParameter("@Inputer",item.Inputer),
-                            new MyData.MyParameter("@Checker",item.Checker),
-                            new MyData.MyParameter("@DeaprtmentID",item.DepartmentID, MyData.MyParameter.MyDataType.Int),
-                            new MyData.MyParameter("@DepartmentHrNumb",item.hrNumb, MyData.MyParameter.MyDataType.Numeric),
-                            new MyData.MyParameter("@ProcessCode",item.ProcessCode),
-                            new MyData.MyParameter("@MachineCode",item.MachineCode),
-                            new MyData.MyParameter("@PlanSheetNumb",item.PlanCount , MyData.MyParameter.MyDataType.Numeric),
-                            new MyData.MyParameter("@FinishSheetNumb",item.FinishCount , MyData.MyParameter.MyDataType.Numeric),
-                            new MyData.MyParameter("@PlanNumb",item.PlanSheetNumb , MyData.MyParameter.MyDataType.Numeric),
-                            new MyData.MyParameter("@FinishNumb",item.FinishSheetNumb , MyData.MyParameter.MyDataType.Numeric),
-                            new MyData.MyParameter("@PlanProdNumb",item.PlanProdNumb, MyData.MyParameter.MyDataType.Numeric),
-                            new MyData.MyParameter("@FinishProdNumb",item.FinishProdNumb, MyData.MyParameter.MyDataType.Numeric)
-                        };
-                        xmcd.Add(SQLSave, string.Format("X_Insert{0}", iRow), amps);
-                        MyRecord.Say(string.Format("4.3-第{0}行，部门：{1}，工序：{2}，机台：{3}，笔数达成率：{4:0.00%}，产量达成率：{5:0.00%}", iRow, item.DepartmentName, item.ProcessName, item.MachineName, item.FinishCount / item.PlanCount, item.FinishSheetNumb / item.PlanSheetNumb));
-                        iRow++;
-                    }
-
-                    MyRecord.Say(string.Format("一共：{0}行，已经生成。总耗时：{1}秒。语句：{2}行。", iRow, (DateTime.Now - t1).TotalSeconds, xmcd.SQLCmdColl.Count));
-                    MyRecord.Say("开始提交，等2秒。");
-
-                    if (_StopProdPlanForSaved) return;
-                    if (xmcd.Execute())
-                        MyRecord.Say("保存完毕！");
-                    else
-                        MyRecord.Say("运行出错。");
-                }
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            //MyRecord.Say("-----------保存排程达成率完成-----------");
-        }
-
-        #endregion
-
         #region 不良率100发邮件
         void RejectSendMailLoader()
         {
@@ -1857,10 +900,10 @@ from prodDailyReport a Where a.RptDate Between @DateBegin And @DateEnd
 Order by a.ProcessID,a.MachinID
 ";
                 DateTime NowTime = DateTime.Now;
-                MyData.MyParameter[] myps = new MyData.MyParameter[]
+                MyData.MyDataParameter[] myps = new MyData.MyDataParameter[]
             {
-                new MyData.MyParameter("@DateBegin",NowTime.AddDays(-1).Date, MyData.MyParameter.MyDataType.DateTime),
-                new MyData.MyParameter("@DateEnd",NowTime.Date , MyData.MyParameter.MyDataType.DateTime)
+                new MyData.MyDataParameter("@DateBegin",NowTime.AddDays(-1).Date, MyData.MyDataParameter.MyDataType.DateTime),
+                new MyData.MyDataParameter("@DateEnd",NowTime.Date , MyData.MyDataParameter.MyDataType.DateTime)
             };
                 MyRecord.Say(string.Format("@DateBegin = {0}，@DateBegin = {1}", NowTime.AddDays(-1).Date, NowTime.Date));
                 string body = MyConvert.ZH_TW(@"
@@ -2629,27 +1672,31 @@ Drop Table #T
                 DateTime NowTime = DateTime.Now;
                 DateTime beginTime = NowTime.AddMonths(-6).AddDays(1 - NowTime.Day).Date, endTime = NowTime.AddDays(-10).Date.AddMilliseconds(-10);
                 //beginTime = NowTime.AddMonths(-1).AddDays(1 - NowTime.Day).Date;
-                DateTime stTime = new DateTime(2015, 11, 01).Date;
+                DateTime stTime = new DateTime(2017, 1, 1).Date;
+                if (CompanyType == "MD")
+                {
+                    stTime = new DateTime(2017, 4, 1).Date;
+                }
                 if (beginTime < stTime)
                 {
                     beginTime = stTime;
                 }
                 #region 加载数据源
                 Thread.Sleep(200);
-                MyData.MyParameter[] mps = new MyData.MyParameter[]
+                MyData.MyDataParameter[] mps = new MyData.MyDataParameter[]
                     {
-                        new MyData.MyParameter("@BTime",beginTime, MyData.MyParameter.MyDataType.DateTime),
-                        new MyData.MyParameter("@ETime",endTime, MyData.MyParameter.MyDataType.DateTime),
-                        new MyData.MyParameter("@ProduceRdsNo",string.Empty),
-                        new MyData.MyParameter("@PName",string.Empty),
-                        new MyData.MyParameter("@PCode",string.Empty),
-                        new MyData.MyParameter("@CUST",string.Empty),
-                        new MyData.MyParameter("@FinishStatus",0, MyData.MyParameter.MyDataType.Int),
-                        new MyData.MyParameter("@StockStatus",3, MyData.MyParameter.MyDataType.Int),
-                        new MyData.MyParameter("@ProdType",string.Empty),
-                        new MyData.MyParameter("@PhoneSubject",string.Empty),
-                        new MyData.MyParameter("@BK",-1, MyData.MyParameter.MyDataType.Int),
-                        new MyData.MyParameter("@Bond",-1, MyData.MyParameter.MyDataType.Int)
+                        new MyData.MyDataParameter("@BTime",beginTime, MyData.MyDataParameter.MyDataType.DateTime),
+                        new MyData.MyDataParameter("@ETime",endTime, MyData.MyDataParameter.MyDataType.DateTime),
+                        new MyData.MyDataParameter("@ProduceRdsNo",string.Empty),
+                        new MyData.MyDataParameter("@PName",string.Empty),
+                        new MyData.MyDataParameter("@PCode",string.Empty),
+                        new MyData.MyDataParameter("@CUST",string.Empty),
+                        new MyData.MyDataParameter("@FinishStatus",0, MyData.MyDataParameter.MyDataType.Int),
+                        new MyData.MyDataParameter("@StockStatus",3, MyData.MyDataParameter.MyDataType.Int),
+                        new MyData.MyDataParameter("@ProdType",string.Empty),
+                        new MyData.MyDataParameter("@PhoneSubject",string.Empty),
+                        new MyData.MyDataParameter("@BK",-1, MyData.MyDataParameter.MyDataType.Int),
+                        new MyData.MyDataParameter("@Bond",-1, MyData.MyDataParameter.MyDataType.Int)
                     };
                 MyRecord.Say(string.Format("1.数据条件：beginTime={0},endTime={1}", beginTime, endTime));
                 MyRecord.Say("1.从后台读取数据。");
@@ -3082,7 +2129,7 @@ Drop Table #T
                     sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, xBodyString, NowTime, MyBase.CompanyTitle));
                     sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}結單差異數提醒。", NowTime, MyBase.CompanyTitle));
                     string mailto = ConfigurationManager.AppSettings["FinishMailTo"], mailcc = ConfigurationManager.AppSettings["FinishMailCC"];
-                    MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+                    MyRecord.Say(string.Format("发送邮件地址：\r\n MailTO:{0} \r\n MailCC:{1}", mailto, mailcc));
                     sm.MailTo = mailto;
                     sm.MailCC = mailcc;
                     //sm.MailTo = "my80@my.imedia.com.tw";
@@ -3137,8 +2184,8 @@ Drop Table #T
                             Order by RdsNo
                         ";
                 MyData.MyDataTable mTableProduceFinished = new MyData.MyDataTable(SQL,
-                    new MyData.MyParameter("@InputBegin", StartTime, MyData.MyParameter.MyDataType.DateTime),
-                    new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime)
+                    new MyData.MyDataParameter("@InputBegin", StartTime, MyData.MyDataParameter.MyDataType.DateTime),
+                    new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime)
                     );
                 if (_StopAll) return;
                 if (mTableProduceFinished != null && mTableProduceFinished.MyRows.Count > 0)
@@ -3211,7 +2258,7 @@ Drop Table #T
             {
                 MyData.MyCommand mc = new MyData.MyCommand();
 
-                MyData.MyParameter mp = new MyData.MyParameter("@rdsno", CurrentRdsNO);
+                MyData.MyDataParameter mp = new MyData.MyDataParameter("@rdsno", CurrentRdsNO);
                 string SQL = "Exec [dbo].[_PMC_UpdateFinishAndPicking] @RdsNo";
                 return mc.Execute(SQL, mp);
 
@@ -3292,7 +2339,7 @@ Select a.[_ID] as ID,a.RdsNo,a.PlanBegin,b.[date]
         }
 
         #endregion
-        void ConfirmProcessPlan()
+        void ConfirmProcessPlanLoader()
         {
             MyRecord.Say("开启定时审核排程线程..........");
             Thread t = new Thread(ConfirmProcessPlanRecord);
@@ -3335,8 +2382,8 @@ a.PlanBegin Between @TimeBgein And @TimeEnd And PlanEnd is Null
 And Not Exists(Select Top 1 _ID From [_PMC_ProdPlan] b Where b.PlanBegin Between @TimeBgein And @TimeEnd And PlanEnd is Not Null And a.Process=b.Process And a.Department=b.Department)
 Group by Process,Department ";
                 MyData.MyDataTable mLastPlan = new MyData.MyDataTable(SQL,
-                    new MyData.MyParameter("@TimeBgein", TimeBegin, MyData.MyParameter.MyDataType.DateTime),
-                    new MyData.MyParameter("@TimeEnd", TimeEnd, MyData.MyParameter.MyDataType.DateTime));
+                    new MyData.MyDataParameter("@TimeBgein", TimeBegin, MyData.MyDataParameter.MyDataType.DateTime),
+                    new MyData.MyDataParameter("@TimeEnd", TimeEnd, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mLastPlan != null && mLastPlan.MyRows.Count > 0)
                 {
@@ -3393,9 +2440,9 @@ SET NOCOUNT OFF
 ";
             MyData.MyCommand mc = new MyData.MyCommand();
             return mc.Execute(SQL,
-                new MyData.MyParameter("@zbid", xPlanID, MyData.MyParameter.MyDataType.Int),
-                new MyData.MyParameter("@PlanEndSet", PlanEndSet, MyData.MyParameter.MyDataType.DateTime),
-                new MyData.MyParameter("@Memo", Memo)
+                new MyData.MyDataParameter("@zbid", xPlanID, MyData.MyDataParameter.MyDataType.Int),
+                new MyData.MyDataParameter("@PlanEndSet", PlanEndSet, MyData.MyDataParameter.MyDataType.DateTime),
+                new MyData.MyDataParameter("@Memo", Memo)
                 );
         }
 
@@ -3553,8 +2600,8 @@ Where isNull(Status,0) = 0 And StockDate is Null And FinishDate is Null
                 string brs = "";
                 MyRecord.Say("后台计算");
                 using (MyData.MyDataTable md = new MyData.MyDataTable(SQL,
-                    new MyData.MyParameter("@DateBegin", BDate, MyData.MyParameter.MyDataType.DateTime),
-                    new MyData.MyParameter("@DateEnd", EDate, MyData.MyParameter.MyDataType.DateTime)
+                    new MyData.MyDataParameter("@DateBegin", BDate, MyData.MyDataParameter.MyDataType.DateTime),
+                    new MyData.MyDataParameter("@DateEnd", EDate, MyData.MyDataParameter.MyDataType.DateTime)
                     ))
                 {
                     MyRecord.Say("工单");
@@ -3660,7 +2707,7 @@ Select [_ID],RdsNo from _PMC_ProdPlan Where IsNull([Status],0) < 2 And PlanBegin
                         if (_StopAll) return;
                         string RdsNo = Convert.ToString(r["RdsNo"]);
                         DateTime mStartTime = DateTime.Now;
-                        MyData.MyParameter mpid = new MyData.MyParameter("@ID", r["_ID"], MyData.MyParameter.MyDataType.Int);
+                        MyData.MyDataParameter mpid = new MyData.MyDataParameter("@ID", r["_ID"], MyData.MyDataParameter.MyDataType.Int);
                         string SQLDetial = @"Delete from [_PMC_ProdPlan_List] Where zbid=@ID", SQLMain = @"Delete from [_PMC_ProdPlan] Where [_ID]=@ID";
                         MyData.MyCommand DeleteCMD = new MyData.MyCommand();
                         DeleteCMD.Add(SQLDetial, "DeleteDetail", mpid);
@@ -3702,13 +2749,13 @@ Select [_ID],RdsNo from _PMC_ProdPlan Where IsNull([Status],0) = 2 And PlanBegin
                         if (_StopAll) return;
                         DateTime mStartTime = DateTime.Now;
                         string RdsNo = Convert.ToString(r["RdsNo"]);
-                        MyData.MyParameter mpRdsNo = new MyData.MyParameter("@rdsno", RdsNo);
-                        MyData.MyParameter mpid = new MyData.MyParameter("@ID", r["_ID"], MyData.MyParameter.MyDataType.Int);
-                        MyData.MyParameter mpEndDate = new MyData.MyParameter("@PlanEnd", r["PlanEnd"], MyData.MyParameter.MyDataType.DateTime);
+                        MyData.MyDataParameter mpRdsNo = new MyData.MyDataParameter("@rdsno", RdsNo);
+                        MyData.MyDataParameter mpid = new MyData.MyDataParameter("@ID", r["_ID"], MyData.MyDataParameter.MyDataType.Int);
+                        MyData.MyDataParameter mpEndDate = new MyData.MyDataParameter("@PlanEnd", r["PlanEnd"], MyData.MyDataParameter.MyDataType.DateTime);
                         string SQLDetial = @"Delete from [_PMC_ProdPlan_List] Where zbid = @ID And Bdd > DateAdd(HH,3,@PlanEnd)";
                         string SQLMain = @"Update [_PMC_ProdPlan] Set Status=3 Where [_ID]=@ID";
                         string SQLStatus = @"Insert Into [_PMC_ProdPlan_StatusRecorder](zbid,Author,[state],memo,rdsno,type,typeid,CheckIn,CheckOut) Values(@ID,'自動審核',1,'關閉排程，到 ' + Convert(VarChar(100),DateAdd(HH,3,@PlanEnd),120),@rdsno,'關閉',2,1,1)";
-                        MyData.MyParameter[] mpss = new MyData.MyParameter[]
+                        MyData.MyDataParameter[] mpss = new MyData.MyDataParameter[]
                         {
                             mpRdsNo,
                             mpid,
@@ -3972,7 +3019,7 @@ from [_QE_ProblemSolving8D] a Where FinalizDate is Null And InputDate <= @DateEn
                 string brs = "", brt = "", brl = "";
                 MyRecord.Say("后台计算");
                 //类型，单号,发起人,问题描述,责任部门,指定答辩人,发起日期,逾期时间,当前状态
-                using (MyData.MyDataTable md = new MyData.MyDataTable(SQL, new MyData.MyParameter("@DateEnd", EDate, MyData.MyParameter.MyDataType.DateTime)))
+                using (MyData.MyDataTable md = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@DateEnd", EDate, MyData.MyDataParameter.MyDataType.DateTime)))
                 {
                     MyRecord.Say("读出8D报告，创建表格内容");
                     if (md != null && md.MyRows.Count > 0)
@@ -4129,8 +3176,8 @@ from [_QE_ProblemSolving8D] a Where FinalizDate is Null And InputDate <= @DateEn
                 MyRecord.Say("定时计算——获取计算范围");
                 string SQL = @"Select Distinct RdsNo from moProduce Where InputDate Between @InputBegin And @InputEnd Order by RdsNo";
                 MyData.MyDataTable mTableProduceFinished = new MyData.MyDataTable(SQL,
-                    new MyData.MyParameter("@InputBegin", StartTime, MyData.MyParameter.MyDataType.DateTime),
-                    new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime)
+                    new MyData.MyDataParameter("@InputBegin", StartTime, MyData.MyDataParameter.MyDataType.DateTime),
+                    new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime)
                     );
                 if (_StopAll) return;
                 if (mTableProduceFinished != null && mTableProduceFinished.MyRows.Count > 0)
@@ -4173,7 +3220,7 @@ from [_QE_ProblemSolving8D] a Where FinalizDate is Null And InputDate <= @DateEn
             try
             {
                 MyData.MyCommand mc = new MyData.MyCommand();
-                MyData.MyParameter mp = new MyData.MyParameter("@rdsno", CurrentRdsNO);
+                MyData.MyDataParameter mp = new MyData.MyDataParameter("@rdsno", CurrentRdsNO);
                 string SQL = "Exec [dbo].[_PMC_UpdateFinishAndPicking] @RdsNo";
                 return mc.Execute(SQL, mp);
             }
@@ -4328,7 +3375,7 @@ Order by a.[_id]
                 DateTime EDate = NowTime.Date.AddDays(1).AddMilliseconds(-10);
                 string brs = "";
                 MyRecord.Say("后台计算");
-                using (MyData.MyDataTable md = new MyData.MyDataTable(SQL, new MyData.MyParameter("@DateEnd", EDate, MyData.MyParameter.MyDataType.DateTime)))
+                using (MyData.MyDataTable md = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@DateEnd", EDate, MyData.MyDataParameter.MyDataType.DateTime)))
                 {
                     MyRecord.Say("读出维修申请单，创建表格内容");
                     if (md != null && md.MyRows.Count > 0)
@@ -4399,7 +3446,7 @@ Order by a.[_id]
             {
                 MyRecord.Say("核销维修单");
                 SQL = @"Select * from _GS_EquipmentRepair a Where a.InputDate < @InputEnd And isNull(a.Status,0)=0  ";
-                MyData.MyDataTable mTableEquipmentRepair = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime));
+                MyData.MyDataTable mTableEquipmentRepair = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableEquipmentRepair != null && mTableEquipmentRepair.MyRows.Count > 0)
                 {
@@ -4414,12 +3461,12 @@ Order by a.[_id]
                         string RdsNo = Convert.ToString(r["RdsNo"]);
                         memo = string.Format("核销第{0}条，维修单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableEquipmentRepairCount, RdsNo, CurID, r["InputDate"]);
                         MyRecord.Say(memo);
-                        MyData.MyParameter[] mps = new MyData.MyParameter[]
+                        MyData.MyDataParameter[] mps = new MyData.MyDataParameter[]
                         {
-                            new MyData.MyParameter("@memo","超出15日没有审核，被系统自动核销。"),
-                            new MyData.MyParameter("@id", CurID, MyData.MyParameter.MyDataType.Int),
-                            new MyData.MyParameter("@RdsNo",RdsNo),
-                            new MyData.MyParameter("@Status",Convert.ToInt32(r["Status"]),MyData.MyParameter.MyDataType.Int)
+                            new MyData.MyDataParameter("@memo","超出15日没有审核，被系统自动核销。"),
+                            new MyData.MyDataParameter("@id", CurID, MyData.MyDataParameter.MyDataType.Int),
+                            new MyData.MyDataParameter("@RdsNo",RdsNo),
+                            new MyData.MyDataParameter("@Status",Convert.ToInt32(r["Status"]),MyData.MyDataParameter.MyDataType.Int)
                         };
                         string CheckSQL = "Update [_GS_EquipmentRepair] Set Status =-1,FinishMemo=@memo,FinishTime=GetDate() Where [_ID]=@id";
                         string CheckLogSQL = @"Insert Into [_GS_EquipmentRepair_StatusRecorder](zbid,Author,[state],memo,rdsno,type,typeid,CheckIn,CheckOut)

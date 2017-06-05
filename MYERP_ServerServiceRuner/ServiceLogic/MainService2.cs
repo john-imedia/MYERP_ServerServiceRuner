@@ -41,15 +41,13 @@ namespace MYERP_ServerServiceRuner
             string SQL = "";
             MyRecord.Say("---------------------启动定时审核纪律单。------------------------------");
             DateTime NowTime = DateTime.Now;
-            DateTime StopTime = NowTime.Date.AddDays(-1);
-            int tpid = (NowTime.Hour < 13) ? 1 : 2;
-            MyRecord.Say(string.Format("审核截止时间：{0:yy/MM/dd HH:mm},ID={1}", StopTime, tpid));
+            MyRecord.Say(string.Format("审核截止时间：{0:yy/MM/dd HH:mm}", NowTime));
             #region 审核纪律单
             try
             {
                 MyRecord.Say("审核纪律单");
-                SQL = @"Select * from _PMC_KanbanKPI_CheckList Where isNull(Status,0)=0 And ((InspectDate < @InputEnd) or (Convert(DateTime,Convert(VarChar(10),InspectDate,121)) = @InputEnd And ClassType=@TpID))";
-                MyData.MyDataTable mTableWorkspaceInspect = new MyData.MyDataTable(SQL, new MyData.MyParameter("@InputEnd", StopTime, MyData.MyParameter.MyDataType.DateTime), new MyData.MyParameter("@TpID", tpid, MyData.MyParameter.MyDataType.Int));
+                SQL = @"Select * from _PMC_KanbanKPI_CheckList Where isNull(Status,0)=0 And InspectDate < @InputEnd";
+                MyData.MyDataTable mTableWorkspaceInspect = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", NowTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableWorkspaceInspect != null && mTableWorkspaceInspect.MyRows.Count > 0)
                 {
@@ -68,7 +66,7 @@ namespace MYERP_ServerServiceRuner
                             MyRecord.Say("审核错误！");
                         }
 
-                        MyData.MyParameter mdpID = new MyData.MyParameter("@id", CurID, MyData.MyParameter.MyDataType.Int);
+                        MyData.MyDataParameter mdpID = new MyData.MyDataParameter("@id", CurID, MyData.MyDataParameter.MyDataType.Int);
                         string SQLDelete = "Delete from _PMC_KanbanKPI_CheckList_List Where isNull(Score,0)=0 And zbid=@id";
 
                         MyData.MyCommand mcd = new MyData.MyCommand();
@@ -92,8 +90,6 @@ namespace MYERP_ServerServiceRuner
         }
 
         #endregion
-
-
 
         #region 发送昨日还没处理的不良品退料和不合格品判定
 
@@ -180,10 +176,10 @@ namespace MYERP_ServerServiceRuner
                 string SQLRS = @"Exec [_WH_IPQC_Return] -1";   //不良品退料单
                 string SQLQC = @"Exec [_QC_IPQC_Confirm_View] 0,@BTime,@ETime,0,Null,Null,Null,Null,Null";   //不良品判定单
                 DateTime NowTime = DateTime.Now, BeginTime = DateTime.Parse("2016-01-01 00:00:05");
-                MyData.MyParameter[] mps = new MyData.MyParameter[]
+                MyData.MyDataParameter[] mps = new MyData.MyDataParameter[]
                 {
-                    new MyData.MyParameter("@BTime",BeginTime , MyData.MyParameter.MyDataType.DateTime),
-                    new MyData.MyParameter("@ETime",NowTime , MyData.MyParameter.MyDataType.DateTime)
+                    new MyData.MyDataParameter("@BTime",BeginTime , MyData.MyDataParameter.MyDataType.DateTime),
+                    new MyData.MyDataParameter("@ETime",NowTime , MyData.MyDataParameter.MyDataType.DateTime)
                 };
 
                 string brs = "";
@@ -515,7 +511,7 @@ Into #T
   From [_PMC_KanbanKPI_CheckList] a Inner Join [_PMC_KanbanKPI_CheckList_List] b ON a.id=b.zbid
                                     Left Outer Join [_PMC_Machine_CheckItemList] ck ON b.ItemCode = ck.ItemCode
                                     Left Outer Join pbDept c ON b.DepartmentCode = c.Code
-  Where isNull(b.Score,0)>0 And a.InspectDate Between @DateBegin And @DateEnd 
+  Where isNull(b.Score,0) <> 0 And a.InspectDate Between @DateBegin And @DateEnd 
 
 Select InspectDate,ClassType,DepartmentID,MachineCode,ProcessCode,(Case When Count(*) = 0 Then 0 Else Sum(Score) /(Count(*) / 10.00) End) as Score Into #X 
 From #T Group by InspectDate,ClassType,DepartmentID,MachineCode,ProcessCode
@@ -529,12 +525,13 @@ Drop Table #T
 Drop Table #X
 ";
             DateTime NowDateTime = DateTime.Now;
-            DateTime xDateBegin = NowDateTime.AddWeeks(-3).Date.AddHours(8), xDateEnd = NowDateTime.AddDays(1).Date.AddHours(8);
+            MyRecord.Say(string.Format("向前推：{0}周。", CacluateKanbanWeekSpanTimes));
+            DateTime xDateBegin = NowDateTime.AddWeeks(-CacluateKanbanWeekSpanTimes).Date.AddHours(8), xDateEnd = NowDateTime.AddDays(1).Date.AddHours(9);
 
-            MyData.MyParameter[] mps = new MyData.MyParameter[]
+            MyData.MyDataParameter[] mps = new MyData.MyDataParameter[]
             {
-                new MyData.MyParameter("@DateBegin",xDateBegin, MyData.MyParameter.MyDataType.DateTime),
-                new MyData.MyParameter("@DateEnd",xDateEnd, MyData.MyParameter.MyDataType.DateTime)
+                new MyData.MyDataParameter("@DateBegin",xDateBegin, MyData.MyDataParameter.MyDataType.DateTime),
+                new MyData.MyDataParameter("@DateEnd",xDateEnd, MyData.MyDataParameter.MyDataType.DateTime)
             };
 
             DateTime dtBegin = DateTime.Now;
@@ -651,7 +648,7 @@ Drop Table #X
                 MyData.MyCommand mcd = new MyData.MyCommand();
                 Say("保存到表");
                 string SQLDelete = @"Update [_PMC_ProdPlan_YieldRate] Set DailyRejectNumb = 0 Where DateDiff(""DD"",@BeginDate,PlanBegin) >= 0 ";
-                mcd.Add(SQLDelete, "XDelete", new MyData.MyParameter("@BeginDate", DateBegin, MyData.MyParameter.MyDataType.DateTime));
+                mcd.Add(SQLDelete, "XDelete", new MyData.MyDataParameter("@BeginDate", DateBegin, MyData.MyDataParameter.MyDataType.DateTime));
 
                 int vmiCount = 0;
                 foreach (var item in vMachineReject)
@@ -660,15 +657,15 @@ Drop Table #X
 Declare @xid int
 Select @xid=Max([_id]) From [_PMC_ProdPlan_YieldRate] Where DateDiff(""DD"",PlanBegin,@Date) >= 0 And DateDiff(""DD"",@BeginDate,PlanBegin) >=0 And DeaprtmentID = @DeptID And ProcessCode = @PCode And MachineCode = @MCode And PlanType = @PT
 Update [_PMC_ProdPlan_YieldRate] Set DailyRejectNumb = isNull(DailyRejectNumb,0) + @Numb Where [_id] = @xid";
-                    MyData.MyParameter[] mpUpdate = new MyData.MyParameter[]
+                    MyData.MyDataParameter[] mpUpdate = new MyData.MyDataParameter[]
                     {
-                        new MyData.MyParameter("@MCode",item.MachinCode),
-                        new MyData.MyParameter("@Date",item.Date, MyData.MyParameter.MyDataType.DateTime),
-                        new MyData.MyParameter("@DeptID",item.DepmartmentID, MyData.MyParameter.MyDataType.Int),
-                        new MyData.MyParameter("@PCode",item.ProcessCode),
-                        new MyData.MyParameter("@PT",item.PlanType, MyData.MyParameter.MyDataType.Int),
-                        new MyData.MyParameter("@Numb",item.RejectNumb, MyData.MyParameter.MyDataType.Numeric),
-                        new MyData.MyParameter("@BeginDate",DateBegin, MyData.MyParameter.MyDataType.DateTime)
+                        new MyData.MyDataParameter("@MCode",item.MachinCode),
+                        new MyData.MyDataParameter("@Date",item.Date, MyData.MyDataParameter.MyDataType.DateTime),
+                        new MyData.MyDataParameter("@DeptID",item.DepmartmentID, MyData.MyDataParameter.MyDataType.Int),
+                        new MyData.MyDataParameter("@PCode",item.ProcessCode),
+                        new MyData.MyDataParameter("@PT",item.PlanType, MyData.MyDataParameter.MyDataType.Int),
+                        new MyData.MyDataParameter("@Numb",item.RejectNumb, MyData.MyDataParameter.MyDataType.Numeric),
+                        new MyData.MyDataParameter("@BeginDate",DateBegin, MyData.MyDataParameter.MyDataType.DateTime)
                     };
                     mcd.Add(SQLUpdate, string.Format("XM{0}", vmiCount), mpUpdate);
                 }
@@ -679,10 +676,10 @@ Update [_PMC_ProdPlan_YieldRate] Set DailyRejectNumb = isNull(DailyRejectNumb,0)
 
             void LoadData()
             {
-                MyData.MyParameter[] mps = new MyData.MyParameter[]
+                MyData.MyDataParameter[] mps = new MyData.MyDataParameter[]
                 {
-                    new MyData.MyParameter("@DateBegin",DateBegin,MyData.MyParameter.MyDataType.DateTime),
-                    new MyData.MyParameter("@DateEnd",DateEnd,MyData.MyParameter.MyDataType.DateTime)
+                    new MyData.MyDataParameter("@DateBegin",DateBegin,MyData.MyDataParameter.MyDataType.DateTime),
+                    new MyData.MyDataParameter("@DateEnd",DateEnd,MyData.MyDataParameter.MyDataType.DateTime)
                 };
 
                 string SQLIPQC = @"
@@ -824,5 +821,35 @@ from #T Group by MachinCode,ProcessID,PrdID,ProduceNo,DepartmentID,PlanType
 
 
         #endregion
+
+        #region 清理LOG文件
+        public void LogingFileCleanLoader()
+        {
+            Thread t = new Thread(new ThreadStart(LogingFileClean));
+            t.IsBackground = true;
+            t.Start();
+        }
+        public void LogingFileClean()
+        {
+            string LogsPath = string.Format("{0}\\Logs", Application.StartupPath);
+            DirectoryInfo di = new DirectoryInfo(LogsPath);
+            foreach (var item in di.GetFiles())
+            {
+                try
+                {
+                    if ((DateTime.Now - item.CreationTime).TotalDays > 1)
+                    {
+                        item.Delete();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MyRecord.Say(ex);
+                    continue;
+                }
+            }
+        }
+        #endregion
+
     }
 }

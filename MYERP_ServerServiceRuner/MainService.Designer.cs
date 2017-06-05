@@ -37,7 +37,7 @@
             // 
             // MainService
             // 
-            this.ServiceName = "Service1";
+            this.ServiceName = "MYERPServerService";
             ((System.ComponentModel.ISupportInitialize)(this.MainTimer)).EndInit();
 
         }
