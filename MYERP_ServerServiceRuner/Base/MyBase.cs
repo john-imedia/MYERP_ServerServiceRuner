@@ -27,7 +27,7 @@ namespace MYERP_ServerServiceRuner.Base
         {
             get
             {
-                return string.Format("Data Source={0};Persist Security Info=True;Password={2};User ID={1};Initial Catalog={3};Application Name=ERPSVR_{5}_{4};Connection Timeout=300",
+                return string.Format("Data Source={0};Persist Security Info=True;Password={2};User ID={1};Initial Catalog={3};Application Name=ERPSVR_{5}_{4};Connection Timeout=300;Pooling =True;Max Pool Size=100;Min Pool Size=0;Connection Lifetime=55",
                     ServerAddress, DB_UID, DB_PWD, DB_Name, System.Environment.MachineName, Application.ProductVersion);
             }
         }

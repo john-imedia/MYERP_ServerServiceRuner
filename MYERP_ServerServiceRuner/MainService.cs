@@ -24,7 +24,7 @@ namespace MYERP_ServerServiceRuner
             InitializeComponent();
         }
 
-        public DateTime CheckStockStartTime, CalculatePruchaseStartTime, CalculateOLDPayToNew, CalculateOrderStartTime, CheckPlanConfirmStartTime;
+        public DateTime CheckStockStartTime, CalculatePruchaseStartTime, CalculateOLDPayToNew, CalculateOrderStartTime, CheckPlanConfirmStartTime, KickOutSPUserStartTime;
         /// <summary>
         /// 上一次计算完工数领料数计算时间。
         /// </summary>
@@ -48,7 +48,7 @@ namespace MYERP_ServerServiceRuner
             MainTimer.Elapsed += MainTimer_Elapsed;
             MyRecord.Say(MyBase.ConnectionString);
             CheckStockStartTime = DateTime.Now.Date;
-            ProduceFeedBackLastRunTime = CalculatePruchaseStartTime = CalculateOrderStartTime = CheckPlanConfirmStartTime = DateTime.Now;
+            ProduceFeedBackLastRunTime = CalculatePruchaseStartTime = CalculateOrderStartTime = CheckPlanConfirmStartTime = KickOutSPUserStartTime = DateTime.Now;
             //ProduceFeedBackLastRunTime = new DateTime(2000, 1, 1);
             MyRecord.Say("服务启动");
             FirstStart = true;
@@ -98,7 +98,6 @@ namespace MYERP_ServerServiceRuner
                     CheckStockStartTime = NowTime;
                     ProduceFeedBackLastRunTime = NowTime.AddDays(-5);
                     #region 暂停
-
                     #endregion
                 }
 
@@ -155,7 +154,7 @@ namespace MYERP_ServerServiceRuner
                     {
                         CheckStockRecordRunning = true;
                         CheckStockRecordLoder();   //定時審核出入庫單。
-                        Thread.Sleep(500);
+                        Thread.Sleep(200);
                     }
                 }
                 //每隔1.4个小时计算一次采购数量
@@ -163,21 +162,29 @@ namespace MYERP_ServerServiceRuner
                 {
                     CalculatePruchaseStartTime = NowTime;
                     PurchaseCalculateLoader();
-                    Thread.Sleep(500);
+                    Thread.Sleep(200);
                 }
                 //每隔42分钟计算一次送货数到订单
                 if ((NowTime - CalculateOrderStartTime).TotalHours > 0.7)
                 {
                     CalculateOrderStartTime = NowTime;
                     OrderCalculateLoader();
-                    Thread.Sleep(500);
+                    Thread.Sleep(200);
                 }
                 //每隔9分钟跑一次审核30分钟撤销的排程
                 if ((NowTime - CheckPlanConfirmStartTime).TotalMinutes > 13)
                 {
                     CheckPlanConfirmStartTime = NowTime;
                     ConfirmPlanHalfHour();
-                    Thread.Sleep(500);
+                    Thread.Sleep(200);
+                }
+
+                //每隔11分钟跑一次踢出特殊权限。
+                if ((NowTime - KickOutSPUserStartTime).TotalMinutes > 11)
+                {
+                    KickOutSPUserStartTime = NowTime ;
+                    KickOutSpecialHalfHour();
+                    Thread.Sleep(200);
                 }
 
                 if (h == 17 || h == 5 || h == 8 || h == 11)  //保存达成率和计算看板
@@ -196,7 +203,7 @@ namespace MYERP_ServerServiceRuner
                         KanbanRecorderLoader();
                     }
                 }
-                if (h == 13 && m == 15 && s == 15)
+                if ((h == 13 || h == 22) && m == 15 && s == 15)
                 {
                     MyRecord.Say("开启计算OEE线程");
                     OEE_ForSaveLoader(NowTime);
@@ -211,14 +218,10 @@ namespace MYERP_ServerServiceRuner
                     SendProdPlanEmail(NowTime);  //定時發送排程和達成率。
                     MyRecord.Say("发送排程完成。");
                 }
-                else if ((h == 12 || h == 0) && m == 09 && s == 25) //自動計算完工數
+                else if ((h == 11 || h == 23) && m == 09 && s == 25) //自動計算完工數
                 {
-                    if (!ProduceFeedBackRuning) //自动计算完工数
-                    {
-                        ProduceFeedBackRuning = true;
-                        ProduceFeedBackLoder();
-                        Thread.Sleep(500);
-                    }
+                    ProduceFeedBackLoder();
+                    Thread.Sleep(500);
                 }
                 else if (h == 4 && m == 2 && s == 1) //自动计算库存的最后出库日期，平均周转天数，反馈入库时间到出库表
                 {
@@ -244,15 +247,15 @@ namespace MYERP_ServerServiceRuner
                 {//工作日发
                     if (h == 7 && m == 17 && s == 12) //发送未审核工单
                     {
-                        SendProduceDayReportLoder();  ///每天发送未审核工单，每天早7点发送。
+                        SendProduceDayReportLoder(); //每天发送未审核工单，每天早7点发送。
                         Thread.Sleep(1000);
-                        SendProduceUnFinishEmailLoder();  ///未结单工作日发送。
+                        SendProduceUnFinishEmailLoder(); //未结单工作日发送。
                     }
                     else if (h == 6 && m == 17 && s == 12) //发送不良超100%
                     {
                         RejectSendMailLoader();  ///发送不良率超过100%的列表，每天早6点发送。
                     }
-                    else if (h == 7 && m == 17 && s == 27)   ///每天发送8D报告跟踪表
+                    else if (h == 7 && m == 17 && s == 27) //每天发送8D报告跟踪表
                     {
                         ProblemSolving8DReportLoder();
                     }
@@ -271,6 +274,10 @@ namespace MYERP_ServerServiceRuner
                     else if (h == 6 && m == 47 && s == 45) //发送未判定和未退料
                     {
                         SendIPQCAndScrapBackEmailLoder();
+                    }
+                    else if (h == 6 && m == 31 && s == 07) //发送入库跟催表。
+                    {
+                        SendProduceUnFinishInStockEmailLoder();
                     }
                     else if (h == 7 && m == 1 && s == 9) //发送每日出货计划量
                     {
@@ -1062,7 +1069,7 @@ Order by a.ProcessID,a.MachinID
         }
         #endregion
 
-        #region 发送10天前没有结案的工单
+        #region 发送3天前没有结案的工单
 
         void SendProduceUnFinishEmailLoder()
         {
@@ -1082,7 +1089,7 @@ Order by a.ProcessID,a.MachinID
 <HTML>
 <BODY style=""FONT-SIZE: 9pt; FONT-FAMILY: PMingLiU"" leftMargin=5 topMargin=5 bgColor=#ece4f3 #ffffff>
 <DIV><FONT size=3 face=PMingLiU>{3}ERP系统提示您：</FONT></DIV>
-<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请注意，以下内容为十天前（{0:yy/MM/dd}前）所有未结且交货期小于今日的工单列表。</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请注意，以下内容为三天前（{0:yy/MM/dd}前含当日）所有未结且交货期小于今日的工单列表。</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; （说明：工单未结是指—工单需要入库且入库完成没有打勾的工单。）</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <TABLE style=""BORDER-COLLAPSE: collapse"" cellSpacing=0 cellPadding=0 width=""100%"" border=0>
@@ -1226,7 +1233,7 @@ Select RdsNo,OrderNo,CustID,Code,pDeliver as SendDate,pNumb,InputDate,Inputer,Ch
 	   FinishNumb=(Select Top 1 FinishNumb from moProdProcedure Where a.ProdProcID = ProcNo And zbid=a.id)
   Into #T
   from moProduce a
- Where StockDate is Null And Year(InputDate) > 2013 And CheckDate < DateAdd(dd,-9,GetDate()) And
+ Where StockDate is Null And Year(InputDate) > 2013 And CheckDate < DateAdd(dd,-2,GetDate()) And
        pDeliver < DateAdd(dd,1,GetDate()) And isNull(StopStock,0) =0
 Update a Set a.Name=b.FullName,a.TypeName=b.mTypeName,a.Size=b.Size From #T a,AllMaterialView b Where a.Code=b.Code
 Update a Set a.InStockFinishNumb = (Select Sum(isNull(Numb,0)) from stPrdStocklst b Where a.RdsNo = b.ProductNo) From #T a
@@ -1268,9 +1275,234 @@ Drop Table #T
                         MyRecord.Say("创建SendMail。");
                         MyBase.SendMail sm = new MyBase.SendMail();
                         MyRecord.Say("加载邮件内容。");
-                        sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, NowTime.AddDays(-10), brs, NowTime, MyBase.CompanyTitle));
-                        sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_10日未结工单提醒。", NowTime, MyBase.CompanyTitle));
+                        sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, NowTime.AddDays(-2), brs, NowTime, MyBase.CompanyTitle));
+                        sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_未结工单提醒。", NowTime, MyBase.CompanyTitle));
                         string mailto = ConfigurationManager.AppSettings["TenDayMailTo"], mailcc = ConfigurationManager.AppSettings["TenDayMailCC"];
+                        MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+                        sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
+                        sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
+                        //sm.MailTo = "my80@my.imedia.com.tw";
+                        MyRecord.Say("发送邮件。");
+                        sm.SendOut();
+                        MyRecord.Say("已经发送。");
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有找到资料。");
+                    }
+                }
+                MyRecord.Say("------------------发送完成----------------------------");
+            }
+            catch (Exception e)
+            {
+                MyRecord.Say(e);
+            }
+        }
+
+        #endregion
+
+        #region 发送应入库没入库的内容
+
+        void SendProduceUnFinishInStockEmailLoder()
+        {
+            MyRecord.Say("开启定时发送入库跟催表..........");
+            Thread t = new Thread(SendProduceUnFinishInStockEmail);
+            t.IsBackground = true;
+            t.Start();
+            MyRecord.Say("开启定时发送入库跟催表进程完成。");
+        }
+
+        void SendProduceUnFinishInStockEmail()
+        {
+            try
+            {
+                MyRecord.Say("-----------------开启定时发送入库跟催表-------------------------");
+                string body = MyConvert.ZH_TW(@"
+<HTML>
+<BODY style=""FONT-SIZE: 12pt; FONT-FAMILY: PMingLiU"" leftMargin=5 topMargin=5 bgColor=#ece4f3 #ffffff>
+<DIV><FONT size=3 face=PMingLiU>{3}ERP系统提示您：</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请注意，以下内容为12H（{0:MM/dd HH:mm}）前，已输入验收入库单（完工单）但还没输入对应产成品入库单（仓库）的验收入库单列表。</FONT><FONT size=5 color=#ff0000 face=PMingLiU>{4}</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; （说明：过期时间单位是小时。）</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<TABLE style=""BORDER-COLLAPSE: collapse"" cellSpacing=0 cellPadding=0 width=""100%"" border=0>
+  <TBODY>
+    <TR>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    部门
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    工序
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    机台
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    工单号
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    验收入库单
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    料号
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    良品数
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    完工单时间
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    过期时间
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    入仓别
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    工单性质
+    </TD>
+    </TR>
+    {1}
+</TBODY></TABLE></FONT>
+</DIV>
+<DIV><FONT face=PMingLiU><FONT size=2></FONT>&nbsp;</DIV>
+<DIV><FONT color=#0000ff size=4 face=PMingLiU><STRONG>&nbsp;&nbsp;此郵件由ERP系統自動發送，请勿在此郵件上直接回復。</STRONG></FONT></DIV>
+<DIV><FONT color=#800080 size=2><STRONG>&nbsp;&nbsp;&nbsp;</STRONG>
+<FONT color=#000000 face=PMingLiU>{2:yy/MM/dd HH:mm}，由ERP系统伺服器自动发送。<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;如自動發送功能有問題或者格式内容修改建議，請MailTo:<A href=""mailto:my80@my.imedia.com.tw"">JOHN</A><BR>
+</FONT></FONT></DIV></FONT></BODY></HTML>
+");
+                string br = @"
+    <TR>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    {1}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    {2}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    {3}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    {4}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    {5}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    {6}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    {7:0}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    {8:MM.dd HH:mm}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    {9:0}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    {10}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    {11}
+    </TD>
+    </TR>
+";
+
+                string SQL = @"
+	  Set NoCount On
+	  Create Table #Tmp_ProdDailyReport(CustCode nVarChar(40),ProductCode nVarChar(200),ProduceRdsNo nVarChar(40),AccNoteRdsno nVarChar(40),RptDate DateTime,Numb1 Numeric(38,6),
+	                                    Operator nVarChar(100),InputDate DateTime,Inputer nVarChar(40),Remark nVarChar(4000),
+										MachineCode nVarChar(40),ProcessCode nVarChar(40),PrdID Int,
+										MachineName nVarChar(100),DepartmentID int
+										)
+	  Create Index IX_Tmp_ProdDailyReport_1 On #Tmp_ProdDailyReport (ProduceRdsNo,ProductCode,AccNoteRdsNo)
+
+	  Insert Into #Tmp_ProdDailyReport
+	  Select a.CustCode,a.ProductCode,a.ProduceNo,a.AccNoteRdsNo,a.RptDate,a.Numb1,a.Operator,a.InputDate,a.Inputer,a.Remark,a.MachinID,a.ProcessID,a.PrdID,b.Name,b.DepartmentID
+	  From ProdDailyReport a Inner Join moMachine b On a.MachinID = b.Code
+	  Where a.ProcessID <> '9035' And isNull(a.Numb1,0) > 0 And isNull(a.Reject,0) = 0 And a.RptDate Between '2017-01-01 00:00:00' And DATEADD(HH,-12,GetDate())
+
+	  Create Table #Tmp_Result(CustCode nVarChar(40),ProductCode nVarChar(200),ProduceRdsNo nVarChar(40),AccNoteRdsno nVarChar(40),RptDate DateTime,Numb1 Numeric(38,6),
+	                           Operator nVarChar(100),InputDate DateTime,Inputer nVarChar(40),Remark nVarChar(4000),MachineCode nVarChar(40),ProcessCode nVarChar(40),PrdID Int,
+							   ProcessName nVarChar(100),MachineName nVarChar(100),FullSortID nVarChar(50),DepartmentName nVarChar(80),DepartmentID int,
+							   ProductName nVarChar(400),Description nVarChar(400),DeclaretionName nVarChar(400),CustProductCode nVarChar(400),
+							   PropertyID Int,StockLocationType nVarChar(20),Status Int,StockStatus Int,
+							   InStockNumb Numeric(38,6),StockRdsNo nVarChar(40),StockDate DateTime,StockInputer nVarChar(40),stManger nVarChar(40),IQC nVarChar(40),
+							   ProduceStatusName nVarChar(80),ProducepropertyName nVarChar(80),StockLocationTypeName nVarChar(80),ProduceStockStatusName nVarChar(80),
+							   FinishMan nVarChar(40),FinishRemark nVarchar(4000),finishdate DateTime,ProduceID int)
+
+	  Insert Into #Tmp_Result(CustCode,ProductCode,ProduceRdsNo,AccNoteRdsno,RptDate,Numb1,Operator,InputDate,Inputer,Remark,MachineCode,ProcessCode,PrdID,DepartmentID,PropertyID,StockLocationType,Status,StockStatus,MachineName,FinishMan,FinishRemark,finishdate,ProduceID)
+	  Select a.CustCode,a.ProductCode,ProduceRdsNo,a.AccNoteRdsno,a.RptDate,a.Numb1,a.Operator,a.InputDate,a.Inputer,a.Remark,a.MachineCode,a.ProcessCode,a.PrdID,a.DepartmentID,b.property,b.StockLocationType,b.status,b.StockStatus,a.MachineName,b.FinishMan,b.FinishRemark,b.finishdate,b.id
+	  from #Tmp_ProdDailyReport a Inner Join moProduce b On a.ProduceRdsNo = b.RdsNo And a.PrdID = b.LastProcessID
+	  Where isNull(b.StopStock,0)=0 And b.status > 0 
+
+	  Update a Set a.ProduceStatusName = b.Name From [#Tmp_Result] a,[_SY_Status] b Where b.StatusID = isNull(a.Status,0) And b.Type = 'PO'
+	  Update a Set a.ProduceStockStatusName = b.Name From [#Tmp_Result] a,[_SY_Status] b Where b.StatusID = isNull(a.StockStatus,0) And b.Type = 'POStatus'
+	  Update a Set a.ProducepropertyName = b.Name From [#Tmp_Result] a,[_SY_Status] b Where b.StatusID = isNull(a.PropertyID,0) And b.Type = 'POProperty'
+	  Update a Set a.StockLocationTypeName = b.Name From [#Tmp_Result] a,[_BS_Location_Type] b Where a.StockLocationType = b.code
+	  Update a Set a.ProcessName = b.Name From [#Tmp_Result] a,moProcedure b Where a.ProcessCode = b.code
+	  Update a Set a.DepartmentName = b.name,a.FullSortID = b.FullSortID From [#Tmp_Result] a,pbDept b Where a.DepartmentID = b.[_ID]
+	  Update a Set a.StockRdsNo = b.rdsno,a.StockDate = b.StockDate,a.InStockNumb = b.Number,a.StockInputer = b.inputer,a.stManger = b.stManger,a.IQC = b.IQC
+	          From [#Tmp_Result] a,stProduceStock b Where a.AccNoteRdsno = b.AccNoteRdsNo
+      Update a Set a.ProductName = b.Name,a.Description = b.Description,a.CustProductCode = b.mCustNO,a.DeclaretionName = b.DeclaretionName
+	          From [#Tmp_Result] a,pbProduct b Where a.ProductCode = b.Code
+
+	  Select *,
+	        InStockTimeSpan = DateDiff(HH,RptDate,isNull(StockDate,GetDate()))
+	   from #Tmp_Result
+	  Where isNull(InStockNumb,0) <= 0
+      Order by FullSortID,ProcessCode,MachineCode,ProductCode,ProduceRdsNo,AccNoteRdsno
+      Drop Table #Tmp_Result
+      Drop Table #Tmp_ProdDailyReport
+	  Set NoCount Off
+";
+                DateTime NowTime = DateTime.Now;
+                string brs = "";
+                MyRecord.Say("后台计算开启。");
+                using (MyData.MyDataTable md = new MyData.MyDataTable(SQL))
+                {
+                    MyRecord.Say("完工单已经获取");
+                    if (md != null && md.MyRows.Count > 0)
+                    {
+                        foreach (var ri in md.MyRows)
+                        {
+                            brs += string.Format(br, ri.IntValue("InStockTimeSpan") < 24 ? "transparent" : ri.IntValue("InStockTimeSpan") < 48 ? "yellow" : "red",
+                                                    ri.Value("DepartmentName"),
+                                                    ri.Value("ProcessName"),
+                                                    ri.Value("MachineName"),
+                                                    ri.Value("ProduceRdsNo"),
+                                                    ri.Value("AccNoteRdsNo"),
+                                                    ri.Value("ProductName"),
+                                                    ri.Value<double>("Numb1"),
+                                                    ri.DateTimeValue("RptDate"),
+                                                    ri.IntValue("InStockTimeSpan"),
+                                                    ri.Value("StockLocationTypeName"),
+                                                    ri.Value("ProducePropertyName")
+                                                    );
+                        }
+                        MyRecord.Say(string.Format("表格一共：{0}行，表格已经生成。", md.Rows.Count));
+                        MyRecord.Say("创建SendMail。");
+                        MyBase.SendMail sm = new MyBase.SendMail();
+                        MyRecord.Say("加载邮件内容。");
+
+                        var vx = from a in md.MyRows
+                                 group a by a.Value("DepartmentName") into g
+                                 orderby g.FirstOrDefault().Value("FullSortID")
+                                 select new
+                                 {
+                                     Name = g.Key,
+                                     Count = g.Count()
+                                 };
+                        string stMemoItem = string.Empty;
+                        foreach (var item in vx)
+                        {
+                            stMemoItem += string.Format("{0}：{1}笔，", item.Name, item.Count);
+                        }
+                        string stSumMemo = string.Format("合计：{0}笔，其中：{1}详细内容请看下表。", md.MyRows.Count, stMemoItem);
+                        sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, NowTime.AddHours(-12), brs, NowTime, MyBase.CompanyTitle, stSumMemo));
+                        sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_入库跟催表。", NowTime, MyBase.CompanyTitle));
+                        string mailto = ConfigurationManager.AppSettings["InStockFollowUPMailTo"], mailcc = ConfigurationManager.AppSettings["InStockFollowUPMailCC"];
                         MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
                         sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
                         sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
@@ -3778,6 +4010,44 @@ SELECT a.*,b.[_ID] FROM OPENROWSET('SQLOLEDB','server=192.168.1.10;uid=sa','Sele
         }
 
         #endregion
+
+        #region 定时踢出特殊权限
+
+        void KickOutSpecialHalfHour()
+        {
+            Thread t = new Thread(KickOutSpecialByHalfHour);
+            t.IsBackground = true;
+            t.Start();
+        }
+
+        void KickOutSpecialByHalfHour()
+        {
+            MyRecord.Say("---------------------定时踢出特殊权限---------------------------------");
+            DateTime bStartTime = DateTime.Now;
+            DateTime NowTime = DateTime.Now, TimeSet = DateTime.MinValue;
+            try
+            {
+                string SQL = "";
+                SQL = @"UPDATE a SET a.ComputerIP = null,a.ComputerName = null,LogoutTime = GETDATE() FROM _HR_Employee a WHERE a.isSpecial = 1 AND a.LogoutTime < a.LoginTime AND DATEDIFF(MI,a.LoginTime,GETDATE()) > 30 ";
+                MyData.MyCommand cmd = new MyData.MyCommand();
+                if (_StopAll) return;
+                if (cmd.Execute(SQL))
+                {
+                    MyRecord.Say("执行完毕，运行正常。");
+                }
+                else
+                {
+                    MyRecord.Say("执行出错。");
+                }
+            }
+            catch (Exception ex)
+            {
+                MyRecord.Say(ex);
+            }
+            MyRecord.Say("-----------------------定时踢出特殊权限-完毕-------------------------------");
+        } 
+        #endregion
+
 
     }
 }

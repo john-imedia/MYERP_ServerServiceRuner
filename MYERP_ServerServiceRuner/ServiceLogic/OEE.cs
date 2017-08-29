@@ -91,16 +91,16 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
 
             if (classtype == 1) //白班
             {
-                fTimeBegin = NowTime.Date.AddHours(7).AddMinutes(55);
+                fTimeBegin = NowTime.Date.AddHours(6).AddMinutes(55);
                 fTimeEnd = NowTime.Date.AddDays(3).AddHours(22);
-                TimeBegin = NowTime.Date.AddHours(7).AddMinutes(55);
+                TimeBegin = NowTime.Date.AddHours(6).AddMinutes(55);
                 TimeEnd = NowTime.Date.AddHours(22).AddMinutes(15);
             }
             else  //夜班
             {
-                fTimeBegin = NowTime.Date.AddHours(19).AddMinutes(55);
+                fTimeBegin = NowTime.Date.AddHours(18).AddMinutes(55);
                 fTimeEnd = NowTime.Date.AddDays(4).AddHours(10);
-                TimeBegin = NowTime.Date.AddHours(19).AddMinutes(55);
+                TimeBegin = NowTime.Date.AddHours(18).AddMinutes(55);
                 TimeEnd = NowTime.Date.AddDays(1).AddHours(8).AddMinutes(15);
             }
             MyData.MyDataParameter[] mfps = new MyData.MyDataParameter[]
@@ -609,12 +609,12 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
             DateTime fTimeBegin = DateTime.MinValue, fTimeEnd = DateTime.MinValue;
             if (classtype == 1) //白班
             {
-                fTimeBegin = NowTime.Date.AddHours(7).AddMinutes(55);
+                fTimeBegin = NowTime.Date.AddHours(6).AddMinutes(55);
                 fTimeEnd = NowTime.Date.AddDays(3).AddHours(22);
             }
             else  //夜班
             {
-                fTimeBegin = NowTime.Date.AddHours(19).AddMinutes(55);
+                fTimeBegin = NowTime.Date.AddHours(18).AddMinutes(55);
                 fTimeEnd = NowTime.Date.AddDays(4).AddHours(10);
             }
             List<Plan_GridItem> _GridData = new List<Plan_GridItem>();
@@ -714,16 +714,16 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
                 }
                 if (finishProdNumb <= 0) finishProdNumb = 0;
                 if (finishNumb <= 0) finishNumb = 0;
-                if (finishNumb > (item.ReqNumb * 1.10) && item.ReqNumb <= 500)   //印刷超数量，要按照需求数计算，不可以超出110%
-                {
-                    item.FinishProdNumb = item.ReqNumb * item.ColNumb * 1.10;
-                    item.FinishSheetNumb = item.ReqNumb * 1.10;
-                }
-                else
-                {
-                    item.FinishProdNumb = finishProdNumb;
-                    item.FinishSheetNumb = finishNumb;
-                }
+                //if (finishNumb > (item.ReqNumb * 1.10) && item.ReqNumb >= 500)   //印刷超数量，要按照需求数计算，不可以超出110%
+                //{
+                //    item.FinishProdNumb = item.ReqNumb * item.ColNumb * 1.10;
+                //    item.FinishSheetNumb = item.ReqNumb * 1.10;
+                //}
+                //else
+                //{
+                item.FinishProdNumb = finishProdNumb;
+                item.FinishSheetNumb = finishNumb;
+                //}
                 item.Type = ((item.Bdd - item.PlanBegin).TotalMinutes > -5 && (item.Edd - item.PlanEnd).TotalMinutes < 5) ? MyConvert.ZHLC("正常") : MyConvert.ZHLC("超出");
                 if (finishProdNumb > 0) foreach (var iv in vf) iv.iCalItem = true;
             }

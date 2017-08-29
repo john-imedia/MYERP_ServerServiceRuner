@@ -122,7 +122,7 @@ namespace MYERP_ServerServiceRuner
                 string SQL = @"
 Declare @NowDate DateTime
 Set @NowDate=Convert(DateTime,Convert(VarChar(10),GetDate(),121),121)
-Select ProdNo = IsNull(A.ProdNo,B.RdsNo),SendDate = IsNull(A.SendDate,B.pdeliver),DateAdd(hh,-8,IsNull(A.SendDate,B.pDeliver)) as DutySendDate,PNumb=isNull(A.PNumb,B.PNumb),
+Select ProdNo = IsNull(A.ProdNo,B.RdsNo),SendDate = IsNull(A.SendDate,B.pdeliver),DateAdd([MI],-485,IsNull(A.SendDate,B.pDeliver)) as DutySendDate,PNumb=isNull(A.PNumb,B.PNumb),
        B.PNumb as ProduceNumber,B.Code,C.Name,C.Type,C.mTypeName as TypeName,C.CustCode
   Into #T
   from [_PMC_ActiveProduceNote_View] B Left Outer Join [_PMC_DeliverPlan_Sendlist] A ON B.[RdsNo] = A.PRODNO

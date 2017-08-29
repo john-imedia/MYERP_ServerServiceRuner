@@ -96,6 +96,7 @@ namespace MYERP_ServerServiceRuner
         class SendIPQCAndScrapBackEmailItem
         {
             public string DepartmentName { get; set; }
+            public string FullSortID { get; set; }
             public int CountNumber { get; set; }
         }
 
@@ -104,6 +105,12 @@ namespace MYERP_ServerServiceRuner
             public string DepartmentName { get; set; }
             public int CountNumber1 { get; set; }
             public int CountNumber2 { get; set; }
+
+            public int CountNumber3 { get; set; }
+
+            public int CountNumber4 { get; set; }
+
+            public int CountNumber5 { get; set; }
         }
 
         void SendIPQCAndScrapBackEmailLoder()
@@ -143,10 +150,19 @@ namespace MYERP_ServerServiceRuner
     部门
     </TD>
     <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    未判定笔数
+    不良品品未判定笔数
     </TD>
     <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    未退料笔数
+    不良品未退料笔数
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    不良品已退料未审核笔数
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    过版纸未退料笔数
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    过版纸已退料未审核笔数
     </TD>
     </TR>
     {1}
@@ -157,7 +173,7 @@ namespace MYERP_ServerServiceRuner
 <DIV><FONT size=5 color=#ff33ff face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请品保和各部门尽快处理完成！</FONT></DIV>
 ";
                 string sd = @"
-<DIV><FONT size=5 color=#ff0000 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 截止到昨天（{0:yy/MM/dd HH}点前）系统没有发现未处理的制程不良品内容。</FONT></DIV>
+<DIV><FONT size=5 color=#ff0000 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 截止到昨天（{0:yy/MM/dd HH}点前）系统没有发现未处理的制程不良品和过版纸内容。</FONT></DIV>
 ";
                 string br = @"
     <TR>
@@ -170,11 +186,31 @@ namespace MYERP_ServerServiceRuner
     <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
     {2}
     </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {3}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {4}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {5}
+    </TD>
     </TR>
 ";
 
                 string SQLRS = @"Exec [_WH_IPQC_Return] -1";   //不良品退料单
                 string SQLQC = @"Exec [_QC_IPQC_Confirm_View] 0,@BTime,@ETime,0,Null,Null,Null,Null,Null";   //不良品判定单
+                string SQLRS1 = @"Select a.RdsNo,b.Name as Department,a.InputDate,a.Inputer,a.StockDate,a.StoreKeeper,a.QCChecker,a.Sender,a.Remark,a.inBonded,a.isBK,a.[Type],departmentFullSortID=b.FullSortID,
+       BondedWord=(Case When a.inBonded =1 Then '保稅' else '非稅' end),
+	   BKWord = (Case When a.isBK =1 Then 'BK' else '' end)
+from [_WH_SemiReject_Receipt] a Inner Join [pbDept] b On a.DeptID = b.[_ID]
+Where isNull(a.Type,'') = '' And a.CheckDate is Null And a.InputDate > '2016-10-01'"; //已退料未审核
+                string SQLGB1 = @"Exec [_WH_IPQC_ReturnScrap_View2] 'N',@BTime,@ETime,0,Null,1,Null,Null,Null,-1,Null"; //未退过版纸
+                string SQLGB2 = @"Select a.RdsNo,b.Name as Department,a.InputDate,a.Inputer,a.StockDate,a.StoreKeeper,a.QCChecker,a.Sender,a.Remark,a.inBonded,a.isBK,a.[Type],departmentFullSortID=b.FullSortID,
+       BondedWord=(Case When a.inBonded =1 Then '保稅' else '非稅' end),
+	   BKWord = (Case When a.isBK =1 Then 'BK' else '' end)
+from [_WH_SemiReject_Receipt] a Inner Join [pbDept] b On a.DeptID = b.[_ID]
+Where isNull(a.Type,'') = 'N' And a.CheckDate is Null And a.InputDate > '2016-10-01'"; //已退过版纸未审核
                 DateTime NowTime = DateTime.Now, BeginTime = DateTime.Parse("2016-01-01 00:00:05");
                 MyData.MyDataParameter[] mps = new MyData.MyDataParameter[]
                 {
@@ -187,11 +223,21 @@ namespace MYERP_ServerServiceRuner
                 MyData.MyDataTable mrs = new MyData.MyDataTable(SQLRS, mps);   //退料
                 MyRecord.Say("后台计算-不良判定");
                 MyData.MyDataTable mqc = new MyData.MyDataTable(SQLQC, mps);   //判定
+                MyRecord.Say("后台计算-退料未审核");
+                MyData.MyDataTable mrs2 = new MyData.MyDataTable(SQLRS1, mps);   //退料未审核
+                MyRecord.Say("后台计算-过版纸未退料");
+                MyData.MyDataTable mgb1 = new MyData.MyDataTable(SQLGB1, mps);   //过版纸未退料
+                MyRecord.Say("后台计算-过版纸退料未审核");
+                MyData.MyDataTable mgb2 = new MyData.MyDataTable(SQLGB2, mps);   //过版纸退料未审
+
                 MyRecord.Say("后台计算完成。");
                 try
                 {
                     List<SendIPQCAndScrapBackEmailItem> lrs = new List<SendIPQCAndScrapBackEmailItem>();
+                    List<SendIPQCAndScrapBackEmailItem> lrs2 = new List<SendIPQCAndScrapBackEmailItem>();
                     List<SendIPQCAndScrapBackEmailItem> lqc = new List<SendIPQCAndScrapBackEmailItem>();
+                    List<SendIPQCAndScrapBackEmailItem> lgb1 = new List<SendIPQCAndScrapBackEmailItem>();
+                    List<SendIPQCAndScrapBackEmailItem> lgb2 = new List<SendIPQCAndScrapBackEmailItem>();
                     HSSFWorkbook wb = new HSSFWorkbook();
                     if (mrs != null && mrs.MyRows.Count > 0)  //退料
                     {
@@ -201,6 +247,7 @@ namespace MYERP_ServerServiceRuner
                                  select new SendIPQCAndScrapBackEmailItem
                                  {
                                      DepartmentName = g.Key,
+                                     FullSortID = g.FirstOrDefault().Value("DepartmentFullSortID"),
                                      CountNumber = g.Count()
                                  };
                         lrs = v1.ToList();
@@ -221,6 +268,7 @@ namespace MYERP_ServerServiceRuner
                                  select new SendIPQCAndScrapBackEmailItem
                                  {
                                      DepartmentName = g.Key,
+                                     FullSortID = g.FirstOrDefault().Value("DepartmentFullSortID"),
                                      CountNumber = g.Count()
                                  };
                         lqc = v2.ToList();
@@ -234,16 +282,89 @@ namespace MYERP_ServerServiceRuner
                     {
                         MyRecord.Say("没有未判定");
                     }
+                    if (mrs2 != null && mrs2.MyRows.Count > 0)  //已退料未审核
+                    {
+                        MyRecord.Say(string.Format("退料未审核，找到了：{0} 行。", mrs2.MyRows.Count));
+                        var v1 = from a in mrs2.MyRows
+                                 group a by a.Value("department") into g
+                                 select new SendIPQCAndScrapBackEmailItem
+                                 {
+                                     DepartmentName = g.Key,
+                                     FullSortID = g.FirstOrDefault().Value("DepartmentFullSortID"),
+                                     CountNumber = g.Count()
+                                 };
+                        lrs2 = v1.ToList();
+                        //				StockDate	StoreKeeper				inBonded	isBK	Type
+
+                        string[] fNames = new string[] { "RdsNo", "Department", "InputDate", "Inputer", "QCChecker", "Sender", "Remark", "BondedWord", "BKWord" };
+                        string[] fTitles = new string[] { "退料单号", "部门", "输入时间", "输入人", "品保", "退料人", "备注", "保税", "BK"};
+                        string[] fSortFields = new string[] { "departmentFullSortID", "RdsNo", "Department" };
+                        ExportToExcelIPQCAndScrapBack(wb, mrs2, fNames, fTitles, "退料单未审核的制程不良品", fSortFields);
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有未审核");
+                    }
+                    if (mgb1 != null && mgb1.MyRows.Count > 0)  //退料
+                    {
+                        MyRecord.Say(string.Format("过版纸未退料，找到了：{0} 行。", mgb1.MyRows.Count));
+                        var v1 = from a in mgb1.MyRows
+                                 group a by a.Value("department") into g
+                                 select new SendIPQCAndScrapBackEmailItem
+                                 {
+                                     DepartmentName = g.Key,
+                                     FullSortID = g.FirstOrDefault().Value("DepartmentFullSortID"),
+                                     CountNumber = g.Count()
+                                 };
+                        lgb1 = v1.ToList();
+                        string[] fNames = new string[] { "department", "ProduceNo", "ProcessName", "MachineName", "ProductCode", "ProdName", "Bonded", "SecretWord", "ProjectName", "accNoterdsNo", "RejectrdsNo", "ReceiptrdsNo", "ReceiptStockDate", "rejNumb" };
+                        string[] fTitles = new string[] { "部门", "工单号", "工序", "机台", "产品编号", "料号", "保税", "BK", "不良项目", "完工单号", "不合格品单", "退料单号", "退料时间", "退料数量" };
+                        string[] fSortFields = new string[] { "departmentFullSortID", "ProcessID", "ProduceNo" };
+                        ExportToExcelIPQCAndScrapBack(wb, mgb1, fNames, fTitles, "未退料的过版纸", fSortFields);
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有过版纸未退料");
+                    }
+                    if (mgb2 != null && mgb2.MyRows.Count > 0)  //过版纸退料未审核
+                    {
+                        MyRecord.Say(string.Format("过版纸退料未审核，找到了：{0} 行。", mgb2.MyRows.Count));
+                        var v1 = from a in mgb2.MyRows
+                                 group a by a.Value("department") into g
+                                 select new SendIPQCAndScrapBackEmailItem
+                                 {
+                                     DepartmentName = g.Key,
+                                     FullSortID = g.FirstOrDefault().Value("DepartmentFullSortID"),
+                                     CountNumber = g.Count()
+                                 };
+                        lgb2 = v1.ToList();
+                        string[] fNames = new string[] { "RdsNo", "Department", "InputDate", "Inputer", "QCChecker", "Sender", "Remark", "BondedWord", "BKWord" };
+                        string[] fTitles = new string[] { "退料单号", "部门", "输入时间", "输入人", "品保", "退料人", "备注", "保税", "BK" };
+                        string[] fSortFields = new string[] { "departmentFullSortID", "RdsNo", "Department" };
+                        ExportToExcelIPQCAndScrapBack(wb, mgb2, fNames, fTitles, "过版纸已退料未审核", fSortFields);
+                    }
+                    else
+                    {
+                        MyRecord.Say("过版纸没有退料未审核");
+                    }
+
+
 
                     MyRecord.Say("生成邮件内容");
                     var vv = (from a in lqc
-                              select a.DepartmentName).Union(
-                            from a in lrs
-                            select a.DepartmentName
-                            );
+                              select a).Union(
+                              from b in lrs
+                              select b).Union(
+                              from c in lrs2
+                              select c).Union(
+                              from d in lgb1
+                              select d).Union(
+                              from e in lgb2
+                              select e);
 
                     var vvv = from a in vv
-                              group a by a into g
+                              orderby a.FullSortID
+                              group a by a.DepartmentName into g
                               select g.Key;
 
                     List<SendIPQCAndScrapBackEmailItemRow> xlist = new List<SendIPQCAndScrapBackEmailItemRow>();
@@ -266,6 +387,30 @@ namespace MYERP_ServerServiceRuner
                         {
                             xritem.CountNumber2 = vv2.Sum();  //退料数
                         }
+
+                        var vv3 = from a in lrs2
+                                  where a.DepartmentName == item
+                                  select a.CountNumber;
+                        if (vv3.IsNotEmptySet())
+                        {
+                            xritem.CountNumber3 = vv3.Sum(); //退料未审核
+                        }
+
+                        var vv4 = from a in lgb1
+                                  where a.DepartmentName == item
+                                  select a.CountNumber;
+                        if (vv4.IsNotEmptySet())
+                        {
+                            xritem.CountNumber4 = vv4.Sum(); //过版纸
+                        }
+
+                        var vv5 = from a in lgb2
+                                  where a.DepartmentName == item
+                                  select a.CountNumber;
+                        if (vv5.IsNotEmptySet())
+                        {
+                            xritem.CountNumber5 = vv5.Sum(); //过版纸未审核
+                        }
                         xlist.Add(xritem);
                     }
 
@@ -274,7 +419,7 @@ namespace MYERP_ServerServiceRuner
                     {
                         foreach (var item in xlist)
                         {
-                            brs += string.Format(br, item.DepartmentName, item.CountNumber1, item.CountNumber2);
+                            brs += string.Format(br, item.DepartmentName, item.CountNumber1, item.CountNumber2, item.CountNumber3, item.CountNumber4, item.CountNumber5);
                         }
                         string gds = string.Format(gd, NowTime.AddDays(-1).Date.AddHours(20), brs);
                         xBodyString = string.Format(body, gds, NowTime, MyBase.CompanyTitle);
@@ -361,7 +506,7 @@ namespace MYERP_ServerServiceRuner
             if (mds.MyRows.IsNotEmptySet())
             {
                 var vListGridRow = from a in mds.MyRows
-                                   orderby a.Value(sortFields[0]), a.Value(sortFields[1]), a.DateTimeValue(sortFields[2])
+                                   orderby a.Value(sortFields[0]), a.Value(sortFields[1]), a.Value(sortFields[2])
                                    select a;
                 MyRecord.Say(string.Format("输出表格{0}", caption));
                 HSSFSheet st = (HSSFSheet)wb.CreateSheet(caption);
@@ -400,46 +545,71 @@ namespace MYERP_ServerServiceRuner
                 xCellCaption1.CellStyle = cds3;
                 st.AddMergedRegion(new CellRangeAddress(1, 1, 0, fileds.Length - 1));
 
+                //MyRecord.Say(string.Format("输出表格{0}，表格已经创建，建立表头。", caption));
+
                 HSSFRow rNoteCaption2 = (HSSFRow)st.CreateRow(2);
                 for (int i = 0; i < fileds.Length; i++)
                 {
                     ICell xCellCaption = rNoteCaption2.CreateCell(i);
                     xCellCaption.SetCellValue(LCStr(titles[i]));
                     xCellCaption.CellStyle = cellNomalStyle;
+                    //MyRecord.Say(string.Format("输出表格{0}，标题行，{1}列", caption, LCStr(titles[i])));
                 }
+
+                MyRecord.Say(string.Format("输出表格{0}，表格已经创建，建立表头完成。", caption));
+
                 int uu = 3;
+
                 foreach (var item in vListGridRow)
                 {
-                    HSSFRow rNoteCaption3 = (HSSFRow)st.CreateRow(uu);
-                    for (int i = 0; i < fileds.Length; i++)
+                    if (item.IsNotNull())
                     {
-                        string fieldname = fileds[i];
-                        ICell xCellCaption = rNoteCaption3.CreateCell(i);
-                        DataColumn dc = mds.Columns[fieldname];
-
-                        if (dc.DataType == typeof(DateTime))
+                        HSSFRow rNoteCaption3 = (HSSFRow)st.CreateRow(uu);
+                        for (int i = 0; i < fileds.Length; i++)
                         {
-                            xCellCaption.SetCellValue(item.DateTimeValue(fieldname));
-                            xCellCaption.CellStyle = cellDateStyle;
-                            st.SetColumnWidth(i, 20 * 256);
-                        }
-                        else if (dc.DataType == typeof(double) || dc.DataType == typeof(Single) || dc.DataType == typeof(int))
-                        {
-                            xCellCaption.SetCellValue(item.Value<double>(fieldname));
-                            xCellCaption.CellStyle = cellIntStyle;
-                            st.SetColumnWidth(i, 15 * 256);
-                        }
-                        else
-                        {
-                            xCellCaption.SetCellValue(LCStr(item.Value(fieldname)));
-                            xCellCaption.CellStyle = cellNomalStyle;
-                            if (st.GetColumnWidth(i) < (item.Value(fieldname).Length + 4) * 256)
+                            string fieldname = fileds[i];
+                            //MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列", caption, uu, fieldname));
+                            ICell xCellCaption = rNoteCaption3.CreateCell(i);
+                            if (mds.Columns.Contains(fieldname))
                             {
-                                st.SetColumnWidth(i, (item.Value(fieldname).Length + 4) * 256);
+                                //MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列，列存在。", caption, uu, fieldname));
+                                DataColumn dc = mds.Columns[fieldname];
+                                if (dc.IsNotNull())
+                                {
+                                    if (dc.DataType == typeof(DateTime))
+                                    {
+                                        //MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列，日期列。", caption, uu, fieldname));
+                                        xCellCaption.SetCellValue(item.DateTimeValue(fieldname));
+                                        xCellCaption.CellStyle = cellDateStyle;
+                                        st.SetColumnWidth(i, 20 * 256);
+                                    }
+                                    else if (dc.DataType == typeof(double) || dc.DataType == typeof(Single) || dc.DataType == typeof(int) || dc.DataType == typeof(decimal) || dc.DataType == typeof(Int16))
+                                    {
+                                        //MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列，數字列。", caption, uu, fieldname));
+                                        xCellCaption.SetCellValue(item.Value<double>(fieldname));
+                                        xCellCaption.CellStyle = cellIntStyle;
+                                        st.SetColumnWidth(i, 15 * 256);
+                                    }
+                                    else
+                                    {
+                                        //MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列，字符列。", caption, uu, fieldname));
+                                        xCellCaption.SetCellValue(LCStr(item.Value(fieldname)));
+                                        xCellCaption.CellStyle = cellNomalStyle;
+                                        if (st.GetColumnWidth(i) < (item.Value(fieldname).Length + 4) * 256)
+                                        {
+                                            st.SetColumnWidth(i, (item.Value(fieldname).Length + 4) * 256);
+                                        }
+                                    }
+                                    //MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列，完成。", caption, uu, fieldname));
+                                }
+                            }
+                            else
+                            {
+                                MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列，没有这个字段。", caption, uu, fieldname));
                             }
                         }
+                        uu++;
                     }
-                    uu++;
                 }
             }
             MyRecord.Say(string.Format("输出表格{0}完成。", caption));
