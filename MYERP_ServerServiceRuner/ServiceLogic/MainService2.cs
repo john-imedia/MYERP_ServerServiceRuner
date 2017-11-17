@@ -204,14 +204,15 @@ namespace MYERP_ServerServiceRuner
        BondedWord=(Case When a.inBonded =1 Then '保稅' else '非稅' end),
 	   BKWord = (Case When a.isBK =1 Then 'BK' else '' end)
 from [_WH_SemiReject_Receipt] a Inner Join [pbDept] b On a.DeptID = b.[_ID]
-Where isNull(a.Type,'') = '' And a.CheckDate is Null And a.InputDate > '2016-10-01'"; //已退料未审核
+Where isNull(a.Type,'') = '' And a.CheckDate is Null And a.InputDate > '2016-10-01' And a.InputDate > @BTime"; //已退料未审核
                 string SQLGB1 = @"Exec [_WH_IPQC_ReturnScrap_View2] 'N',@BTime,@ETime,0,Null,1,Null,Null,Null,-1,Null"; //未退过版纸
                 string SQLGB2 = @"Select a.RdsNo,b.Name as Department,a.InputDate,a.Inputer,a.StockDate,a.StoreKeeper,a.QCChecker,a.Sender,a.Remark,a.inBonded,a.isBK,a.[Type],departmentFullSortID=b.FullSortID,
-       BondedWord=(Case When a.inBonded =1 Then '保稅' else '非稅' end),
-	   BKWord = (Case When a.isBK =1 Then 'BK' else '' end)
-from [_WH_SemiReject_Receipt] a Inner Join [pbDept] b On a.DeptID = b.[_ID]
-Where isNull(a.Type,'') = 'N' And a.CheckDate is Null And a.InputDate > '2016-10-01'"; //已退过版纸未审核
+                                  BondedWord=(Case When a.inBonded =1 Then '保稅' else '非稅' end),
+	                              BKWord = (Case When a.isBK =1 Then 'BK' else '' end)
+                                  from [_WH_SemiReject_Receipt] a Inner Join [pbDept] b On a.DeptID = b.[_ID]
+Where isNull(a.Type,'') = 'N' And a.CheckDate is Null And a.InputDate > '2016-10-01' And a.InputDate > @BTime"; //已退过版纸未审核
                 DateTime NowTime = DateTime.Now, BeginTime = DateTime.Parse("2016-01-01 00:00:05");
+                if (CompanyType == "MD") BeginTime = DateTime.Parse("2017-06-01 00:00:05");
                 MyData.MyDataParameter[] mps = new MyData.MyDataParameter[]
                 {
                     new MyData.MyDataParameter("@BTime",BeginTime , MyData.MyDataParameter.MyDataType.DateTime),
@@ -326,6 +327,7 @@ Where isNull(a.Type,'') = 'N' And a.CheckDate is Null And a.InputDate > '2016-10
                     {
                         MyRecord.Say("没有过版纸未退料");
                     }
+
                     if (mgb2 != null && mgb2.MyRows.Count > 0)  //过版纸退料未审核
                     {
                         MyRecord.Say(string.Format("过版纸退料未审核，找到了：{0} 行。", mgb2.MyRows.Count));
@@ -614,7 +616,6 @@ Where isNull(a.Type,'') = 'N' And a.CheckDate is Null And a.InputDate > '2016-10
             }
             MyRecord.Say(string.Format("输出表格{0}完成。", caption));
         }
-
         #endregion
 
         #region 记录所有的看板要件
@@ -695,8 +696,8 @@ Drop Table #T
 Drop Table #X
 ";
             DateTime NowDateTime = DateTime.Now;
-            MyRecord.Say(string.Format("向前推：{0}周。", CacluateKanbanWeekSpanTimes));
-            DateTime xDateBegin = NowDateTime.AddWeeks(-CacluateKanbanWeekSpanTimes).Date.AddHours(8), xDateEnd = NowDateTime.AddDays(1).Date.AddHours(9);
+            MyRecord.Say(string.Format("向前推：{0}天。", CacluateKanbanDaySpanTimes));
+            DateTime xDateBegin = NowDateTime.AddDays(-CacluateKanbanDaySpanTimes).Date.AddHours(8), xDateEnd = NowDateTime.AddDays(1).Date.AddHours(9);
 
             MyData.MyDataParameter[] mps = new MyData.MyDataParameter[]
             {

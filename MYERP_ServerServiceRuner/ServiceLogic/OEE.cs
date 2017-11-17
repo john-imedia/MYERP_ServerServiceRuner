@@ -233,24 +233,24 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
 
                         if (classType == 1)
                         {
-                            if (BDD.TimeOfDay.Hours > 7 && BDD.TimeOfDay.Hours < 12 && EDD.TimeOfDay.Hours > 17 && EDD.TimeOfDay.Hours < 22)
+                            if (BDD.TimeOfDay.Hours >= 7 && BDD.TimeOfDay.Hours < 12 && EDD.TimeOfDay.Hours > 17 && EDD.TimeOfDay.Hours < 22)
                             {
                                 PlanActivationTime -= 2;
                             }
                             else if ((BDD.TimeOfDay.Hours > 12 && BDD.TimeOfDay.Hours < 17 && EDD.TimeOfDay.Hours > 17 && EDD.TimeOfDay.Hours < 22)
-                                  || (BDD.TimeOfDay.Hours > 7 && BDD.TimeOfDay.Hours < 12 && EDD.TimeOfDay.Hours > 13 && EDD.TimeOfDay.Hours < 17))
+                                  || (BDD.TimeOfDay.Hours >= 7 && BDD.TimeOfDay.Hours < 12 && EDD.TimeOfDay.Hours > 13 && EDD.TimeOfDay.Hours < 17))
                             {
                                 PlanActivationTime -= 1;
                             }
                         }
                         else if (classType == 2)
                         {
-                            if (BDD.TimeOfDay.Hours > 19 && BDD.TimeOfDay.Hours < 24 && EDD.TimeOfDay.Hours > 5 && EDD.TimeOfDay.Hours < 9)
+                            if (BDD.TimeOfDay.Hours >= 19 && BDD.TimeOfDay.Hours < 24 && EDD.TimeOfDay.Hours > 5 && EDD.TimeOfDay.Hours < 9)
                             {
                                 PlanActivationTime -= 2;
                             }
                             else if ((BDD.TimeOfDay.Hours > 0 && BDD.TimeOfDay.Hours < 5 && EDD.TimeOfDay.Hours > 5 && EDD.TimeOfDay.Hours < 9) ||
-                                     (BDD.TimeOfDay.Hours > 19 && BDD.TimeOfDay.Hours < 24 && EDD.TimeOfDay.Hours < 5))
+                                     (BDD.TimeOfDay.Hours >= 19 && BDD.TimeOfDay.Hours < 24 && EDD.TimeOfDay.Hours < 5))
                             {
                                 PlanActivationTime -= 1;
                             }

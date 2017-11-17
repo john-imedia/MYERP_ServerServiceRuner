@@ -10,9 +10,15 @@ using System.Threading;
 using System.ServiceProcess;
 using System.Text;
 using System.Windows.Forms;
+using System.IO;
 using MYERP_ServerServiceRuner.Base;
 using NPOI;
 using NPOI.Util;
+using NPOI.HPSF;
+using NPOI.HSSF.UserModel;
+using NPOI.HSSF.Util;
+using NPOI.SS.UserModel;
+using NPOI.SS.Util;
 
 namespace MYERP_ServerServiceRuner
 {
@@ -28,15 +34,16 @@ namespace MYERP_ServerServiceRuner
         /// <summary>
         /// 上一次计算完工数领料数计算时间。
         /// </summary>
-        public DateTime ProduceFeedBackLastRunTime;
+        public DateTime ProduceFeedBackLastRunTime, ProduceEstimateLastRunTime;
 
-        public string CompanyType = string.Empty;
+        public static string CompanyType { get; set; }
+
         public double CheckStockTimers = 0;   //3.25;
         /// <summary>
         /// 计算达成率，向前计算多少天的设置。
         /// </summary>
         public int CacluatePlanRateDaySpanTimes = 6,
-                   CacluateKanbanWeekSpanTimes = 3;
+                   CacluateKanbanDaySpanTimes = 6;
 
         public bool FirstStart = false,
                     CheckStockNoteOnceTimeSwitch = false,
@@ -81,23 +88,27 @@ namespace MYERP_ServerServiceRuner
                 else
                     CacluatePlanRateDaySpanTimes = 6;
 
-                if (ConfigurationManager.AppSettings.AllKeys.Contains("CacluateKanbanWeekSpanTimes"))
-                    CacluateKanbanWeekSpanTimes = ConfigurationManager.AppSettings.Get("CacluateKanbanWeekSpanTimes").ConvertTo<int>(6, true);
+                if (ConfigurationManager.AppSettings.AllKeys.Contains("CacluateKanbanDaySpanTimes"))
+                    CacluateKanbanDaySpanTimes = ConfigurationManager.AppSettings.Get("CacluateKanbanDaySpanTimes").ConvertTo<int>(6, true);
                 else
-                    CacluateKanbanWeekSpanTimes = 3;
+                    CacluateKanbanDaySpanTimes = 6;
 
                 //MyRecord.Say(string.Format("CacluatePlanRateDaySpanTimes = {0}", CacluatePlanRateDaySpanTimes));
 
                 DateTime NowTime = DateTime.Now;
                 int h = NowTime.Hour, m = NowTime.Minute, s = NowTime.Second, d = NowTime.Day;
                 DayOfWeek w = NowTime.DayOfWeek;
+
+
                 if (FirstStart)
                 {
                     FirstStart = false;
                     MyRecord.Say("首次启动，时间循环已经开启。");
-                    CheckStockStartTime = NowTime;
+                    CheckStockStartTime = ProduceEstimateLastRunTime = NowTime;
                     ProduceFeedBackLastRunTime = NowTime.AddDays(-5);
+                    MyRecord.Say(string.Format("设定时间成功：CheckStockStartTime={0} ProduceFeedBackLastRunTime = {1} ", CheckStockStartTime, ProduceFeedBackLastRunTime));
                     #region 暂停
+                    ProduceEstimateLoader();
                     #endregion
                 }
 
@@ -107,9 +118,10 @@ namespace MYERP_ServerServiceRuner
                     //MyRecord.Say(string.Format("临时启动审核库存单据，CheckStockNoteOnceTime = {0}", CheckStockNoteOnceTime));
                     if (CheckStockNoteOnceTime == "TRUE" || CheckStockNoteOnceTime == "1" || CheckStockNoteOnceTime == "T")
                     {
-                        CheckStockStartTime = NowTime;
                         if (!CheckStockRecordRunning && CheckStockNoteOnceTimeSwitch)
                         {
+                            CheckStockStartTime = NowTime;
+                            //MyRecord.Say(string.Format("临时审核库存启动：CheckStockNoteOnceTime={0}  CheckStockStartTime={1}", CheckStockNoteOnceTime, CheckStockStartTime));
                             MyRecord.Say("临时启动审核库存单据，已经启动");
                             CheckStockRecordRunning = true;
                             CheckStockRecordLoder();   //審核出入庫單。
@@ -140,22 +152,28 @@ namespace MYERP_ServerServiceRuner
                         ProdKanbanSaveOnceTimeSwitch = true;
                     }
                 }
-
-                if (h == 0 && m == 0 & s == 0) //计时器归零
+                //计时器归零
+                if (h == 0 && m == 0 & s == 0)
                 {   ///每天0点对表，计时器归零。
                     ProduceFeedBackLastRunTime = CheckStockStartTime = CalculatePruchaseStartTime = DateTime.Now;
+                    MyRecord.Say("重置计数器");
                 }
-
-                ///每四个小时候审核一次仓库单据
-                if ((NowTime - CheckStockStartTime).TotalHours > 4)
+                ///每小时候审核一次仓库单据
+                if ((NowTime - CheckStockStartTime).TotalHours > 1.2)
                 {
-                    CheckStockStartTime = NowTime;
+                    MyRecord.Say("每小时审核一次仓库单据，准备开启线程。");
                     if (!CheckStockRecordRunning)
                     {
+                        CheckStockStartTime = NowTime;
                         CheckStockRecordRunning = true;
                         CheckStockRecordLoder();   //定時審核出入庫單。
                         Thread.Sleep(200);
                     }
+                    else
+                    {
+                        MyRecord.Say("上一个正在运行中。");
+                    }
+                    MyRecord.Say("开启完毕");
                 }
                 //每隔1.4个小时计算一次采购数量
                 if ((NowTime - CalculatePruchaseStartTime).TotalHours > 1.4)
@@ -178,11 +196,10 @@ namespace MYERP_ServerServiceRuner
                     ConfirmPlanHalfHour();
                     Thread.Sleep(200);
                 }
-
                 //每隔11分钟跑一次踢出特殊权限。
                 if ((NowTime - KickOutSPUserStartTime).TotalMinutes > 11)
                 {
-                    KickOutSPUserStartTime = NowTime ;
+                    KickOutSPUserStartTime = NowTime;
                     KickOutSpecialHalfHour();
                     Thread.Sleep(200);
                 }
@@ -203,12 +220,12 @@ namespace MYERP_ServerServiceRuner
                         KanbanRecorderLoader();
                     }
                 }
-                if ((h == 13 || h == 22) && m == 15 && s == 15)
+                if ((h == 13 || h == 22) && m == 15 && s == 15) //计算OEE
                 {
                     MyRecord.Say("开启计算OEE线程");
                     OEE_ForSaveLoader(NowTime);
                 }
-                if ((h == 8 || h == 21) && m == 45 && s == 15) //审核排程
+                if ((h == 8 && m == 45 && s == 15) || (h == 21 && m == 05 && s == 15)) //审核排程
                 {
                     MyRecord.Say("每天定时審核排程");
                     ConfirmProcessPlanLoader(); //每天定时审核单据，先审核单据。
@@ -223,11 +240,16 @@ namespace MYERP_ServerServiceRuner
                     ProduceFeedBackLoder();
                     Thread.Sleep(500);
                 }
+                else if (h == 2 && m == 3 && s == 30)
+                {
+                    ProduceEstimateLoader();
+                    Thread.Sleep(1000);
+                }
                 else if (h == 4 && m == 2 && s == 1) //自动计算库存的最后出库日期，平均周转天数，反馈入库时间到出库表
                 {
                     StockCalculateLoader();
                 }
-                else if (((h == 7 || h == 19) && m == 35 && s == 10)) //清理排程
+                else if (((h == 5 || h == 17) && m == 35 && s == 10)) //清理排程
                 {
                     if (!PlanRecordCleanRuning) PlanRecordCleanLoder(); ///每天清理排程
                 }
@@ -237,27 +259,45 @@ namespace MYERP_ServerServiceRuner
                     LogingFileCleanLoader();
                 }
 
-                if (d == 1 && h == 8 && m == 3 && s == 17)  //每月1日8点发送上个月的达成率和纪律
+                if (d == 2 && h == 8 && m == 3 && s == 17)  //每月1日8点发送上个月的达成率和纪律
                 {
                     SendKanbanEmail_Performance(NowTime);
                     SendKanbanEmail_Inspect(NowTime);
                 }
 
-                if (w == DayOfWeek.Monday || w == DayOfWeek.Tuesday || w == DayOfWeek.Wednesday || w == DayOfWeek.Thursday || w == DayOfWeek.Friday || w == DayOfWeek.Saturday)
-                {//工作日发
-                    if (h == 7 && m == 17 && s == 12) //发送未审核工单
+                if (w != DayOfWeek.Sunday)  //工作日发
+                {
+                    if (h == 7)
                     {
-                        SendProduceDayReportLoder(); //每天发送未审核工单，每天早7点发送。
-                        Thread.Sleep(1000);
-                        SendProduceUnFinishEmailLoder(); //未结单工作日发送。
-                    }
-                    else if (h == 6 && m == 17 && s == 12) //发送不良超100%
-                    {
-                        RejectSendMailLoader();  ///发送不良率超过100%的列表，每天早6点发送。
-                    }
-                    else if (h == 7 && m == 17 && s == 27) //每天发送8D报告跟踪表
-                    {
-                        ProblemSolving8DReportLoder();
+                        if (m == 1 && s == 15)       //发送每日出货计划量
+                        {
+                            DeliverPlanNumbSumSender();
+                        }
+                        else if (m == 5 && s == 15)  //发送不良超100%
+                        {
+                            RejectSendMailLoader();  ///发送不良率超过100%的列表，每天早6点发送。
+                        }
+                        else if (m == 10 && s == 15) //发送未审核工单
+                        {
+                            SendProduceDayReportLoder(); //每天发送未审核工单，每天早7点发送。
+                        }
+                        else if (m == 12 && s == 15) //未结单工作日发送。
+                        {
+                            SendProduceUnFinishEmailLoder();
+                        }
+                        else if (m == 15 && s == 15) //每天发送8D报告跟踪表
+                        {
+                            ProblemSolving8DReportLoder();
+                        }
+                        else if (m == 20 && s == 30) //发送未判定和未退料
+                        {
+                            SendIPQCAndScrapBackEmailLoder();
+                        }
+                        else if (m == 35 && s == 7)  //发送入库跟催表。
+                        {
+                            MyRecord.Say("发送入库跟催表，时间循环启动。");
+                            SendProduceUnFinishInStockEmailLoder();
+                        }
                     }
                     else if (h == 11 && m == 55 && s == 51) //自动计算“三日出货计划异常”异常项目发送邮件。
                     {
@@ -267,21 +307,9 @@ namespace MYERP_ServerServiceRuner
                     {
                         MachineRepairReportLoder();
                     }
-                    else if (h == 0 && m == 25 && s == 7) //发送工单差异数
+                    else if (h == 22 && m == 55 && s == 52) //发送工单差异数
                     {
                         SendProduceDiffNumbEmailLoder();   ///每天零点发送昨天工单差异数
-                    }
-                    else if (h == 6 && m == 47 && s == 45) //发送未判定和未退料
-                    {
-                        SendIPQCAndScrapBackEmailLoder();
-                    }
-                    else if (h == 6 && m == 31 && s == 07) //发送入库跟催表。
-                    {
-                        SendProduceUnFinishInStockEmailLoder();
-                    }
-                    else if (h == 7 && m == 1 && s == 9) //发送每日出货计划量
-                    {
-                        DeliverPlanNumbSumSender();
                     }
                 }
             }
@@ -393,403 +421,51 @@ namespace MYERP_ServerServiceRuner
             DateTime StopTime = NowTime.AddHours(0 - CheckStockTimers);
             MyRecord.Say(string.Format("审核截止时间：{0:yy/MM/dd HH:mm}", StopTime));
             CheckStockRecordRunning = true;
-            #region 審核產成品入庫----新版
             try
             {
-                MyRecord.Say("审核产成品入库单——新ERP系统审核");
-                SQL = @"Select * from stProduceStock Where InputDate < @InputEnd And isNull(Status,0)=0 And isono='NEWERP'";
-                MyData.MyDataTable mTableProduceInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
-                if (_StopAll) return;
-                if (mTableProduceInStock != null && mTableProduceInStock.MyRows.Count > 0)
-                {
-                    string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableProduceInStock.MyRows.Count);
-                    MyRecord.Say(memo);
-                    int mTableProduceInStockCount = 1;
-                    foreach (MyData.MyDataRow r in mTableProduceInStock.MyRows)
-                    {
-                        if (_StopAll) return;
-                        int CurID = Convert.ToInt32(r["_ID"]);
-                        string RdsNo = Convert.ToString(r["RdsNo"]);
-                        memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableProduceInStockCount, RdsNo, CurID, r["InputDate"]);
-                        MyRecord.Say(memo);
-                        if (!RecordCheck("stProduceStock", "_WH_ProduceEntryWarehouse_StatusRecorder", CurID, RdsNo))
-                        {
-                            MyRecord.Say("审核错误！");
-                        }
-                        mTableProduceInStockCount++;
-                    }
-                }
-                else
-                {
-                    MyRecord.Say("没有获取到任何内容");
-                }
-                MyRecord.Say("审核产成品入库单——新ERP系统审核，完成");
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            #endregion
-
-            #region 審核其他入库----新版
-            try
-            {
-                MyRecord.Say("审核其他入库单——新ERP系统审核");
-                SQL = @"Select * from stOtherStock Where InputDate < @InputEnd And isNull(Status,0)=0 And otherno='NEWERP'";
-                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
-                if (_StopAll) return;
-                if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
-                {
-                    string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOtherInStock.MyRows.Count);
-                    MyRecord.Say(memo);
-                    int mTableOtherInStockCount = 1;
-                    foreach (MyData.MyDataRow r in mTableOtherInStock.MyRows)
-                    {
-                        if (_StopAll) return;
-                        int CurID = Convert.ToInt32(r["_ID"]);
-                        string RdsNo = Convert.ToString(r["RdsNo"]);
-                        memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherInStockCount, RdsNo, CurID, r["InputDate"]);
-                        MyRecord.Say(memo);
-                        if (!RecordCheck("stOtherStock", "_WH_OtherStockIn_StatusRecorder", CurID, RdsNo))
-                        {
-                            MyRecord.Say("审核错误！");
-                        }
-                        mTableOtherInStockCount++;
-                    }
-                }
-                else
-                {
-                    MyRecord.Say("没有获取到任何内容");
-                }
-                MyRecord.Say("审核其他入库单——新ERP系统审核，完成");
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            #endregion
-
-            #region 審核生产领料----新版
-            try
-            {
-                MyRecord.Say("审核生产领料单——新ERP系统审核");
-                SQL = @"Select * from stProduceOut Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO='NEWERP'";
-                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
-                if (_StopAll) return;
-                if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
-                {
-                    string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOtherInStock.MyRows.Count);
-                    MyRecord.Say(memo);
-                    int mTableOtherInStockCount = 1;
-                    foreach (MyData.MyDataRow r in mTableOtherInStock.MyRows)
-                    {
-                        if (_StopAll) return;
-                        int CurID = Convert.ToInt32(r["_ID"]);
-                        string RdsNo = Convert.ToString(r["RdsNo"]);
-                        memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherInStockCount, RdsNo, CurID, r["InputDate"]);
-                        MyRecord.Say(memo);
-                        if (!RecordCheck("stProduceOut", "_WH_ProducePicking_StatusRecorder", CurID, RdsNo))
-                        {
-                            MyRecord.Say("审核错误！");
-                        }
-                        mTableOtherInStockCount++;
-                    }
-                }
-                else
-                {
-                    MyRecord.Say("没有获取到任何内容");
-                }
-                MyRecord.Say("审核其他入库单——新ERP系统审核，完成");
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            #endregion
-
-            #region 審核產成品入庫---旧版
-            try
-            {
-                MyRecord.Say("审核产成品入库单——旧ERP系统审核");
-                SQL = @"Select * from stProduceStock Where InputDate < @InputEnd And isNull(Status,0)=0 And isNull(isono,'')=''";
-                MyData.MyDataTable mTableProduceInStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
-                if (_StopAll) return;
-                if (mTableProduceInStock_OLD != null && mTableProduceInStock_OLD.MyRows.Count > 0)
-                {
-                    string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableProduceInStock_OLD.MyRows.Count);
-                    MyRecord.Say(memo);
-                    int mTableProduceInStockCount = 1;
-                    foreach (MyData.MyDataRow r in mTableProduceInStock_OLD.MyRows)
-                    {
-                        if (_StopAll) return;
-                        int CurID = Convert.ToInt32(r["_ID"]);
-                        string RdsNo = Convert.ToString(r["RdsNo"]);
-                        memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableProduceInStockCount, RdsNo, CurID, r["InputDate"]);
-                        MyRecord.Say(memo);
-                        string UpdateOLD_SQL = @"Update stProduceStock Set CheckDate=GetDate(),Checker='自動審核',Status=1 Where RdsNo=@RdsNo";
-                        MyData.MyCommand mc = new MyData.MyCommand();
-                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
-                        {
-                            MyRecord.Say("审核错误！");
-                        }
-                        mTableProduceInStockCount++;
-                    }
-                }
-                else
-                {
-                    MyRecord.Say("没有获取到任何内容");
-                }
-                MyRecord.Say("审核产成品入库单——旧ERP系统审核，完成");
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            #endregion
-
-            #region 審核其他入庫---旧版
-            try
-            {
-                MyRecord.Say("审核其他入库单——旧ERP系统审核");
-                SQL = @"Select * from stOtherStock Where InputDate < @InputEnd And isNull(Status,0)=0 And isNull(otherno,'')<>'NEWERP'";
-                MyData.MyDataTable mTableOtherInStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
-                if (_StopAll) return;
-                if (mTableOtherInStock_OLD != null && mTableOtherInStock_OLD.MyRows.Count > 0)
-                {
-                    string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOtherInStock_OLD.MyRows.Count);
-                    MyRecord.Say(memo);
-                    int mTableOtherInStockCount = 1;
-                    foreach (MyData.MyDataRow r in mTableOtherInStock_OLD.MyRows)
-                    {
-                        if (_StopAll) return;
-                        int CurID = Convert.ToInt32(r["_ID"]);
-                        string RdsNo = Convert.ToString(r["RdsNo"]);
-                        memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherInStockCount, RdsNo, CurID, r["InputDate"]);
-                        MyRecord.Say(memo);
-                        string UpdateOLD_SQL = @"Update stOtherStock Set CheckDate=GetDate(),Checker2='自動審核',Status=1 Where RdsNo=@RdsNo";
-                        MyData.MyCommand mc = new MyData.MyCommand();
-                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
-                        {
-                            MyRecord.Say("审核错误！");
-                        }
-                        mTableOtherInStockCount++;
-                    }
-                }
-                else
-                {
-                    MyRecord.Say("没有获取到任何内容");
-                }
-                MyRecord.Say("审核其他入库单——旧ERP系统审核，完成");
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            #endregion
-
-            #region 審核采购入庫---旧版
-            try
-            {
-                MyRecord.Say("审核产成品入库单——旧ERP系统审核");
-                SQL = @"Select * from coPurchStock Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO <> 'NEWERP'";
-                MyData.MyDataTable mTablePurchInStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
-                if (_StopAll) return;
-                if (mTablePurchInStock_OLD != null && mTablePurchInStock_OLD.MyRows.Count > 0)
-                {
-                    string memo = string.Format("读取了{0}条记录，下面开始审核....", mTablePurchInStock_OLD.MyRows.Count);
-                    MyRecord.Say(memo);
-                    int mTableProduceInStockCount = 1;
-                    foreach (MyData.MyDataRow r in mTablePurchInStock_OLD.MyRows)
-                    {
-                        if (_StopAll) return;
-                        int CurID = Convert.ToInt32(r["ID"]);
-                        string RdsNo = Convert.ToString(r["RdsNo"]);
-                        memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableProduceInStockCount, RdsNo, CurID, r["InputDate"]);
-                        MyRecord.Say(memo);
-                        string UpdateOLD_SQL = @"Update coPurchStock Set CheckDate=GetDate(),Checker='自動審核',Status=1 Where RdsNo=@RdsNo";
-                        MyData.MyCommand mc = new MyData.MyCommand();
-                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
-                        {
-                            MyRecord.Say("审核错误！");
-                        }
-                        mTableProduceInStockCount++;
-                    }
-                }
-                else
-                {
-                    MyRecord.Say("没有获取到任何内容");
-                }
-                MyRecord.Say("审核产成品入库单——旧ERP系统审核，完成");
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            #endregion
-
-            #region 審核采购入库----新版
-            try
-            {
-                MyRecord.Say("审核采购入库——新ERP系统审核");
-                SQL = @"Select * from coPurchStock Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO='NEWERP'";
-                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
-                if (_StopAll) return;
-                if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
-                {
-                    string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOtherInStock.MyRows.Count);
-                    MyRecord.Say(memo);
-                    int mTableOtherInStockCount = 1;
-                    foreach (MyData.MyDataRow r in mTableOtherInStock.MyRows)
-                    {
-                        if (_StopAll) return;
-                        int CurID = Convert.ToInt32(r["_ID"]);
-                        string RdsNo = Convert.ToString(r["RdsNo"]);
-                        memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherInStockCount, RdsNo, CurID, r["InputDate"]);
-                        MyRecord.Say(memo);
-                        if (!RecordCheck("coPurchStock", "_WH_PurchaseEntryWarehouse_StatusRecorder", CurID, RdsNo))
-                        {
-                            MyRecord.Say("审核错误！");
-                        }
-                        mTableOtherInStockCount++;
-                    }
-                }
-                else
-                {
-                    MyRecord.Say("没有获取到任何内容");
-                }
-                MyRecord.Say("审核其他入库单——新ERP系统审核，完成");
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            #endregion
-
-            #region 審核生产领料---旧版
-            try
-            {
-                MyRecord.Say("审核生产领料——旧ERP系统审核");
-                SQL = @"Select * from stProduceOut Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO is Null ";
-                MyData.MyDataTable mTableProduceOutStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
-                if (_StopAll) return;
-                if (mTableProduceOutStock_OLD != null && mTableProduceOutStock_OLD.MyRows.Count > 0)
-                {
-                    string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableProduceOutStock_OLD.MyRows.Count);
-                    MyRecord.Say(memo);
-                    int mTableProduceOutStockCount = 1;
-                    foreach (MyData.MyDataRow r in mTableProduceOutStock_OLD.MyRows)
-                    {
-                        if (_StopAll) return;
-                        int CurID = Convert.ToInt32(r["ID"]);
-                        string RdsNo = Convert.ToString(r["RdsNo"]);
-                        memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableProduceOutStockCount, RdsNo, CurID, r["InputDate"]);
-                        MyRecord.Say(memo);
-                        string UpdateOLD_SQL = @"Update stProduceOut Set CheckDate=GetDate(),Checker2='自動審核',Status=1 Where RdsNo=@RdsNo";
-                        MyData.MyCommand mc = new MyData.MyCommand();
-                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
-                        {
-                            MyRecord.Say("审核错误！");
-                        }
-                        mTableProduceOutStockCount++;
-                    }
-                }
-                else
-                {
-                    MyRecord.Say("没有获取到任何内容");
-                }
-                MyRecord.Say("审核生产领料——旧ERP系统审核，完成");
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            #endregion
-
-            #region 審核其他出库---旧版
-            try
-            {
-                MyRecord.Say("审核其他领料——旧ERP系统审核");
-                SQL = @"Select * from stOtherOut Where InputDate < @InputEnd And isNull(Status,0)=0 And handno is Null ";
-                MyData.MyDataTable mTableOthereOutStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
-                if (_StopAll) return;
-                if (mTableOthereOutStock_OLD != null && mTableOthereOutStock_OLD.MyRows.Count > 0)
-                {
-                    string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOthereOutStock_OLD.MyRows.Count);
-                    MyRecord.Say(memo);
-                    int mTableOtherOutStockCount = 1;
-                    foreach (MyData.MyDataRow r in mTableOthereOutStock_OLD.MyRows)
-                    {
-                        if (_StopAll) return;
-                        int CurID = Convert.ToInt32(r["ID"]);
-                        string RdsNo = Convert.ToString(r["RdsNo"]);
-                        memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherOutStockCount, RdsNo, CurID, r["InputDate"]);
-                        MyRecord.Say(memo);
-                        string UpdateOLD_SQL = @"Update stOtherOut Set CheckDate=GetDate(),Checker2='自動審核',Status=1 Where RdsNo=@RdsNo";
-                        MyData.MyCommand mc = new MyData.MyCommand();
-                        if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
-                        {
-                            MyRecord.Say("审核错误！");
-                        }
-                        mTableOtherOutStockCount++;
-                    }
-                }
-                else
-                {
-                    MyRecord.Say("没有获取到任何内容");
-                }
-                MyRecord.Say("审核生产领料——旧ERP系统审核，完成");
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            #endregion
-
-            #region 審核其他领料----新版
-            try
-            {
-                MyRecord.Say("审核其他入库单——新ERP系统审核");
-                SQL = @"Select * from stOtherOut Where InputDate < @InputEnd And isNull(Status,0)=0 And handno='NEWERP'";
-                MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
-                if (_StopAll) return;
-                if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
-                {
-                    string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOtherInStock.MyRows.Count);
-                    MyRecord.Say(memo);
-                    int mTableOtherInStockCount = 1;
-                    foreach (MyData.MyDataRow r in mTableOtherInStock.MyRows)
-                    {
-                        if (_StopAll) return;
-                        int CurID = Convert.ToInt32(r["_ID"]);
-                        string RdsNo = Convert.ToString(r["RdsNo"]);
-                        memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherInStockCount, RdsNo, CurID, r["InputDate"]);
-                        MyRecord.Say(memo);
-                        if (!RecordCheck("stOtherOut", "_WH_OtherStockOut_StatusRecorder", CurID, RdsNo))
-                        {
-                            MyRecord.Say("审核错误！");
-                        }
-                        mTableOtherInStockCount++;
-                    }
-                }
-                else
-                {
-                    MyRecord.Say("没有获取到任何内容");
-                }
-                MyRecord.Say("审核其他入库单——新ERP系统审核，完成");
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            #endregion
-
-            #region 審核送货单----新版
-            if (CompanyType != "MT")
-            {
+                #region 審核產成品入庫----新版
                 try
                 {
-                    MyRecord.Say("审核送货单——新ERP系统审核");
-                    SQL = @"Select * from coShip Where InputDate < @InputEnd And isNull(Status,0)=0 ";
+                    MyRecord.Say("审核产成品入库单——新ERP系统审核");
+                    SQL = @"Select * from stProduceStock Where InputDate < @InputEnd And isNull(Status,0)=0 And isono='NEWERP'";
+                    MyData.MyDataTable mTableProduceInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
+                    if (_StopAll) return;
+                    if (mTableProduceInStock != null && mTableProduceInStock.MyRows.Count > 0)
+                    {
+                        string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableProduceInStock.MyRows.Count);
+                        MyRecord.Say(memo);
+                        int mTableProduceInStockCount = 1;
+                        foreach (MyData.MyDataRow r in mTableProduceInStock.MyRows)
+                        {
+                            if (_StopAll) return;
+                            int CurID = Convert.ToInt32(r["_ID"]);
+                            string RdsNo = Convert.ToString(r["RdsNo"]);
+                            memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableProduceInStockCount, RdsNo, CurID, r["InputDate"]);
+                            MyRecord.Say(memo);
+                            if (!RecordCheck("stProduceStock", "_WH_ProduceEntryWarehouse_StatusRecorder", CurID, RdsNo))
+                            {
+                                MyRecord.Say("审核错误！");
+                            }
+                            mTableProduceInStockCount++;
+                        }
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有获取到任何内容");
+                    }
+                    MyRecord.Say("审核产成品入库单——新ERP系统审核，完成");
+                }
+                catch (Exception ex)
+                {
+                    MyRecord.Say(ex);
+                }
+                #endregion
+
+                #region 審核其他入库----新版
+                try
+                {
+                    MyRecord.Say("审核其他入库单——新ERP系统审核");
+                    SQL = @"Select * from stOtherStock Where InputDate < @InputEnd And isNull(Status,0)=0 And otherno='NEWERP'";
                     MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
                     if (_StopAll) return;
                     if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
@@ -804,7 +480,7 @@ namespace MYERP_ServerServiceRuner
                             string RdsNo = Convert.ToString(r["RdsNo"]);
                             memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherInStockCount, RdsNo, CurID, r["InputDate"]);
                             MyRecord.Say(memo);
-                            if (!RecordCheck("coShip", "_WH_DeiliverNote_StatusRecorder", CurID, RdsNo))
+                            if (!RecordCheck("stOtherStock", "_WH_OtherStockIn_StatusRecorder", CurID, RdsNo))
                             {
                                 MyRecord.Say("审核错误！");
                             }
@@ -815,60 +491,418 @@ namespace MYERP_ServerServiceRuner
                     {
                         MyRecord.Say("没有获取到任何内容");
                     }
-                    MyRecord.Say("审核送货单——新ERP系统审核，完成");
+                    MyRecord.Say("审核其他入库单——新ERP系统审核，完成");
                 }
                 catch (Exception ex)
                 {
                     MyRecord.Say(ex);
                 }
-            }
-            else
-            {
-                MyRecord.Say("送货单——不审核。");
-            }
-            #endregion
+                #endregion
 
-            #region 審核库存调整单----新版&旧版
-            try
-            {
-                MyRecord.Say("审核库存调整单——新ERP系统审核");
-                SQL = @"Select * from stAdjustStock Where InputDate < @InputEnd And isNull(Status,0)=0";
-                MyData.MyDataTable mTableAdjustStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
-                if (_StopAll) return;
-                if (mTableAdjustStock != null && mTableAdjustStock.MyRows.Count > 0)
+                #region 審核生产领料----新版
+                try
                 {
-                    string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableAdjustStock.MyRows.Count);
-                    MyRecord.Say(memo);
-                    int mTableAdjustStockCount = 1;
-                    foreach (MyData.MyDataRow r in mTableAdjustStock.MyRows)
+                    MyRecord.Say("审核生产领料单——新ERP系统审核");
+                    SQL = @"Select * from stProduceOut Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO='NEWERP'";
+                    MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
+                    if (_StopAll) return;
+                    if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
                     {
-                        if (_StopAll) return;
-                        int CurID = Convert.ToInt32(r["_ID"]);
-                        string RdsNo = Convert.ToString(r["RdsNo"]);
-                        memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableAdjustStockCount, RdsNo, CurID, r["InputDate"]);
+                        string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOtherInStock.MyRows.Count);
                         MyRecord.Say(memo);
-                        if (!RecordCheck("stAdjustStock", "_WH_AdjustInventory_StatusRecorder", CurID, RdsNo))
+                        int mTableOtherInStockCount = 1;
+                        foreach (MyData.MyDataRow r in mTableOtherInStock.MyRows)
                         {
-                            MyRecord.Say("审核错误！");
+                            if (_StopAll) return;
+                            int CurID = Convert.ToInt32(r["_ID"]);
+                            string RdsNo = Convert.ToString(r["RdsNo"]);
+                            memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherInStockCount, RdsNo, CurID, r["InputDate"]);
+                            MyRecord.Say(memo);
+                            if (!RecordCheck("stProduceOut", "_WH_ProducePicking_StatusRecorder", CurID, RdsNo))
+                            {
+                                MyRecord.Say("审核错误！");
+                            }
+                            mTableOtherInStockCount++;
                         }
-                        mTableAdjustStockCount++;
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有获取到任何内容");
+                    }
+                    MyRecord.Say("审核其他入库单——新ERP系统审核，完成");
+                }
+                catch (Exception ex)
+                {
+                    MyRecord.Say(ex);
+                }
+                #endregion
+
+                #region 審核產成品入庫---旧版
+                try
+                {
+                    MyRecord.Say("审核产成品入库单——旧ERP系统审核");
+                    SQL = @"Select * from stProduceStock Where InputDate < @InputEnd And isNull(Status,0)=0 And isNull(isono,'')=''";
+                    MyData.MyDataTable mTableProduceInStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
+                    if (_StopAll) return;
+                    if (mTableProduceInStock_OLD != null && mTableProduceInStock_OLD.MyRows.Count > 0)
+                    {
+                        string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableProduceInStock_OLD.MyRows.Count);
+                        MyRecord.Say(memo);
+                        int mTableProduceInStockCount = 1;
+                        foreach (MyData.MyDataRow r in mTableProduceInStock_OLD.MyRows)
+                        {
+                            if (_StopAll) return;
+                            int CurID = Convert.ToInt32(r["_ID"]);
+                            string RdsNo = Convert.ToString(r["RdsNo"]);
+                            memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableProduceInStockCount, RdsNo, CurID, r["InputDate"]);
+                            MyRecord.Say(memo);
+                            string UpdateOLD_SQL = @"Update stProduceStock Set CheckDate=GetDate(),Checker='自動審核',Status=1 Where RdsNo=@RdsNo";
+                            MyData.MyCommand mc = new MyData.MyCommand();
+                            if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
+                            {
+                                MyRecord.Say("审核错误！");
+                            }
+                            mTableProduceInStockCount++;
+                        }
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有获取到任何内容");
+                    }
+                    MyRecord.Say("审核产成品入库单——旧ERP系统审核，完成");
+                }
+                catch (Exception ex)
+                {
+                    MyRecord.Say(ex);
+                }
+                #endregion
+
+                #region 審核其他入庫---旧版
+                try
+                {
+                    MyRecord.Say("审核其他入库单——旧ERP系统审核");
+                    SQL = @"Select * from stOtherStock Where InputDate < @InputEnd And isNull(Status,0)=0 And isNull(otherno,'')<>'NEWERP'";
+                    MyData.MyDataTable mTableOtherInStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
+                    if (_StopAll) return;
+                    if (mTableOtherInStock_OLD != null && mTableOtherInStock_OLD.MyRows.Count > 0)
+                    {
+                        string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOtherInStock_OLD.MyRows.Count);
+                        MyRecord.Say(memo);
+                        int mTableOtherInStockCount = 1;
+                        foreach (MyData.MyDataRow r in mTableOtherInStock_OLD.MyRows)
+                        {
+                            if (_StopAll) return;
+                            int CurID = Convert.ToInt32(r["_ID"]);
+                            string RdsNo = Convert.ToString(r["RdsNo"]);
+                            memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherInStockCount, RdsNo, CurID, r["InputDate"]);
+                            MyRecord.Say(memo);
+                            string UpdateOLD_SQL = @"Update stOtherStock Set CheckDate=GetDate(),Checker2='自動審核',Status=1 Where RdsNo=@RdsNo";
+                            MyData.MyCommand mc = new MyData.MyCommand();
+                            if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
+                            {
+                                MyRecord.Say("审核错误！");
+                            }
+                            mTableOtherInStockCount++;
+                        }
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有获取到任何内容");
+                    }
+                    MyRecord.Say("审核其他入库单——旧ERP系统审核，完成");
+                }
+                catch (Exception ex)
+                {
+                    MyRecord.Say(ex);
+                }
+                #endregion
+
+                #region 審核采购入庫---旧版
+                try
+                {
+                    MyRecord.Say("审核产成品入库单——旧ERP系统审核");
+                    SQL = @"Select * from coPurchStock Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO <> 'NEWERP'";
+                    MyData.MyDataTable mTablePurchInStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
+                    if (_StopAll) return;
+                    if (mTablePurchInStock_OLD != null && mTablePurchInStock_OLD.MyRows.Count > 0)
+                    {
+                        string memo = string.Format("读取了{0}条记录，下面开始审核....", mTablePurchInStock_OLD.MyRows.Count);
+                        MyRecord.Say(memo);
+                        int mTableProduceInStockCount = 1;
+                        foreach (MyData.MyDataRow r in mTablePurchInStock_OLD.MyRows)
+                        {
+                            if (_StopAll) return;
+                            int CurID = Convert.ToInt32(r["ID"]);
+                            string RdsNo = Convert.ToString(r["RdsNo"]);
+                            memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableProduceInStockCount, RdsNo, CurID, r["InputDate"]);
+                            MyRecord.Say(memo);
+                            string UpdateOLD_SQL = @"Update coPurchStock Set CheckDate=GetDate(),Checker='自動審核',Status=1 Where RdsNo=@RdsNo";
+                            MyData.MyCommand mc = new MyData.MyCommand();
+                            if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
+                            {
+                                MyRecord.Say("审核错误！");
+                            }
+                            mTableProduceInStockCount++;
+                        }
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有获取到任何内容");
+                    }
+                    MyRecord.Say("审核产成品入库单——旧ERP系统审核，完成");
+                }
+                catch (Exception ex)
+                {
+                    MyRecord.Say(ex);
+                }
+                #endregion
+
+                #region 審核采购入库----新版
+                try
+                {
+                    MyRecord.Say("审核采购入库——新ERP系统审核");
+                    SQL = @"Select * from coPurchStock Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO='NEWERP'";
+                    MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
+                    if (_StopAll) return;
+                    if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
+                    {
+                        string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOtherInStock.MyRows.Count);
+                        MyRecord.Say(memo);
+                        int mTableOtherInStockCount = 1;
+                        foreach (MyData.MyDataRow r in mTableOtherInStock.MyRows)
+                        {
+                            if (_StopAll) return;
+                            int CurID = Convert.ToInt32(r["_ID"]);
+                            string RdsNo = Convert.ToString(r["RdsNo"]);
+                            memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherInStockCount, RdsNo, CurID, r["InputDate"]);
+                            MyRecord.Say(memo);
+                            if (!RecordCheck("coPurchStock", "_WH_PurchaseEntryWarehouse_StatusRecorder", CurID, RdsNo))
+                            {
+                                MyRecord.Say("审核错误！");
+                            }
+                            mTableOtherInStockCount++;
+                        }
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有获取到任何内容");
+                    }
+                    MyRecord.Say("审核其他入库单——新ERP系统审核，完成");
+                }
+                catch (Exception ex)
+                {
+                    MyRecord.Say(ex);
+                }
+                #endregion
+
+                #region 審核生产领料---旧版
+                try
+                {
+                    MyRecord.Say("审核生产领料——旧ERP系统审核");
+                    SQL = @"Select * from stProduceOut Where InputDate < @InputEnd And isNull(Status,0)=0 And ISONO is Null ";
+                    MyData.MyDataTable mTableProduceOutStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
+                    if (_StopAll) return;
+                    if (mTableProduceOutStock_OLD != null && mTableProduceOutStock_OLD.MyRows.Count > 0)
+                    {
+                        string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableProduceOutStock_OLD.MyRows.Count);
+                        MyRecord.Say(memo);
+                        int mTableProduceOutStockCount = 1;
+                        foreach (MyData.MyDataRow r in mTableProduceOutStock_OLD.MyRows)
+                        {
+                            if (_StopAll) return;
+                            int CurID = Convert.ToInt32(r["ID"]);
+                            string RdsNo = Convert.ToString(r["RdsNo"]);
+                            memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableProduceOutStockCount, RdsNo, CurID, r["InputDate"]);
+                            MyRecord.Say(memo);
+                            string UpdateOLD_SQL = @"Update stProduceOut Set CheckDate=GetDate(),Checker2='自動審核',Status=1 Where RdsNo=@RdsNo";
+                            MyData.MyCommand mc = new MyData.MyCommand();
+                            if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
+                            {
+                                MyRecord.Say("审核错误！");
+                            }
+                            mTableProduceOutStockCount++;
+                        }
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有获取到任何内容");
+                    }
+                    MyRecord.Say("审核生产领料——旧ERP系统审核，完成");
+                }
+                catch (Exception ex)
+                {
+                    MyRecord.Say(ex);
+                }
+                #endregion
+
+                #region 審核其他出库---旧版
+                try
+                {
+                    MyRecord.Say("审核其他领料——旧ERP系统审核");
+                    SQL = @"Select * from stOtherOut Where InputDate < @InputEnd And isNull(Status,0)=0 And handno is Null ";
+                    MyData.MyDataTable mTableOthereOutStock_OLD = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
+                    if (_StopAll) return;
+                    if (mTableOthereOutStock_OLD != null && mTableOthereOutStock_OLD.MyRows.Count > 0)
+                    {
+                        string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOthereOutStock_OLD.MyRows.Count);
+                        MyRecord.Say(memo);
+                        int mTableOtherOutStockCount = 1;
+                        foreach (MyData.MyDataRow r in mTableOthereOutStock_OLD.MyRows)
+                        {
+                            if (_StopAll) return;
+                            int CurID = Convert.ToInt32(r["ID"]);
+                            string RdsNo = Convert.ToString(r["RdsNo"]);
+                            memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherOutStockCount, RdsNo, CurID, r["InputDate"]);
+                            MyRecord.Say(memo);
+                            string UpdateOLD_SQL = @"Update stOtherOut Set CheckDate=GetDate(),Checker2='自動審核',Status=1 Where RdsNo=@RdsNo";
+                            MyData.MyCommand mc = new MyData.MyCommand();
+                            if (!mc.Execute(UpdateOLD_SQL, new MyData.MyDataParameter("@rdsno", RdsNo)))
+                            {
+                                MyRecord.Say("审核错误！");
+                            }
+                            mTableOtherOutStockCount++;
+                        }
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有获取到任何内容");
+                    }
+                    MyRecord.Say("审核生产领料——旧ERP系统审核，完成");
+                }
+                catch (Exception ex)
+                {
+                    MyRecord.Say(ex);
+                }
+                #endregion
+
+                #region 審核其他领料----新版
+                try
+                {
+                    MyRecord.Say("审核其他入库单——新ERP系统审核");
+                    SQL = @"Select * from stOtherOut Where InputDate < @InputEnd And isNull(Status,0)=0 And handno='NEWERP'";
+                    MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
+                    if (_StopAll) return;
+                    if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
+                    {
+                        string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOtherInStock.MyRows.Count);
+                        MyRecord.Say(memo);
+                        int mTableOtherInStockCount = 1;
+                        foreach (MyData.MyDataRow r in mTableOtherInStock.MyRows)
+                        {
+                            if (_StopAll) return;
+                            int CurID = Convert.ToInt32(r["_ID"]);
+                            string RdsNo = Convert.ToString(r["RdsNo"]);
+                            memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherInStockCount, RdsNo, CurID, r["InputDate"]);
+                            MyRecord.Say(memo);
+                            if (!RecordCheck("stOtherOut", "_WH_OtherStockOut_StatusRecorder", CurID, RdsNo))
+                            {
+                                MyRecord.Say("审核错误！");
+                            }
+                            mTableOtherInStockCount++;
+                        }
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有获取到任何内容");
+                    }
+                    MyRecord.Say("审核其他入库单——新ERP系统审核，完成");
+                }
+                catch (Exception ex)
+                {
+                    MyRecord.Say(ex);
+                }
+                #endregion
+
+                #region 審核送货单----新版
+                if (CompanyType != "MT")
+                {
+                    try
+                    {
+                        MyRecord.Say("审核送货单——新ERP系统审核");
+                        SQL = @"Select * from coShip Where InputDate < @InputEnd And isNull(Status,0)=0 ";
+                        MyData.MyDataTable mTableOtherInStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
+                        if (_StopAll) return;
+                        if (mTableOtherInStock != null && mTableOtherInStock.MyRows.Count > 0)
+                        {
+                            string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableOtherInStock.MyRows.Count);
+                            MyRecord.Say(memo);
+                            int mTableOtherInStockCount = 1;
+                            foreach (MyData.MyDataRow r in mTableOtherInStock.MyRows)
+                            {
+                                if (_StopAll) return;
+                                int CurID = Convert.ToInt32(r["_ID"]);
+                                string RdsNo = Convert.ToString(r["RdsNo"]);
+                                memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableOtherInStockCount, RdsNo, CurID, r["InputDate"]);
+                                MyRecord.Say(memo);
+                                if (!RecordCheck("coShip", "_WH_DeiliverNote_StatusRecorder", CurID, RdsNo))
+                                {
+                                    MyRecord.Say("审核错误！");
+                                }
+                                mTableOtherInStockCount++;
+                            }
+                        }
+                        else
+                        {
+                            MyRecord.Say("没有获取到任何内容");
+                        }
+                        MyRecord.Say("审核送货单——新ERP系统审核，完成");
+                    }
+                    catch (Exception ex)
+                    {
+                        MyRecord.Say(ex);
                     }
                 }
                 else
                 {
-                    MyRecord.Say("没有获取到任何内容");
+                    MyRecord.Say("送货单——不审核。");
                 }
-                MyRecord.Say("审核库存调整单——新旧ERP系统审核，完成");
-            }
-            catch (Exception ex)
-            {
-                MyRecord.Say(ex);
-            }
-            #endregion
+                #endregion
 
-            Thread.Sleep(1000);
-            CheckStockRecordRunning = false;
-            MyRecord.Say("-----------------------审核完成。-------------------------------");
+                #region 審核库存调整单----新版&旧版
+                try
+                {
+                    MyRecord.Say("审核库存调整单——新ERP系统审核");
+                    SQL = @"Select * from stAdjustStock Where InputDate < @InputEnd And isNull(Status,0)=0";
+                    MyData.MyDataTable mTableAdjustStock = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@InputEnd", StopTime, MyData.MyDataParameter.MyDataType.DateTime));
+                    if (_StopAll) return;
+                    if (mTableAdjustStock != null && mTableAdjustStock.MyRows.Count > 0)
+                    {
+                        string memo = string.Format("读取了{0}条记录，下面开始审核....", mTableAdjustStock.MyRows.Count);
+                        MyRecord.Say(memo);
+                        int mTableAdjustStockCount = 1;
+                        foreach (MyData.MyDataRow r in mTableAdjustStock.MyRows)
+                        {
+                            if (_StopAll) return;
+                            int CurID = Convert.ToInt32(r["_ID"]);
+                            string RdsNo = Convert.ToString(r["RdsNo"]);
+                            memo = string.Format("审核第{0}条，入库单号：{1}，ID：{2}，输入时间：{3:yy/MM/dd HH:mm}", mTableAdjustStockCount, RdsNo, CurID, r["InputDate"]);
+                            MyRecord.Say(memo);
+                            if (!RecordCheck("stAdjustStock", "_WH_AdjustInventory_StatusRecorder", CurID, RdsNo))
+                            {
+                                MyRecord.Say("审核错误！");
+                            }
+                            mTableAdjustStockCount++;
+                        }
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有获取到任何内容");
+                    }
+                    MyRecord.Say("审核库存调整单——新旧ERP系统审核，完成");
+                }
+                catch (Exception ex)
+                {
+                    MyRecord.Say(ex);
+                }
+                #endregion
+
+                Thread.Sleep(1000);
+            }
+            finally
+            {
+                CheckStockRecordRunning = false;
+                MyRecord.Say("-----------------------审核完成。-------------------------------");
+            }
         }
 
         #endregion
@@ -1309,7 +1343,7 @@ Drop Table #T
             Thread t = new Thread(SendProduceUnFinishInStockEmail);
             t.IsBackground = true;
             t.Start();
-            MyRecord.Say("开启定时发送入库跟催表进程完成。");
+            MyRecord.Say("开启定时发送入库跟催表进程启动。");
         }
 
         void SendProduceUnFinishInStockEmail()
@@ -1320,9 +1354,18 @@ Drop Table #T
                 string body = MyConvert.ZH_TW(@"
 <HTML>
 <BODY style=""FONT-SIZE: 12pt; FONT-FAMILY: PMingLiU"" leftMargin=5 topMargin=5 bgColor=#ece4f3 #ffffff>
-<DIV><FONT size=3 face=PMingLiU>{3}ERP系统提示您：</FONT></DIV>
-<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请注意，以下内容为12H（{0:MM/dd HH:mm}）前，已输入验收入库单（完工单）但还没输入对应产成品入库单（仓库）的验收入库单列表。</FONT><FONT size=5 color=#ff0000 face=PMingLiU>{4}</FONT></DIV>
-<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; （说明：过期时间单位是小时。）</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>{2}ERP系统提示您：</FONT></DIV>
+{0}
+<DIV><FONT face=PMingLiU><FONT size=2></FONT>&nbsp;</DIV>
+<DIV><FONT color=#0000ff size=4 face=PMingLiU><STRONG>&nbsp;&nbsp;此郵件由ERP系統自動發送，请勿在此郵件上直接回復。</STRONG></FONT></DIV>
+<DIV><FONT color=#800080 size=2><STRONG>&nbsp;&nbsp;&nbsp;</STRONG>
+<FONT color=#000000 face=PMingLiU>{1:yy/MM/dd HH:mm}，由ERP系统伺服器自动发送。<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;如自動發送功能有問題或者格式内容修改建議，請MailTo:<A href=""mailto:my80@my.imedia.com.tw"">JOHN</A><BR>
+</FONT></FONT></DIV></FONT></BODY></HTML>
+");
+                string bx = @"
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请注意，以下内容为12H（{0:MM/dd HH:mm}）前，已输入验收入库单（完工单）但还没输入对应产成品入库单（仓库）的验收入库单列表。</FONT></DIV>
+<DIV><FONT size=5 color=#ff0000 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {1}</FONT></DIV>
 <DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <TABLE style=""BORDER-COLLAPSE: collapse"" cellSpacing=0 cellPadding=0 width=""100%"" border=0>
   <TBODY>
@@ -1331,80 +1374,38 @@ Drop Table #T
     部门
     </TD>
     <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    工序
+    超48H
     </TD>
     <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    机台
+    24~48H
     </TD>
     <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    工单号
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    验收入库单
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    料号
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    良品数
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    完工单时间
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    过期时间
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    入仓别
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
-    工单性质
+    12~24H
     </TD>
     </TR>
-    {1}
+    {2}
 </TBODY></TABLE></FONT>
 </DIV>
-<DIV><FONT face=PMingLiU><FONT size=2></FONT>&nbsp;</DIV>
-<DIV><FONT color=#0000ff size=4 face=PMingLiU><STRONG>&nbsp;&nbsp;此郵件由ERP系統自動發送，请勿在此郵件上直接回復。</STRONG></FONT></DIV>
-<DIV><FONT color=#800080 size=2><STRONG>&nbsp;&nbsp;&nbsp;</STRONG>
-<FONT color=#000000 face=PMingLiU>{2:yy/MM/dd HH:mm}，由ERP系统伺服器自动发送。<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;如自動發送功能有問題或者格式内容修改建議，請MailTo:<A href=""mailto:my80@my.imedia.com.tw"">JOHN</A><BR>
-</FONT></FONT></DIV></FONT></BODY></HTML>
-");
+";
+                string bx2 = @"
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 12H（{0:MM/dd HH:mm}）前，验收入库单（完工单）都已经入库完毕。</FONT></DIV>
+<DIV><FONT size=5 color=#ff0000 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 很棒，请再接再厉</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</FONT>
+</DIV>
+";
                 string br = @"
     <TR>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {0}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
     {1}
     </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
     {2}
     </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
     {3}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
-    {4}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
-    {5}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
-    {6}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
-    {7:0}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
-    {8:MM.dd HH:mm}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
-    {9:0}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
-    {10}
-    </TD>
-    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: {0}"" align=center >
-    {11}
     </TD>
     </TR>
 ";
@@ -1421,7 +1422,8 @@ Drop Table #T
 	  Insert Into #Tmp_ProdDailyReport
 	  Select a.CustCode,a.ProductCode,a.ProduceNo,a.AccNoteRdsNo,a.RptDate,a.Numb1,a.Operator,a.InputDate,a.Inputer,a.Remark,a.MachinID,a.ProcessID,a.PrdID,b.Name,b.DepartmentID
 	  From ProdDailyReport a Inner Join moMachine b On a.MachinID = b.Code
-	  Where a.ProcessID <> '9035' And isNull(a.Numb1,0) > 0 And isNull(a.Reject,0) = 0 And a.RptDate Between '2017-01-01 00:00:00' And DATEADD(HH,-12,GetDate())
+	  Where a.ProcessID <> '9035' And isNull(a.Numb1,0) > 0 And isNull(a.Reject,0) = 0 And Len(isNull(a.AccNoteRdsNo,''))>0
+        And a.RptDate Between @SBDate And @SEDate
 
 	  Create Table #Tmp_Result(CustCode nVarChar(40),ProductCode nVarChar(200),ProduceRdsNo nVarChar(40),AccNoteRdsno nVarChar(40),RptDate DateTime,Numb1 Numeric(38,6),
 	                           Operator nVarChar(100),InputDate DateTime,Inputer nVarChar(40),Remark nVarChar(4000),MachineCode nVarChar(40),ProcessCode nVarChar(40),PrdID Int,
@@ -1435,7 +1437,7 @@ Drop Table #T
 	  Insert Into #Tmp_Result(CustCode,ProductCode,ProduceRdsNo,AccNoteRdsno,RptDate,Numb1,Operator,InputDate,Inputer,Remark,MachineCode,ProcessCode,PrdID,DepartmentID,PropertyID,StockLocationType,Status,StockStatus,MachineName,FinishMan,FinishRemark,finishdate,ProduceID)
 	  Select a.CustCode,a.ProductCode,ProduceRdsNo,a.AccNoteRdsno,a.RptDate,a.Numb1,a.Operator,a.InputDate,a.Inputer,a.Remark,a.MachineCode,a.ProcessCode,a.PrdID,a.DepartmentID,b.property,b.StockLocationType,b.status,b.StockStatus,a.MachineName,b.FinishMan,b.FinishRemark,b.finishdate,b.id
 	  from #Tmp_ProdDailyReport a Inner Join moProduce b On a.ProduceRdsNo = b.RdsNo And a.PrdID = b.LastProcessID
-	  Where isNull(b.StopStock,0)=0 And b.status > 0 
+	  Where isNull(b.StopStock,0)=0 And isNull(finalized,0)=0 And b.status > 0
 
 	  Update a Set a.ProduceStatusName = b.Name From [#Tmp_Result] a,[_SY_Status] b Where b.StatusID = isNull(a.Status,0) And b.Type = 'PO'
 	  Update a Set a.ProduceStockStatusName = b.Name From [#Tmp_Result] a,[_SY_Status] b Where b.StatusID = isNull(a.StockStatus,0) And b.Type = 'POStatus'
@@ -1449,7 +1451,7 @@ Drop Table #T
 	          From [#Tmp_Result] a,pbProduct b Where a.ProductCode = b.Code
 
 	  Select *,
-	        InStockTimeSpan = DateDiff(HH,RptDate,isNull(StockDate,GetDate()))
+	        InStockTimeSpan = Ceiling(DateDiff(HH,RptDate,isNull(StockDate,GetDate())))
 	   from #Tmp_Result
 	  Where isNull(InStockNumb,0) <= 0
       Order by FullSortID,ProcessCode,MachineCode,ProductCode,ProduceRdsNo,AccNoteRdsno
@@ -1457,51 +1459,77 @@ Drop Table #T
       Drop Table #Tmp_ProdDailyReport
 	  Set NoCount Off
 ";
-                DateTime NowTime = DateTime.Now;
+                DateTime NowTime = DateTime.Now,
+                         xeTime = NowTime.AddDays(-1).DayOfWeek == DayOfWeek.Sunday ? NowTime.AddDays(-2).Date.AddHours(20) : NowTime.AddDays(-1).Date.AddHours(20),
+                         xbTime = CompanyType == "MD" ? xeTime.AddYears(-1) < DateTime.Parse("2017-06-01") ? DateTime.Parse("2017-06-01") : xeTime.AddYears(-1) : xeTime.AddMonths(-10);
                 string brs = "";
                 MyRecord.Say("后台计算开启。");
-                using (MyData.MyDataTable md = new MyData.MyDataTable(SQL))
+                using (MyData.MyDataTable md = new MyData.MyDataTable(SQL,
+                           new MyData.MyDataParameter("@SEDate", xeTime, MyData.MyDataParameter.MyDataType.DateTime),
+                           new MyData.MyDataParameter("@SBDate", xbTime, MyData.MyDataParameter.MyDataType.DateTime)))
                 {
                     MyRecord.Say("完工单已经获取");
                     if (md != null && md.MyRows.Count > 0)
                     {
-                        foreach (var ri in md.MyRows)
-                        {
-                            brs += string.Format(br, ri.IntValue("InStockTimeSpan") < 24 ? "transparent" : ri.IntValue("InStockTimeSpan") < 48 ? "yellow" : "red",
-                                                    ri.Value("DepartmentName"),
-                                                    ri.Value("ProcessName"),
-                                                    ri.Value("MachineName"),
-                                                    ri.Value("ProduceRdsNo"),
-                                                    ri.Value("AccNoteRdsNo"),
-                                                    ri.Value("ProductName"),
-                                                    ri.Value<double>("Numb1"),
-                                                    ri.DateTimeValue("RptDate"),
-                                                    ri.IntValue("InStockTimeSpan"),
-                                                    ri.Value("StockLocationTypeName"),
-                                                    ri.Value("ProducePropertyName")
-                                                    );
-                        }
-                        MyRecord.Say(string.Format("表格一共：{0}行，表格已经生成。", md.Rows.Count));
-                        MyRecord.Say("创建SendMail。");
-                        MyBase.SendMail sm = new MyBase.SendMail();
-                        MyRecord.Say("加载邮件内容。");
-
                         var vx = from a in md.MyRows
                                  group a by a.Value("DepartmentName") into g
                                  orderby g.FirstOrDefault().Value("FullSortID")
                                  select new
                                  {
                                      Name = g.Key,
-                                     Count = g.Count()
+                                     Count1 = g.Where(x => x.IntValue("InStockTimeSpan") > 48).Count(),
+                                     Count2 = g.Where(x => x.IntValue("InStockTimeSpan") > 24 && x.IntValue("InStockTimeSpan") < 49).Count(),
+                                     Count3 = g.Where(x => x.IntValue("InStockTimeSpan") > 0 && x.IntValue("InStockTimeSpan") < 25).Count()
                                  };
-                        string stMemoItem = string.Empty;
-                        foreach (var item in vx)
+                        foreach (var b in vx)
                         {
-                            stMemoItem += string.Format("{0}：{1}笔，", item.Name, item.Count);
+                            brs += string.Format(br, b.Name, b.Count1 == 0 ? "" : string.Format("{0}笔", b.Count1),
+                                                             b.Count2 == 0 ? "" : string.Format("{0}笔", b.Count2),
+                                                             b.Count3 == 0 ? "" : string.Format("{0}笔", b.Count3));
                         }
-                        string stSumMemo = string.Format("合计：{0}笔，其中：{1}详细内容请看下表。", md.MyRows.Count, stMemoItem);
-                        sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, NowTime.AddHours(-12), brs, NowTime, MyBase.CompanyTitle, stSumMemo));
+                        MyRecord.Say("创建SendMail。");
+                        MyBase.SendMail sm = new MyBase.SendMail();
+                        MyRecord.Say("加载邮件内容。");
+                        string stSumMemo = string.Format("合计：{0}笔，详细内容请看附档。", md.MyRows.Count);
+
+                        sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, string.Format(bx, xbTime, stSumMemo, brs), NowTime, MyBase.CompanyTitle));
                         sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_入库跟催表。", NowTime, MyBase.CompanyTitle));
+
+                        HSSFWorkbook wb = new HSSFWorkbook();
+                        string[] fNames = new string[] { "DepartmentName", "ProcessName", "MachineName", "ProduceRdsNo", "AccNoteRdsNo", "ProductName", "Numb1", "RptDate", "InStockTimeSpan", "StockLocationTypeName", "ProducePropertyName" };
+                        string[] fTitles = new string[] { "部门", "工序", "机台", "工单编号", "验收入库单", "料号", "数量", "日期", "入库耗时(H)", "入仓别", "工单性质" };
+                        string[] fSortFields = new string[] { "FullSortID", "ProduceRdsNo", "AccNoteRdsNo" };
+                        ExportToExcelIPQCAndScrapBack(wb, md, fNames, fTitles, "入库跟催表", fSortFields);
+                        string tmpFileName = Path.GetTempFileName();
+                        MyRecord.Say(string.Format("tmpFileName = {0}", tmpFileName));
+                        Regex rgx = new System.Text.RegularExpressions.Regex(@"(?<=tmp)(.+)(?=\.tmp)");
+                        string tmpFileNameLast = rgx.Match(tmpFileName).Value;
+                        MyRecord.Say(string.Format("tmpFileNameLast = {0}", tmpFileNameLast));
+                        string dName = string.Format("{0}\\TMPExcel", Application.StartupPath);
+                        if (!Directory.Exists(dName)) Directory.CreateDirectory(dName);
+                        string fname = string.Format("{0}\\{1}", dName, string.Format("NOTICE_{0:yyyyMMdd}_tmp{1}.xls", NowTime.Date, tmpFileNameLast));
+                        MyRecord.Say(string.Format("fname = {0}", fname));
+                        if (File.Exists(fname)) File.Delete(fname);
+                        using (FileStream fs = new FileStream(fname, FileMode.Create, FileAccess.Write))
+                        {
+                            wb.Write(fs);
+                            MyRecord.Say("已经保存了。");
+                        }
+
+                        if (File.Exists(fname))
+                        {
+                            sm.Attachments.Add(new System.Net.Mail.Attachment(fname));
+                            MyRecord.Say("加载到附件");
+                        }
+                        else
+                        {
+                            MyRecord.Say("没找到附件");
+                        }
+
+                        wb.Close();
+                        MyRecord.Say(string.Format("表格一共：{0}行，表格已经生成。", md.Rows.Count));
+
+
                         string mailto = ConfigurationManager.AppSettings["InStockFollowUPMailTo"], mailcc = ConfigurationManager.AppSettings["InStockFollowUPMailCC"];
                         MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
                         sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
@@ -1509,11 +1537,31 @@ Drop Table #T
                         //sm.MailTo = "my80@my.imedia.com.tw";
                         MyRecord.Say("发送邮件。");
                         sm.SendOut();
+                        sm.mail.Dispose();
+                        sm = null;
                         MyRecord.Say("已经发送。");
+                        if (File.Exists(fname)) File.Delete(fname);
                     }
                     else
                     {
                         MyRecord.Say("没有找到资料。");
+                        MyBase.SendMail sm = new MyBase.SendMail();
+                        MyRecord.Say("加载邮件内容。");
+
+                        sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, string.Format(bx2, xbTime), NowTime, MyBase.CompanyTitle));
+                        sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_入库跟催表。", NowTime, MyBase.CompanyTitle));
+
+                        string mailto = ConfigurationManager.AppSettings["InStockFollowUPMailTo"], mailcc = ConfigurationManager.AppSettings["InStockFollowUPMailCC"];
+                        MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+                        sm.MailTo = mailto;
+                        sm.MailCC = mailcc;
+                        //sm.MailTo = "my80@my.imedia.com.tw";
+                        //sm.MailCC = "my80@my.imedia.com.tw";
+                        MyRecord.Say("发送邮件。");
+                        sm.SendOut();
+                        sm.mail.Dispose();
+                        sm = null;
+                        MyRecord.Say("已经发送。");
                     }
                 }
                 MyRecord.Say("------------------发送完成----------------------------");
@@ -2584,61 +2632,81 @@ Select a.[_ID] as ID,a.RdsNo,a.PlanBegin,b.[date]
         {
             try
             {
-                string SQL = "";
+                string DeptSQL = "", ProcSQL = "";
                 MyRecord.Say("---------------------启动定时审核排程。------------------------------");
                 DateTime bStartTime = DateTime.Now;
                 DateTime NowTime = DateTime.Now, TimeBegin = DateTime.MinValue, TimeEnd = DateTime.MinValue, TimeSet = DateTime.MinValue;
-                MyRecord.Say("第一步，刷新所有部门和工序，最后一份排程。");
-                string xMemo = string.Empty;
+                string xMemo = string.Empty, OnWorkFieldName = string.Empty, OffWorkFieldName = string.Empty;
                 if (NowTime.Hour < 12 && NowTime.Hour > 5)
                 {
-                    TimeBegin = NowTime.Date.AddHours(7);
-                    TimeEnd = NowTime.Date.AddHours(18);
-                    TimeSet = NowTime.Date.AddHours(20);
+                    OnWorkFieldName = "OnWorkTime1"; OffWorkFieldName = "OffWorkTime1";
                     xMemo = "白班自动审核生产计划。";
                 }
-                else if (NowTime.Hour > 20 && NowTime.Hour < 23)
+                else
                 {
-                    TimeBegin = NowTime.Date.AddHours(19);
-                    TimeEnd = NowTime.Date.AddDays(1).Date.AddHours(6);
-                    TimeSet = NowTime.Date.AddDays(1).Date.AddHours(8);
+                    OnWorkFieldName = "OnWorkTime2"; OffWorkFieldName = "OffWorkTime2";
                     xMemo = "夜班自动审核生产计划。";
                 }
+                MyRecord.Say(string.Format("逐部门查询各个工序最后一份排程。OnWorkFieldName={0}，OffWorkFieldName={1}，{2}", OnWorkFieldName, OffWorkFieldName, xMemo));
+                DeptSQL = @"Select * from pbDept Where Not (OnWorkTime1 is Null And OnWorkTime2 is Null) Order by FullSortID";
+                MyData.MyDataTable mdDepartment = new MyData.MyDataTable(DeptSQL);
+                if (mdDepartment.MyRows.IsNotEmptySet())
+                {
+                    MyRecord.Say(string.Format("各个部门已经获取，共{0}部门。", mdDepartment.MyRows.Count));
+                    int dpCount = 1;
+                    foreach (var deptItem in mdDepartment.MyRows)
+                    {
+                        ProcSQL = @"
+Select Max(a.[_id]) as ID,RdsNo =(Select RdsNo From _PMC_ProdPlan r Where r.[_id]=Max(a.[_id])),a.Process,ProcessName=(Select Name from moProcedure Where Code = a.Process)
+  from [_PMC_ProdPlan] a
+ Where a.PlanBegin Between @TimeBgein And @TimeEnd And PlanEnd is Null And
+       Not Exists(Select Top 1 _ID From [_PMC_ProdPlan] b Where b.PlanBegin Between @TimeBgein And @TimeEnd And
+	                                                            b.PlanEnd is Not Null And a.Process=b.Process And a.Department=b.Department)
+ Group by a.Process,a.Department
+ Having a.Department = @DeptID
+";
+                        TimeBegin = NowTime.Date.Add((deptItem.DateTimeValue(OnWorkFieldName) - DateTime.Parse("2000-01-01").Date));
+                        TimeEnd = NowTime.Date.Add((deptItem.DateTimeValue(OffWorkFieldName).AddHours(-2) - DateTime.Parse("2000-01-01").Date));
+                        TimeSet = NowTime.Date.Add((deptItem.DateTimeValue(OffWorkFieldName) - DateTime.Parse("2000-01-01").Date));
+                        MyData.MyDataParameter[] mps = new MyData.MyDataParameter[]
+                        {
+                            new MyData.MyDataParameter("@TimeBgein",TimeBegin, MyData.MyDataParameter.MyDataType.DateTime),
+                            new MyData.MyDataParameter("@TimeEnd",TimeEnd, MyData.MyDataParameter.MyDataType.DateTime),
+                            new MyData.MyDataParameter("@DeptID",deptItem.IntValue("_ID"), MyData.MyDataParameter.MyDataType.Int)
+                        };
+                        MyRecord.Say(string.Format("{0}.{1}，排程起始：{2}到：{3}止，结束时间：{4}", dpCount, deptItem.Value("Name"), TimeBegin, TimeEnd, TimeSet));
+                        using (MyData.MyDataTable mLastPlan = new MyData.MyDataTable(ProcSQL, mps))
+                        {
+                            if (mLastPlan.MyRows.IsNotEmptySet())
+                            {
+                                MyRecord.Say(string.Format("1.1.{2}，读取了{0}条记录，下班时间：{1:yyyy-MM-dd HH:mm}，下面开始计算....", mLastPlan.MyRows.Count, TimeSet, dpCount));
+                                int mLastPlanCount = 1;
+                                foreach (MyData.MyDataRow r in mLastPlan.MyRows)
+                                {
+                                    int PlanID = r.IntValue("ID");
+                                    MyRecord.Say(string.Format("1.1.{0}.{1}，工序：{2}，PlanID={3}，排程：{4}", dpCount, mLastPlanCount, r.Value("ProcessName"), PlanID, r.Value("RdsNo")));
+                                    DateTime mStartTime = DateTime.Now;
+                                    ConfirmAndCheckPlan(PlanID, TimeSet, xMemo);
+                                    MyRecord.Say(string.Format("耗时：{0:#,#0.00}秒。", (DateTime.Now - mStartTime).TotalSeconds));
+                                    mLastPlanCount++;
+                                }
+                            }
+                            else
+                            {
+                                MyRecord.Say("没有获取到任何内容");
+                            }
+                        }
+                        dpCount++;
+                    }
+                    MyRecord.Say(string.Format("计算完毕，一共耗时：{0:#,##0.00}分钟。", (DateTime.Now - bStartTime).TotalSeconds));
+                    MyRecord.Say("-----------------------审核完成。-------------------------------");
+                }
                 else
                 {
-                    return;
+                    MyRecord.Say("没有找到要审核的部门。");
+                    MyRecord.Say("-----------------------审核出错。-------------------------------");
                 }
 
-                SQL = @"Select Max(_ID) as ID from [_PMC_ProdPlan] a Where
-a.PlanBegin Between @TimeBgein And @TimeEnd And PlanEnd is Null
-And Not Exists(Select Top 1 _ID From [_PMC_ProdPlan] b Where b.PlanBegin Between @TimeBgein And @TimeEnd And PlanEnd is Not Null And a.Process=b.Process And a.Department=b.Department)
-Group by Process,Department ";
-                MyData.MyDataTable mLastPlan = new MyData.MyDataTable(SQL,
-                    new MyData.MyDataParameter("@TimeBgein", TimeBegin, MyData.MyDataParameter.MyDataType.DateTime),
-                    new MyData.MyDataParameter("@TimeEnd", TimeEnd, MyData.MyDataParameter.MyDataType.DateTime));
-                if (_StopAll) return;
-                if (mLastPlan != null && mLastPlan.MyRows.Count > 0)
-                {
-                    string memo = string.Format("读取了{0}条记录，下面开始计算....", mLastPlan.MyRows.Count);
-                    MyRecord.Say(memo);
-                    int mLastPlanCount = 1;
-                    foreach (MyData.MyDataRow r in mLastPlan.MyRows)
-                    {
-                        if (_StopAll) return;
-                        MyRecord.Say(string.Format("审核第{0}条:", mLastPlanCount));
-                        int PlanID = Convert.ToInt32(r["ID"]);
-                        DateTime mStartTime = DateTime.Now;
-                        ConfirmAndCheckPlan(PlanID, TimeSet, xMemo);
-                        MyRecord.Say(string.Format("耗时：{0:#,#0.00}秒。", (DateTime.Now - mStartTime).TotalSeconds));
-                        mLastPlanCount++;
-                    }
-                }
-                else
-                {
-                    MyRecord.Say("没有获取到任何内容");
-                }
-                MyRecord.Say(string.Format("计算完毕，一共耗时：{0:#,##0.00}分钟。", (DateTime.Now - bStartTime).TotalSeconds));
-                MyRecord.Say("-----------------------审核完成。-------------------------------");
             }
             catch (Exception ex)
             {
@@ -4045,7 +4113,7 @@ SELECT a.*,b.[_ID] FROM OPENROWSET('SQLOLEDB','server=192.168.1.10;uid=sa','Sele
                 MyRecord.Say(ex);
             }
             MyRecord.Say("-----------------------定时踢出特殊权限-完毕-------------------------------");
-        } 
+        }
         #endregion
 
 

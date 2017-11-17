@@ -189,7 +189,7 @@ namespace MYERP_ServerServiceRuner
         }
 
 
-        protected List<ProduceNoteItem> maindata, mainFinishData, MainPlanData;
+        protected List<Plan_ProduceNoteItem> maindata, mainFinishData, MainPlanData;
 
         List<GridProduceNoteItem> GridList;
 
@@ -273,7 +273,7 @@ Set NoCount Off
             using (MyData.MyDataTable mdata = new MyData.MyDataTable(SQL, mp))
             {
                 var v = from a in mdata.MyRows
-                        select new ProduceNoteItem(a);
+                        select new Plan_ProduceNoteItem(a);
                 maindata = v.ToList();
             }
             MyRecord.Say(string.Format("1.1 读取工单，耗时：{0}秒。", (DateTime.Now - StartTime).TotalSeconds));
@@ -296,7 +296,7 @@ Where a.ProduceNo in (Select ProdNo From _PMC_DeliverPlan_SendList) And a.EndTim
             using (MyData.MyDataTable mdata = new MyData.MyDataTable(SQL, mp))
             {
                 var v = from a in mdata.MyRows
-                        select new ProduceNoteItem(a);
+                        select new Plan_ProduceNoteItem(a);
                 mainFinishData = v.ToList();
             }
 
@@ -346,7 +346,7 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
             using (MyData.MyDataTable mdata = new MyData.MyDataTable(SQL, mp))
             {
                 var v = from a in mdata.MyRows
-                        select new ProduceNoteItem(a);
+                        select new Plan_ProduceNoteItem(a);
                 MainPlanData = v.ToList();
             }
 
@@ -840,9 +840,9 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
 
         }
 
-        protected class ProduceNoteItem
+        protected class Plan_ProduceNoteItem
         {
-            public ProduceNoteItem(MyData.MyDataRow mmdr)
+            public Plan_ProduceNoteItem(MyData.MyDataRow mmdr)
             {
                 ProduceNote = mmdr.Value("ProdRdsNo");
                 ProdCode = mmdr.Value("ProdCode");
