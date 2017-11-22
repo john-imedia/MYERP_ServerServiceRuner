@@ -2267,6 +2267,7 @@ from [_PMC_ProdPlan_YieldRate] a Left Outer Join [pbDept] p On a.DeaprtmentID = 
             {
                 try
                 {
+                    MyRecord.Say("----初始化机台基本资料-----");
                     string sql = @"
 Select procd as ProcCode,a.Code as MachineCode,a.Name as MachineName,
        PrepTime,StdCapcity,a.remark,DepartmentID,a.[_id] as Machine_ID,
@@ -2279,6 +2280,7 @@ Select procd as ProcCode,a.Code as MachineCode,a.Name as MachineName,
         Where isNull(Status,0)<2 Order by Procd,MachineName";
                     using (MyData.MyDataTable md = new MyData.MyDataTable(sql))
                     {
+                        MyRecord.Say(string.Format("读取了：{0}条机台信息",md.MyRows.Count));
                         reLoad(md.MyRows);
                         _LastChangeTime = TestLastChangeTime = LastLoadTime = DateTime.Now;
                         LoadTimes++;
@@ -2288,6 +2290,7 @@ Select procd as ProcCode,a.Code as MachineCode,a.Name as MachineName,
                 {
                     MyRecord.Say(ex);
                 }
+                MyRecord.Say("----初始化机台基本资料，完毕。-----");
             }
 
 

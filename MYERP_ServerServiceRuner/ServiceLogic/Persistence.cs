@@ -164,13 +164,6 @@ namespace MYERP_ServerServiceRuner
 
             private void loadProduct(LoadProductType LdType)
             {
-                int LoadTime = 0;
-                if (LdType == LoadProductType.WithProcessView)
-                    LoadTime = 0;
-                else if (LdType == LoadProductType.Slience)
-                    LoadTime = 5;
-
-                bool wpclose = false;
                 bool LoadRunning = false;
                 lock (LoadingFlag) LoadRunning = LoadingFlag == "Running";
                 if (LoadRunning) return;
@@ -178,13 +171,13 @@ namespace MYERP_ServerServiceRuner
                 {
                     if (LdType == LoadProductType.WithProcessView)
                     {
-                        MyRecord.Say("初始化印件资料");
-                        MyRecord.Say("初始化所有产品到本地，请稍等。\r\n（每隔40分钟会刷新一次。）");
+                        MyRecord.Say("-----初始化印件资料-----");
+                        MyRecord.Say("初始化所有产品到本地，请稍等。（每隔40分钟会刷新一次。）");
                     }
-                    string SQL = @"Select * from _BS_AllProducts";
+                    string SQL = @"Select * from _BS_AllProducts Where ISNULL(@NullParams,'') = '' ";
                     lock (LoadingFlag) LoadingFlag = "Running";
                     _dataSource = new MyData.MyDataTable(SQL, 60, new MyData.MyDataParameter("@NullParams", ""));
-                    MyRecord.Say( string.Format("已经读取了{0}条印件资料，\r\n正在保存到本机电脑。", _dataSource.MyRows.Count));
+                    MyRecord.Say( string.Format("已经读取了{0}条印件资料，正在保存到本机电脑。", _dataSource.MyRows.Count));
                     int iCount = 1;
                     _data.Clear();
                     _data = new List<ProductItem>();
@@ -196,7 +189,7 @@ namespace MYERP_ServerServiceRuner
                         _data.Add(new ProductItem(a));
                         iCount++;
                     }
-                    MyRecord.Say( "印件资料读取完毕。");
+                    MyRecord.Say("-----印件资料读取完毕。-----");
 
                     LoadTimes += 1;
                     _LastChangeTime = LastLoadTime = TestLastChangeTime = DateTime.Now;
@@ -1679,22 +1672,24 @@ namespace MYERP_ServerServiceRuner
 
             public void reLoad()
             {
-                bool wpc = false;
-                MyRecord.Say("初始化物料基本资料");
+                MyRecord.Say("-----初始化物料基本资料开始：------");
                 MyRecord.Say("初始化所有纸张/浪纸/物料到本地，请稍等。");
                 try
                 {
-                    string SQL = "Execute _BS_AllMaterial";
+                    string SQL = "Execute [_BS_AllMaterial]";
                     using (MyData.MyDataTable md = new MyData.MyDataTable(SQL))
                     {
+                        MyRecord.Say(string.Format("已经读取了{0}条，正在保存到本地。", md.MyRows.Count));
                         reLoad(md.MyRows);
                         LoadTimes += 1;
                         _LastChangeTime = TestLastChangeTime = LastLoadTime = DateTime.Now;
                     }
                 }
-                finally
+                catch (Exception ex)
                 {
+                    MyRecord.Say(ex);
                 }
+                MyRecord.Say("------初始化物料基本资料结束。-----");
             }
 
             /// <summary>
@@ -2119,12 +2114,15 @@ Inner Join
 (Select MaterialNo,Max(InputDate) as MaxInputDate from pbMaterialProvider Where isNull(Status,0) > 0 Group by MaterialNo) bb 
 ON a.InputDate = bb.MaxInputDate And a.MaterialNo = bb.MaterialNo
 Inner Join coVender c On a.VenderNo = c.Code Inner Join pbMoneyType d On c.moneytype = d.Code";
+                MyRecord.Say("----加载物料采购价格-----");
                 using (MyData.MyDataTable dt = new MyData.MyDataTable(SQL))
                 {
+                    MyRecord.Say(string.Format("共{0}条", dt.MyRows.Count));
                     var v = from a in dt.MyRows
                             select new MaterialPriceItem(a);
                     this._data = v.ToList();
                 }
+                MyRecord.Say("----加载物料采购价格，完毕。-----");
             }
         }
 
@@ -2181,17 +2179,17 @@ Inner Join coVender c On a.VenderNo = c.Code Inner Join pbMoneyType d On c.money
                 MyData.MyDataTable _DataSource = null;
                 try
                 {
-                    MyRecord.Say("初始化工序基本资料");
+                    MyRecord.Say("------初始化工序基本资料------");
                     string SQL = @"Select a.Code as ProcCode,a.name as ProcName,a.pType,WaitTime,a.[_ID] as ID,Remark,otherinf,
                                               FormulaString,FormulaView,Unit,LossRatio,UsePersonFormula,EstimateStatus
                                    From moProcedure a ";
-                    MyRecord.Say("加载工序基本信息，请稍等。");
                     _DataSource = new MyData.MyDataTable(SQL);
                     string MemoSQL = @"Select * from _BS_Procedure_Memo", ColorSQL = @"Select code as id,name from pbPrintColor";
                     MyData.MyDataTable MemoData = new MyData.MyDataTable(MemoSQL);
                     MyData.MyDataTable ColorData = new MyData.MyDataTable(ColorSQL);
                     try
                     {
+                        MyRecord.Say(string.Format("加载{0}条工序。", _DataSource.MyRows.Count));
                         var q = from a in MemoData.MyRows
                                 select new ProcessMemoItem(a.Value("name"), a.Value("ProcCode"), a.IntValue("_ID"))
                                 {
@@ -2237,20 +2235,15 @@ Inner Join coVender c On a.VenderNo = c.Code Inner Join pbMoneyType d On c.money
                                     x.MemoItemList = null;
                                 }
                                 _ProcedureColl.Add(xCode, x);
-                                MyRecord.Say(string.Format("正在加载{0}", xName));
                             }
-
-
                             var lv = from a in _ProcedureColl
                                      orderby a.Key
                                      select a.Key;
                             _KeyList = lv.ToList();
-
-                            MyRecord.Say("工序加载完成。");
-
                             _LastChangeTime = TestLastChangeTime = LastLoadTime = DateTime.Now;
                             LoadTimes++;
                         }
+                        MyRecord.Say("------初始化工序基本资料，完毕------");
                     }
                     finally
                     {
@@ -3365,11 +3358,13 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
 
             public ProduceNote(string ProduceRdsNo)
             {
+                MyRecord.Say(string.Format("{0}，进入工单类。", ProduceRdsNo));
                 Load(ProduceRdsNo);
                 LoadOrderInfo();
                 LoadDetial();
                 isNew = false;
                 isEdit = false;
+                MyRecord.Say(string.Format("{0}，工单读取完毕。", ProduceRdsNo));
             }
 
             public ProduceNote(int ProduceID)
@@ -3391,7 +3386,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
 
             private void Load(string RdsNo)
             {
-                MyRecord.Say("加载工单。");
+                MyRecord.Say(string.Format("{0}，读取工单基本信息。", RdsNo));
                 string SQL = @"Select * from moProduce Where rdsno = @RdsNo";
                 using (MyData.MyDataTable md = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@RdsNo", RdsNo)))
                 {
@@ -3482,6 +3477,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
             #region 加载订单信息
             public void LoadOrderInfo()
             {
+                MyRecord.Say(string.Format("{0}，读取工单SO信息。", RdsNo));
                 if (isNew) return;
                 Thread.Sleep(200);
                 string SQL = @" Select a.id as Mid,custorderid as CustOrderNo,a.Remark,b.Remark as sRemark,b.PayNumb as Numb
@@ -3491,7 +3487,6 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
                     new MyData.MyDataParameter("@OrderNo",OrderNo),
                     new MyData.MyDataParameter("@PID",OrderSID, MyData.MyDataParameter.MyDataType.Int)
                 };
-                MyRecord.Say("加载工单中的订单信息。");
                 using (MyData.MyDataTable md = new MyData.MyDataTable(SQL, mps))
                 {
                     if (md != null && md.Rows.Count > 0)
@@ -3649,6 +3644,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
                     new MyData.MyDataParameter("@ID",ID, MyData.MyDataParameter.MyDataType.Int),
                 };
                 #region 加载工艺
+                MyRecord.Say(string.Format("{0}，读取工单工艺。", RdsNo));
                 string SQLProcess = @"Exec [_PMC_ProduceProcess] @ID";
                 using (MyData.MyDataTable md = new MyData.MyDataTable(SQLProcess, mps))
                 {
@@ -3658,6 +3654,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
                 }
                 #endregion
                 #region 加载纸张物料
+                MyRecord.Say(string.Format("{0}，读取工单物料。", RdsNo));
                 string SQLMaterial = @"Exec [_PMC_ProduceMaterial] @ID";
                 using (MyData.MyDataTable md = new MyData.MyDataTable(SQLMaterial, mps))
                 {
@@ -3667,6 +3664,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
                 }
                 #endregion
                 #region 加载部件
+                MyRecord.Say(string.Format("{0}，生成工单明细信息。", RdsNo));
                 if (_ProduceProcesses.Count + _ProduceMaterials.Count > 0)
                 {
                     if (_ProduceMaterials != null && _ProduceProcesses != null)
@@ -6606,6 +6604,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
 
             public void LoadBom(ProductItem prod)
             {
+                MyRecord.Say("从印件资料加载BOM基本信息");
                 Code = prod.Code;
                 isOnEdit = false;
                 if (prod.BomID > 0)
@@ -6628,6 +6627,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
 
             public void reLoadDetial()
             {
+                MyRecord.Say(string.Format("{0},读取BOM详细信息。",Code));
                 if (Parent.IsNull())
                 {
                     LoadBom(this.Code);
@@ -6647,7 +6647,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
                     {
                         ID = id;
                         isNewBom = false;
-
+                        MyRecord.Say("读取BOM工艺和物料信息");
                         #region 加载物料
                         int xBomMaterialListCount = BomMaterialListCount;
                         if (xBomMaterialListCount > 0)
@@ -6660,6 +6660,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
                         }
                         else
                         {
+                            MyRecord.Say("读取BOM工艺。");
                             List<BomMaterial> xSource = GetBomMaterialList(this.ID);
                             if (xSource.IsNotEmptySet())
                             {
@@ -6691,6 +6692,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
                         }
                         else
                         {
+                            MyRecord.Say("读取BOM物料。");
                             List<BomProcess> xSource = GetBomProcessList(this.ID);
                             if (xSource.IsNotEmptySet())
                             {
@@ -6730,6 +6732,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
                         //this.Materials = vM.ToList();
                         //if (Materials != null) Materials.ForEach(new Action<BomMaterial>(x => x.Parent = this));
                         #endregion
+                        MyRecord.Say("生成BOM。");
                         LoadBomParts();
                     }
                 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -719,7 +720,7 @@ namespace MYERP_ServerServiceRuner
             /// </summary>
             /// <param name="MemoText"></param>
             /// <returns></returns>
-            protected double GetGlazingNumber(string MemoText)
+            public static double GetGlazingNumber(string MemoText)
             {
                 string hzMemoText = MyConvert.LCZH(MemoText),
                        dblKeyWord = MyConvert.LCZH("双面"),
@@ -898,6 +899,37 @@ namespace MYERP_ServerServiceRuner
                 //    id = 1;
                 //}
             }
+
+
+            protected internal EstimateProcessItem(EstimateProductItem parents, ProduceProcess a)
+            {
+                Parent = parents;
+                isNew = true;
+                var v = from b in parents.Process
+                        select b.id;
+                if (v.IsNotNull() && v.Count() > 0)
+                {
+                    id = v.Max() + 1;
+                }
+
+                ProcessCode = a.Process.IsNotNull() ? a.Process.Code : null;
+                MachineCode = a.Machine.IsNotNull() ? a.Machine.Code : null;
+                PlateNumb = a.PlateNumber;
+                ColorNumb1 = a.CA1 + a.CB1;
+                ColorNumb2 = a.CA2 + a.CB2;
+                ColorNumb3 = EstimateProductItem.GetGlazingNumber(string.Format("{0}/{1}", a.ProcMemo, a.OtherMemo));
+                StdCapcityRate = a.ProductionCoefficient;
+                StdLossTimeRate = a.CleanMachineCoefficient;
+                PartID = a.PartID;
+                ColNumb = a.ColNumb;
+                ProduceRemark = string.Format("{0}/{1}", a.ProcMemo, a.OtherMemo);
+                LossNumb = ((a.LossedNumb + a.RejectNumb) / a.ColNumb);
+                Numb = (a.FinishNumb / a.ColNumb);
+                id = a.ID;
+            }
+
+
+
             /// <summary>
             /// 从BOM来的加工说明。
             /// </summary>
@@ -1763,6 +1795,41 @@ namespace MYERP_ServerServiceRuner
                 }
             }
 
+            protected internal EstimateMaterialItem(EstimateProductItem parents, ProduceMaterial a)
+            {
+                Parent = parents;
+                isNew = true;
+                Type = a.MaterialType == BomMaterial.BomMaterialTypeEnum.BomPaper ? EstimateMaterialItem.MaterialTypeEnum.Type_Paper :
+                                        a.MaterialType == BomMaterial.BomMaterialTypeEnum.BomWavePaper ? EstimateMaterialItem.MaterialTypeEnum.Type_WavePaper :
+                                        EstimateMaterialItem.MaterialTypeEnum.Type_Material;
+                var v = from b in Parent.Material
+                        select b.id;
+                if (v.IsNotNull() && v.Count() > 0)
+                {
+                    id = v.Max() + 1;
+                }
+                else
+                {
+                    id = 1;
+                }
+
+                MaterialCode = a.Code;
+                ColNumb = a.ColNumb;
+                CutNumb = a.CutNumb;
+                UnitNumb = a.UnitNumb;
+                PartID = a.PartID;
+                Length = a.Length;
+                Width = a.Width;
+                ProductNumb = a.PartNumb;
+                PrintLossNumb = (double)a.PrintLossNumb;
+                PostprocessLossNumb = (double)a.PostpressLossNumb;
+                Numb = (double)a.SheetNumber;
+                Numb2 = a.PickedNumber + a.OverflowNumber - a.RetrunNumber;
+                OverrideNumb = a.OverflowNumber;
+                Remark = a.Remark;
+                id = a.ID;
+            }
+
             public int id { get; set; }
 
             public bool isNew { get; set; }
@@ -2007,6 +2074,9 @@ namespace MYERP_ServerServiceRuner
             ///
             /// </summary>
             public double ProductNumb { get; set; }
+
+
+            private double _Numb = -1;
             /// <summary>
             /// 领纸张数、物料数量
             /// </summary>
@@ -2014,6 +2084,7 @@ namespace MYERP_ServerServiceRuner
             {
                 get
                 {
+                    if (_Numb > -1) return _Numb;
                     if (Type == MaterialTypeEnum.Type_Paper)
                     {
                         if (ColNumb == 0) ColNumb = 1;
@@ -2030,7 +2101,13 @@ namespace MYERP_ServerServiceRuner
                         return ProductNumb * UnitNumb;
                     }
                 }
+                set
+                {
+                    _Numb = -1;
+                }
             }
+
+            private double _Numb2 = -1;
             /// <summary>
             /// 领料张数
             /// </summary>
@@ -2038,6 +2115,7 @@ namespace MYERP_ServerServiceRuner
             {
                 get
                 {
+                    if (_Numb2 > -1) return _Numb2;
                     if (Type == MaterialTypeEnum.Type_Paper)
                     {
                         if (CutNumb == 0) CutNumb = 1;
@@ -2056,13 +2134,19 @@ namespace MYERP_ServerServiceRuner
                         return Numb;
                     }
                 }
+                set
+                {
+                    _Numb2 = value;
+                }
             }
 
+            private double _PrintLossNumb = -1;
 
             public double PrintLossNumb
             {
                 get
                 {
+                    if (_PrintLossNumb > -1) return _PrintLossNumb;
                     var v = from a in Parent.Process
                             where a.PartID == this.PartID && a.isPrint
                             select a;
@@ -2072,12 +2156,19 @@ namespace MYERP_ServerServiceRuner
                     }
                     return 0;
                 }
+                set
+                {
+                    _PrintLossNumb = value;
+                }
             }
+
+            private double _PostprocessLossNumb = -1;
 
             public double PostprocessLossNumb
             {
                 get
                 {
+                    if (_PostprocessLossNumb > -1) return _PostprocessLossNumb;
                     var v = from a in Parent.Process
                             where a.PartID == this.PartID && a.isNotPrint
                             select a;
@@ -2087,7 +2178,13 @@ namespace MYERP_ServerServiceRuner
                     }
                     return 0;
                 }
+                set
+                {
+                    _PostprocessLossNumb = value;
+                }
             }
+
+            public double OverrideNumb { get; set; }
 
             /// <summary>
             /// 按照输入数量的金额
@@ -2466,13 +2563,15 @@ Select * from _PMC_Process_Price_Loss";
         {
             public ProduceEstimate(string ProduceRdsNo)
             {
+                MyRecord.Say(string.Format("{0}，创建估价单类。", ProduceRdsNo));
                 Parent = new EstimateNote();
+                MyRecord.Say(string.Format("{0}，创建工单类。", ProduceRdsNo));
                 ProduceNote = new ProduceNote(ProduceRdsNo);
+                MyRecord.Say(string.Format("{0}，从工单设定估价基本内容。", ProduceRdsNo));
                 Code = ProduceNote.Product.Code;
                 Name = ProduceNote.Product.Name;
                 UnflodSize = ProduceNote.Product.UnfoldSize;
                 Size = ProduceNote.Product.Size;
-                Numb1 = ProduceNote.PNumb;
             }
 
             public ProduceNote ProduceNote { get; set; }
@@ -2482,7 +2581,7 @@ Select * from _PMC_Process_Price_Loss";
                 if (ProduceNote.IsNull()) return;
                 MyRecord.Say(string.Format("1.获取产品信息{0}，和BOM", this.Code));
 
-                Numb1 = ProduceNote.PNumb;
+                Numb1 = ProduceNote.StockNumber;
 
                 ProductItem p = ProduceNote.Product;
                 this.TypeCode = p.TypeCode;
@@ -2502,24 +2601,7 @@ Select * from _PMC_Process_Price_Loss";
                 {
                     var vProcess = from a in N.Processes
                                    orderby a.Sort_ID
-                                   select new EstimateProcessItem(this)
-                                   {
-                                       ProcessCode = a.Process.IsNotNull() ? a.Process.Code : null,
-                                       MachineCode = a.Machine.IsNotNull() ? a.Machine.Code : null,
-                                       PlateNumb = a.PlateNumber,
-                                       ColorNumb1 = a.CA1 + a.CB1,
-                                       ColorNumb2 = a.CA2 + a.CB2,
-                                       ColorNumb3 = GetGlazingNumber(string.Format("{0}/{1}", a.ProcMemo, a.OtherMemo)),
-                                       StdCapcityRate = a.ProductionCoefficient,
-                                       StdLossTimeRate = a.CleanMachineCoefficient,
-                                       PartID = a.PartID,
-                                       ColNumb = a.ColNumb,
-                                       ProduceRemark = string.Format("{0}/{1}", a.ProcMemo, a.OtherMemo),
-                                       LossNumb = ((a.LossedNumb + a.RejectNumb) / a.ColNumb),
-                                       Numb = (a.FinishNumb / a.ColNumb),
-                                       //BomPersonNumber =  a.PersonNumb,
-                                       id = a.ID
-                                   };
+                                   select new EstimateProcessItem(this, a);
                     this.Process.AddRange(vProcess.ToArray());
                     //带入单价和版数（版数在纸张里）
                     int iIndex = 0;
@@ -2554,24 +2636,10 @@ Select * from _PMC_Process_Price_Loss";
                 {
                     var vMaterial = from a in N.Materials
                                     orderby a.Sort_ID
-                                    select new EstimateMaterialItem(this,
-                                        a.MaterialType == BomMaterial.BomMaterialTypeEnum.BomPaper ? EstimateMaterialItem.MaterialTypeEnum.Type_Paper :
-                                        a.MaterialType == BomMaterial.BomMaterialTypeEnum.BomWavePaper ? EstimateMaterialItem.MaterialTypeEnum.Type_WavePaper :
-                                        EstimateMaterialItem.MaterialTypeEnum.Type_Material)
-                                    {
-                                        MaterialCode = a.Code,
-                                        ColNumb = a.ColNumb,
-                                        CutNumb = a.CutNumb,
-                                        UnitNumb = a.UnitNumb,
-                                        PartID = a.PartID,
-                                        Length = a.Length,
-                                        Width = a.Width,
-                                        ProductNumb = a.PartNumb,
-                                        id = a.ID
-                                    };
+                                    select new EstimateMaterialItem(this, a);
                     this.Material.AddRange(vMaterial.ToArray());
                 }
-
+                MyRecord.Say("设定计算价格。");
                 LoadPrice();
             }
         }
@@ -2721,7 +2789,6 @@ Select * from _PMC_Process_Price_Loss";
         #endregion
 
         #region 定时计算工单成本
-        bool ProduceEstimateRuning = false;
 
         void ProduceEstimateLoader()
         {
@@ -2736,14 +2803,27 @@ Select * from _PMC_Process_Price_Loss";
         {
             try
             {
-                ProduceEstimateRuning = true;
                 string SQL = "";
                 MyRecord.Say("---------------------启动定时计算工单成本计算。------------------------------");
-                DateTime NowTime = DateTime.Now, StartTime = ProduceEstimateLastRunTime.AddDays(-1);
+                DateTime NowTime = DateTime.Now, StartTime = ProduceEstimateLastRunTime.AddDays(-2);
                 ProduceEstimateLastRunTime = NowTime;
+                MyRecord.Say("1.重新加载所有产品表");
+                Products.reLoad();
+                MyRecord.Say("2.重新加载所有物料表");
+                Materials.reLoad();
+                MyRecord.Say("3.重新加载所有工序表");
+                Processes.reLoad();
+                MyRecord.Say("4.重新加载所有机台表");
+                Machines.reLoad();
+                MyRecord.Say("5.重新加载估价工序表");
+                LoadEstimateProcessList();
+                MyRecord.Say("重新加载物料价格表");
+                MaterialPrice.Load();
                 MyRecord.Say(string.Format("计算起始时间：{0:yy/MM/dd HH:mm}", StartTime));
                 MyRecord.Say("定时计算——获取计算范围");
-                SQL = @"SELECT RdsNo FROM moProduce WHERE StockDate > @Time Order by RdsNo ";
+                SQL = @"SELECT a.RdsNo FROM moProduce a Inner Join [AllMaterialView] b On a.Code=b.Code
+		                          Inner Join [coOrder] o On a.OrderNo = o.RdsNo
+                         WHERE a.StockDate > @Time And a.RdsNo Like 'PO%' And b.Type <> '110' Order by a.RdsNo ";
                 MyData.MyDataTable mTableProduceFinished = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@Time", StartTime, MyData.MyDataParameter.MyDataType.DateTime));
                 if (_StopAll) return;
                 if (mTableProduceFinished != null && mTableProduceFinished.MyRows.Count > 0)
@@ -2790,14 +2870,20 @@ Select * from _PMC_Process_Price_Loss";
         {
             try
             {
+                MyRecord.Say(string.Format("{0}。创建计算类。", CurrentRdsNO));
                 ProduceEstimate pe = new ProduceEstimate(CurrentRdsNO);
+                MyRecord.Say(string.Format("{0}。读取工单结构，完工数。", CurrentRdsNO));
                 pe.LoadFromProduce();
+                MyRecord.Say(string.Format("{0}。计算价格。", CurrentRdsNO));
                 double Price = pe.Price1 = pe.GotPrice();
-                string SQL = "Update moProduce Set Price = @Price Where RdsNo = @RdsNo ";
+                MyRecord.Say(string.Format("{0}。输出计算结果。", CurrentRdsNO));
+                FillDetial(pe);
+                MyRecord.Say(string.Format("{0}。保存价格到工单。", CurrentRdsNO));
+                string SQL = "Update moProduce Set EstimatePrice = @Price Where RdsNo = @RdsNo ";
                 MyData.MyDataParameter mdp = new MyData.MyDataParameter("@Price", Price, MyData.MyDataParameter.MyDataType.Numeric);
                 MyData.MyDataParameter mdr = new MyData.MyDataParameter("@RdsNo", CurrentRdsNO);
                 MyData.MyCommand mcd = new MyData.MyCommand();
-               return  mcd.Execute(SQL, mdp, mdr);
+                return mcd.Execute(SQL, mdp, mdr);
             }
             catch (Exception ex)
             {
@@ -2805,6 +2891,338 @@ Select * from _PMC_Process_Price_Loss";
                 return false;
             }
         }
+
+
+        void FillDetial(ProduceEstimate CurrentNote)
+        {
+            try
+            {
+                MyRecord.Say(string.Format("-------估价单号：{0}，工单号：{1}，价格：{2}，已经计算完毕，输出结果-------。", CurrentNote.EstimateRdsNo, CurrentNote.ProduceNote.RdsNo, CurrentNote.Price1));
+                if (CurrentNote.IsNull()) return;
+                bool bok = CurrentNote.ProduceNote.isMutipart;
+                if (bok) MyRecord.Say("这是书刊");
+
+                MyRecord.Say(string.Format("客户：{0}，编号：{1},料号：{2}，{3}，数量：{4}，入库数量：{9}，币种：{5}，价格：{6}，金额：{7}，基本资料价格：{8}",
+                                            CurrentNote.ProduceNote.CustCode,
+                                            CurrentNote.Code,
+                                            CurrentNote.Name,
+                                            CurrentNote.ProduceNote.OrderNo,
+                                            CurrentNote.ProduceNote.PNumb,
+                                            CurrentNote.Parent.MoneyTypeCode,
+                                            CurrentNote.Price1,
+                                            CurrentNote.Price1 * CurrentNote.ProduceNote.PNumb,
+                                            CurrentNote.ProduceNote.Product.Price,
+                                            CurrentNote.ProduceNote.StockNumber));
+
+                var vPaper = from a in CurrentNote.Material
+                             where a.Type == EstimateMaterialItem.MaterialTypeEnum.Type_Paper
+                             orderby a.Sort_ID
+                             select a;
+
+                foreach (var item in vPaper)
+                {
+                    MyRecord.Say(string.Format("纸张：\r\n     部件：{0}，编号：{1}，名称：{2}，{3}，{4}g，{5}开{6}模，张数：{7}，印刷放损：{8}，后制放损：{9}，领纸数：{12}，纸价：{10}，单价：{11}",
+                                               item.PartID,
+                                               item.MaterialCode,
+                                               item.MaterialName,
+                                               item.MaterialSize,
+                                               item.gw,
+                                               item.CutNumb,
+                                               item.ColNumb,
+                                               item.Numb,
+                                               item.PrintLossNumb,
+                                               item.PostprocessLossNumb,
+                                               item.Price,
+                                               item.UnitPrice,
+                                               item.Numb2));
+                }
+
+                var vPrint = from a in CurrentNote.Process
+                             where a.isPrint
+                             orderby a.Sort_ID
+                             select a;
+
+                foreach (var item in vPrint)
+                {
+                    MyRecord.Say(string.Format("印刷：\r\n     部件：{0}，机台：({1}){2}，{3}，完工数：{4}，损耗数：{5}，模数：{6}，版式：{7}，版数：{8}，版费：{9}，四色：{10}x{11}，专色：{12}x{13}，过油：{14}x{15}，起订量：{16}，起订价：{17}，单价：{18}",
+                                               item.PartID,          //0
+                                               item.MachineTypeName, //1
+                                               item.MachineName,     //2
+                                               item.Name,            //3
+                                               item.Numb,            //4
+                                               item.LossNumb,        //5
+                                               item.ColNumb,         //6
+                                               item.PlateType,       //7
+                                               item.PlateNumb,       //8
+                                               item.FixPrice,        //9
+                                               item.ColorNumb1,      //10
+                                               item.Price1,          //11
+                                               item.ColorNumb2,      //12
+                                               item.Price2,          //13
+                                               item.ColorNumb3,      //14
+                                               item.Price3,          //15
+                                               item.StartNumber,     //16
+                                               item.StartPrice,      //17
+                                               item.UnitPrice));     //18
+                }
+
+                var vPostprocess = from a in CurrentNote.Process
+                                   where a.isNotPrint
+                                   orderby a.Sort_ID
+                                   select a;
+                foreach (var item in vPostprocess)
+                {
+                    MyRecord.Say(string.Format("后加工：\r\n      部件：{0}，工序：({1}){2}，机台：({3}){4}，{5}，张数：{7}，损耗：{6}，计算数：{8}（{9}），模数：{10}，版费：{11}，价格：{12}，起订量：{13}，起订价：{14}，单价：{15}",
+                                               item.PartID,       //0
+                                               item.ProcessCode,  //1
+                                               item.ProcessName,  //2
+                                               item.MachineCode,  //3
+                                               item.MachineName,  //4
+                                               item.Name,         //5
+                                               item.LossNumb,     //6
+                                               item.Numb,         //7
+                                               item.Numb2,        //8
+                                               item.Unit,         //9
+                                               item.ColNumb,      //10
+                                               item.FixPrice,     //11
+                                               item.Price1,       //12
+                                               item.StartNumber,  //13
+                                               item.StartPrice,   //14
+                                               item.UnitPrice));  //15
+                }
+
+                var vWavePaper = from a in CurrentNote.Material
+                                 where a.Type == EstimateMaterialItem.MaterialTypeEnum.Type_WavePaper
+                                 orderby a.Sort_ID
+                                 select a;
+                foreach (var item in vWavePaper)
+                {
+                    MyRecord.Say(string.Format("瓦楞纸：\r\n       部件：{0}，（{1}）{2}，模数：{3}，领用数：{6}，价格：{4}，单价：{5}",
+                                                item.PartID,      //0
+                                                item.MaterialCode,//1
+                                                item.MaterialName,//2
+                                                item.ColNumb,     //3
+                                                item.Price,       //4
+                                                item.UnitPrice,
+                                                item.Numb2)); //5
+                }
+
+                var vMaterial = from a in CurrentNote.Material
+                                where a.Type == EstimateMaterialItem.MaterialTypeEnum.Type_Material
+                                orderby a.Sort_ID
+                                select a;
+                foreach (var item in vMaterial)
+                {
+                    MyRecord.Say(string.Format("辅料：\r\n       部件：{0}，（{1}）{2}，{3}，领用数：{7}，价格：{4}/{5}，单价：{6}",
+                                               item.PartID,      //0
+                                               item.MaterialCode,//1
+                                               item.MaterialName,//2
+                                               item.MaterialSize,//3
+                                               item.Price,       //4
+                                               item.Unit,        //5
+                                               item.UnitPrice,
+                                               item.Numb2)); //6
+                }
+            }
+            catch (Exception ex)
+            {
+                MyRecord.Say(ex);
+            }
+        }
+
+
+        #region 发送3天前没有结案的工单
+
+        void SendProduceEstimateLoder()
+        {
+            MyRecord.Say("开启定时发送当日结单成本..........");
+            Thread t = new Thread(SendProduceEstimateEmail);
+            t.IsBackground = true;
+            t.Start();
+            MyRecord.Say("开启定时当日结单成本完成。");
+        }
+
+        void SendProduceEstimateEmail()
+        {
+            try
+            {
+                MyRecord.Say("-----------------开启定时发送未结工单-------------------------");
+                string body = MyConvert.ZH_TW(@"
+<HTML>
+<BODY style=""FONT-SIZE: 9pt; FONT-FAMILY: PMingLiU"" leftMargin=5 topMargin=5 bgColor=#ece4f3 #ffffff>
+<DIV><FONT size=3 face=PMingLiU>{4}ERP系统提示您：</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 请注意，以下内容为昨天（{0:yy/MM/dd HH:mm}至{1:yy/MM/dd HH:mm}）所有结单工单，成本单价小于印件资料单价的内容。</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; （说明：印件资料单价是业务输入的报价，成本单价是以入库数即时计算的价格。）</FONT></DIV>
+<DIV><FONT size=3 face=PMingLiU>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<TABLE style=""BORDER-COLLAPSE: collapse"" cellSpacing=0 cellPadding=0 width=""100%"" border=0>
+  <TBODY>
+    <TR>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    工单号
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    编号
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    料号
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    工单数量
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    入库数量
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    印件资料单价
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    成本单价
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    价差
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    币种
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    工单状态
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    工单性质
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    入仓别
+    </TD>
+    </TR>
+    {2}
+</TBODY></TABLE></FONT>
+</DIV>
+<DIV><FONT face=PMingLiU><FONT size=2></FONT>&nbsp;</DIV>
+<DIV><FONT color=#0000ff size=4 face=PMingLiU><STRONG>&nbsp;&nbsp;此郵件由ERP系統自動發送，请勿在此郵件上直接回復。</STRONG></FONT></DIV>
+<DIV><FONT color=#800080 size=2><STRONG>&nbsp;&nbsp;&nbsp;</STRONG>
+<FONT color=#000000 face=PMingLiU>{3:yy/MM/dd HH:mm}，由ERP系统伺服器（{5}）自动发送。<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;如自動發送功能有問題或者格式内容修改建議，請MailTo:<A href=""mailto:my80@my.imedia.com.tw"">JOHN</A><BR>
+</FONT></FONT></DIV></FONT></BODY></HTML>
+");
+                string br = @"
+    <TR>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {0}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {1}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {2}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {5}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {6}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent{11}"" align=center >
+    {7}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {8}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {9}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {10}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {3}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {4}
+    </TD>
+    <TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+    {12}
+    </TD>
+    </TR>
+";
+
+                string SQL = @"
+Select a.id,a.RdsNo,a.CustID as CustCode,a.Code,b.Name,b.Size,b.UnfoldSize,a.[_id],a.PNumb,a.OrderNo as OrderRdsNo,o.moneytype as MoneyTypeCode,
+	   MoneyTypeName = (Select cName From pbMoneyType Where Code = o.moneytype),a.EstimatePrice,b.Price as ProdPrice,a.InStockFinishNumb,
+       PropertyName = (Select Name from [_SY_Status] Where Type = 'POProperty' And StatusID = a.Property),
+       StatusName = (Case When a.Status > 0 And a.Status < 3 Then (Select Name From [_SY_Status] ss1 Where ss1.StatusID = a.StockStatus And ss1.Type = 'POStatus') Else (Select Name from [_SY_Status] Where Type = 'PO' And StatusID = a.Status) End),
+       LocationTypeName=(Select Name from [_BS_Location_Type] lt Where lt.Code = a.StockLocationType),
+       PriceDiff = isNull(a.EstimatePrice,0) - isNull(b.Price,0),OrderTypeName=(Select Name From [_SD_OrderNote_Type] Where Code = o.Type)
+           FROM [moProduce] a Inner Join [AllMaterialView] b On a.Code=b.Code
+		                      Inner Join [coOrder] o On a.OrderNo = o.RdsNo
+          Where a.RdsNo Like 'PO%' And b.Type <> '110' And a.CustID <> 'MY' And a.StockDate Between @DateBegin And @DateEnd And 
+                isNull(a.EstimatePrice,0) >0 And isNull(a.EstimatePrice,0) - isNull(b.Price,0) > 0 And o.Type <> '04' And a.property <> 1 And a.StockLocationType in ('01','02')
+		   Order by (Case When isNull(b.Price,0) > 0 Then 0 else 1 End) asc,a.RdsNo asc
+";
+                DateTime NowTime = DateTime.Now;
+                string brs = "";
+                MyRecord.Say("后台计算");
+                DateTime dt1 = NowTime.AddDays(-1).Date.AddHours(8), dt2 = NowTime.Date.AddHours(8);
+                MyData.MyDataParameter[] mps = new MyData.MyDataParameter[]
+                {
+                    new MyData.MyDataParameter("@DateBegin",dt1, MyData.MyDataParameter.MyDataType.DateTime),
+                    new MyData.MyDataParameter("@DateEnd",dt2, MyData.MyDataParameter.MyDataType.DateTime)
+                };
+
+
+                using (MyData.MyDataTable md = new MyData.MyDataTable(SQL, mps))
+                {
+                    MyRecord.Say("工单已经获取");
+                    if (md != null && md.MyRows.Count > 0)
+                    {
+                        foreach (var ri in md.MyRows)
+                        {
+                            brs += string.Format(br, ri.Value("RdsNo"),                                                  //0
+                                                     ri.Value("Code"),                                                   //1
+                                                     ri.Value("Name"),                                                   //2
+                                                     ri.Value("StatusName"),                                             //3
+                                                     ri.Value("OrderTypeName"),                                          //4
+                                                     string.Format("{0:0}",ri.Value<double>("PNumb")),                   //5
+                                                     string.Format("{0:0}",ri.Value<double>("InStockFinishNumb")),       //6
+                                                     string.Format("{0:0.0000##}",ri.Value<double>("ProdPrice")),        //7
+                                                     string.Format("{0:0.0000##}",ri.Value<double>("EstimatePrice")),    //8
+                                                     string.Format("{0:0.00}",ri.Value<double>("PriceDiff")),            //9
+                                                     ri.Value("MoneyTypeName"),                                          //10
+                                                     ri.Value<double>("ProdPrice") == 0 ? "; COLOR:Red":"",              //11
+                                                     ri.Value("LocationTypeName")                                        //12
+                                                    );
+                        }
+                        MyRecord.Say(string.Format("表格一共：{0}行，表格已经生成。", md.Rows.Count));
+                        MyRecord.Say("创建SendMail。");
+                        MyBase.SendMail sm = new MyBase.SendMail();
+                        MyRecord.Say("加载邮件内容。");
+                        sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, dt1, dt2, brs, NowTime, MyBase.CompanyTitle, LocalInfo.GetLocalIp()));
+                        sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_工单成本计算。", NowTime, MyBase.CompanyTitle));
+                        string mailto = ConfigurationManager.AppSettings["ProduceEstimateMailTo"], mailcc = ConfigurationManager.AppSettings["ProduceEstimateMailCC"];
+                        MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+                        sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
+                        sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
+                        //sm.MailTo = "my80@my.imedia.com.tw";
+                        MyRecord.Say("发送邮件。");
+                        sm.SendOut();
+                        MyRecord.Say("已经发送。");
+                    }
+                    else
+                    {
+                        MyRecord.Say("没有找到资料。");
+                    }
+                }
+                MyRecord.Say("------------------发送完成----------------------------");
+            }
+            catch (Exception e)
+            {
+                MyRecord.Say(e);
+            }
+        }
+
+        #endregion
+
+
+
         #endregion
 
     }

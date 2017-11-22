@@ -108,7 +108,7 @@ namespace MYERP_ServerServiceRuner
                     ProduceFeedBackLastRunTime = NowTime.AddDays(-5);
                     MyRecord.Say(string.Format("设定时间成功：CheckStockStartTime={0} ProduceFeedBackLastRunTime = {1} ", CheckStockStartTime, ProduceFeedBackLastRunTime));
                     #region 暂停
-                    ProduceEstimateLoader();
+                    if (CompanyType == "MY") SendProduceEstimateLoder();
                     #endregion
                 }
 
@@ -242,8 +242,11 @@ namespace MYERP_ServerServiceRuner
                 }
                 else if (h == 2 && m == 3 && s == 30)
                 {
-                    ProduceEstimateLoader();
-                    Thread.Sleep(1000);
+                    if (CompanyType == "MY")
+                    {
+                        ProduceEstimateLoader();
+                        Thread.Sleep(1000);
+                    }
                 }
                 else if (h == 4 && m == 2 && s == 1) //自动计算库存的最后出库日期，平均周转天数，反馈入库时间到出库表
                 {
@@ -306,6 +309,13 @@ namespace MYERP_ServerServiceRuner
                     else if (h == 12 && m == 35 && s == 55)  //自动发送未结束维修申请//2周未审核的作废
                     {
                         MachineRepairReportLoder();
+                    }
+                    else if (h == 13 && m == 45 && s == 9) //发送昨日结单的成本
+                    {
+                        if (CompanyType == "MY")
+                        {
+                            SendProduceEstimateLoder();
+                        }
                     }
                     else if (h == 22 && m == 55 && s == 52) //发送工单差异数
                     {
