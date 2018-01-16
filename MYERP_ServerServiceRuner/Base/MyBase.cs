@@ -348,15 +348,16 @@ namespace MYERP_ServerServiceRuner.Base
                 mail.DeliveryNotificationOptions = DeliveryNotificationOptions.OnFailure | DeliveryNotificationOptions.Delay;
                 mail.Priority = MailPriority.Normal;
 
-                //SmtpClient Sender = new SmtpClient("59.125.179.177");
-                SmtpClient Sender = new SmtpClient("my.imedia.com.tw");
+                SmtpClient Sender = new SmtpClient("59.125.179.177");
+                //SmtpClient Sender = new SmtpClient("my.imedia.com.tw");
+                //SmtpClient Sender = new SmtpClient("192.168.10.110");
+                Sender.Timeout = 30 * 1000;
                 Sender.DeliveryMethod = SmtpDeliveryMethod.Network;
                 Sender.EnableSsl = false;
                 Sender.Port = 25;
                 Sender.UseDefaultCredentials = false;
-                Sender.Timeout = 120 * 1000;
                 Sender.Credentials = new NetworkCredential("AutoMessage", "HWGV1z86");
-
+                
                 try
                 {
                     Sender.Send(mail);

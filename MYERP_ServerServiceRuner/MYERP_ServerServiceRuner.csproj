@@ -160,6 +160,9 @@
     <Compile Include="ServiceLogic\Persistence.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ServiceLogic\WorkspaceInspection.cs">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MainService.resx">

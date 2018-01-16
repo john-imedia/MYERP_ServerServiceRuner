@@ -15,6 +15,13 @@ using System.Net;
 using System.Net.Mail;
 using System.Web;
 using MYERP_ServerServiceRuner.Base;
+using System.IO;
+using NPOI.HPSF;
+using NPOI.HSSF.UserModel;
+using NPOI.HSSF.Util;
+using NPOI.SS.UserModel;
+using NPOI.SS.Util;
+
 
 namespace MYERP_ServerServiceRuner
 {
@@ -3201,7 +3208,6 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
         }
 
         #endregion 客户类
-
         #region 工单/BOM类
 
         #region 工单/BOM部件
@@ -6906,6 +6912,154 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
 
         #endregion 工单/BOM类
 
+        public static class ExportExcel
+        {
+            public static string Export(MyBase.SendMail sm, IOrderedEnumerable<MyData.MyDataRow> vListGridRow, string[] ColumnFieldNameArray, string[] ColumnCaptionArray, string TableCaption)
+            {
+                DateTime NowTime = DateTime.Now;
+                if (vListGridRow.IsNotEmptySet())
+                {
+                    string tmpFileName = Path.GetTempFileName();
+                    MyRecord.Say(string.Format("tmpFileName = {0}", tmpFileName));
+                    Regex rgx = new System.Text.RegularExpressions.Regex(@"(?<=tmp)(.+)(?=\.tmp)");
+                    string tmpFileNameLast = rgx.Match(tmpFileName).Value;
+                    MyRecord.Say(string.Format("tmpFileNameLast = {0}", tmpFileNameLast));
+                    string dName = string.Format("{0}\\TMPExcel", Application.StartupPath);
+                    if (!Directory.Exists(dName)) Directory.CreateDirectory(dName);
+                    string AttcahFileName = string.Format("{0}\\{1}", dName, string.Format("NOTICE_{0:yyyyMMdd}_tmp{1}.xls", NowTime.Date, tmpFileNameLast));
+                    MyRecord.Say(string.Format("AttcahFileName = {0}", AttcahFileName));
 
+                    HSSFWorkbook wb = new HSSFWorkbook();
+                    MyRecord.Say(string.Format("输出表格{0}", TableCaption));
+                    HSSFSheet st = (HSSFSheet)wb.CreateSheet(TableCaption);
+                    st.DefaultColumnWidth = 10;
+                    HSSFCellStyle cellNomalStyle = (HSSFCellStyle)wb.CreateCellStyle(), cellIntStyle = (HSSFCellStyle)wb.CreateCellStyle(), cellDateStyle = (HSSFCellStyle)wb.CreateCellStyle();
+
+                    //HSSFPalette palette = wb.GetCustomPalette();
+
+                    cellNomalStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
+                    cellNomalStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
+                    cellNomalStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
+                    cellNomalStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
+                    cellNomalStyle.VerticalAlignment = VerticalAlignment.Center;
+                    cellNomalStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.General;
+                    cellNomalStyle.DataFormat = HSSFDataFormat.GetBuiltinFormat("@");
+                    cellNomalStyle.WrapText = true;
+
+                    cellIntStyle.CloneStyleFrom(cellNomalStyle);
+                    cellIntStyle.DataFormat = wb.CreateDataFormat().GetFormat(@"#,###,###");
+
+                    cellDateStyle.CloneStyleFrom(cellNomalStyle);
+                    cellDateStyle.DataFormat = wb.CreateDataFormat().GetFormat(@"yyyy/MM/dd HH:mm");
+
+                    HSSFFont blodfont1 = (HSSFFont)wb.CreateFont();
+                    blodfont1.FontHeightInPoints = 18;
+                    blodfont1.Boldweight = (short)FontBoldWeight.Bold;
+
+                    HSSFCellStyle cds3 = (HSSFCellStyle)wb.CreateCellStyle();
+                    cds3.CloneStyleFrom(cellNomalStyle);
+                    cds3.SetFont(blodfont1);
+
+                    HSSFRow rNoteCaption1 = (HSSFRow)st.CreateRow(1);
+                    rNoteCaption1.HeightInPoints = 25;
+                    ICell xCellCaption1 = rNoteCaption1.CreateCell(0);
+                    xCellCaption1.SetCellValue(LCStr(TableCaption));
+                    xCellCaption1.CellStyle = cds3;
+                    st.AddMergedRegion(new CellRangeAddress(1, 1, 0, ColumnFieldNameArray.Length - 1));
+
+                    //MyRecord.Say(string.Format("输出表格{0}，表格已经创建，建立表头。", caption));
+
+                    HSSFRow rNoteCaption2 = (HSSFRow)st.CreateRow(2);
+                    for (int i = 0; i < ColumnFieldNameArray.Length; i++)
+                    {
+                        ICell xCellCaption = rNoteCaption2.CreateCell(i);
+                        xCellCaption.SetCellValue(LCStr(ColumnCaptionArray[i]));
+                        xCellCaption.CellStyle = cellNomalStyle;
+                        //MyRecord.Say(string.Format("输出表格{0}，标题行，{1}列", caption, LCStr(titles[i])));
+                    }
+
+                    MyRecord.Say(string.Format("输出表格{0}，表格已经创建，建立表头完成。", TableCaption));
+
+                    int uu = 3;
+
+                    foreach (var item in vListGridRow)
+                    {
+                        if (item.IsNotNull())
+                        {
+                            HSSFRow rNoteCaption3 = (HSSFRow)st.CreateRow(uu);
+                            for (int i = 0; i < ColumnFieldNameArray.Length; i++)
+                            {
+                                string fieldname = ColumnFieldNameArray[i];
+                                //MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列", caption, uu, fieldname));
+                                ICell xCellCaption = rNoteCaption3.CreateCell(i);
+                                if (item.DataRow.Table.Columns.Contains(fieldname))
+                                {
+                                    //MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列，列存在。", caption, uu, fieldname));
+                                    DataColumn dc = item.DataRow.Table.Columns[fieldname];
+                                    if (dc.IsNotNull())
+                                    {
+                                        if (dc.DataType == typeof(DateTime))
+                                        {
+                                            //MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列，日期列。", caption, uu, fieldname));
+                                            xCellCaption.SetCellValue(item.DateTimeValue(fieldname));
+                                            xCellCaption.CellStyle = cellDateStyle;
+                                            st.SetColumnWidth(i, 20 * 256);
+                                        }
+                                        else if (dc.DataType == typeof(double) || dc.DataType == typeof(Single) || dc.DataType == typeof(int) || dc.DataType == typeof(decimal) || dc.DataType == typeof(Int16))
+                                        {
+                                            //MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列，數字列。", caption, uu, fieldname));
+                                            xCellCaption.SetCellValue(item.Value<double>(fieldname));
+                                            xCellCaption.CellStyle = cellIntStyle;
+                                            st.SetColumnWidth(i, 15 * 256);
+                                        }
+                                        else
+                                        {
+                                            //MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列，字符列。", caption, uu, fieldname));
+                                            xCellCaption.SetCellValue(LCStr(item.Value(fieldname)));
+                                            xCellCaption.CellStyle = cellNomalStyle;
+                                            if (st.GetColumnWidth(i) < (item.Value(fieldname).Length + 4) * 256)
+                                            {
+                                                st.SetColumnWidth(i, (item.Value(fieldname).Length + 4) * 256);
+                                            }
+                                        }
+                                        //MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列，完成。", caption, uu, fieldname));
+                                    }
+                                }
+                                else
+                                {
+                                    MyRecord.Say(string.Format("输出表格{0}，内容：{1}行，{2}列，没有这个字段。", TableCaption, uu, fieldname));
+                                }
+                            }
+                            uu++;
+                        }
+                    }
+
+                    MyRecord.Say(string.Format("输出表格{0}完成。", TableCaption));
+
+
+                    if (File.Exists(AttcahFileName)) File.Delete(AttcahFileName);
+                    using (FileStream fs = new FileStream(AttcahFileName, FileMode.Create, FileAccess.Write))
+                    {
+                        wb.Write(fs);
+                        MyRecord.Say("已经保存了。");
+                        wb.Close();
+                        fs.Close();
+                    }
+
+                    if (File.Exists(AttcahFileName))
+                    {
+                        sm.Attachments.Add(new System.Net.Mail.Attachment(AttcahFileName));
+                        MyRecord.Say("加载到附件");
+                    }
+                    else
+                    {
+                        MyRecord.Say("没找到附件");
+                    }
+
+                    return AttcahFileName;
+                }
+                return string.Empty ;
+            }
+        }
     }
 }

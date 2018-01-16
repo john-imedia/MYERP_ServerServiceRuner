@@ -616,6 +616,7 @@ Where isNull(a.Type,'') = 'N' And a.CheckDate is Null And a.InputDate > '2016-10
             }
             MyRecord.Say(string.Format("输出表格{0}完成。", caption));
         }
+
         #endregion
 
         #region 记录所有的看板要件
