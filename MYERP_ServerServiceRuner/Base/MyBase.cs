@@ -17,6 +17,7 @@ using System.Windows.Forms;
 using System.Net.Mail;
 using System.Xml;
 using Microsoft.International.Converters.TraditionalChineseToSimplifiedConverter;
+using SharpConfig;
 
 
 namespace MYERP_ServerServiceRuner.Base
@@ -36,7 +37,7 @@ namespace MYERP_ServerServiceRuner.Base
         {
             get
             {
-                return ConfigurationManager.AppSettings["Server"];
+                return MyConfig.ServerConfig.ServerIP; //return ConfigurationManager.AppSettings["Server"];
             }
         }
 
@@ -44,7 +45,7 @@ namespace MYERP_ServerServiceRuner.Base
         {
             get
             {
-                return ConfigurationManager.AppSettings["UID"];
+                return MyConfig.ServerConfig.UID; //return ConfigurationManager.AppSettings["UID"];
             }
         }
 
@@ -52,7 +53,7 @@ namespace MYERP_ServerServiceRuner.Base
         {
             get
             {
-                return ConfigurationManager.AppSettings["PWD"];
+                return MyConfig.ServerConfig.Password; //return ConfigurationManager.AppSettings["PWD"];
             }
         }
 
@@ -60,7 +61,7 @@ namespace MYERP_ServerServiceRuner.Base
         {
             get
             {
-                return ConfigurationManager.AppSettings["Database"];
+                return MyConfig.ServerConfig.Database; //return ConfigurationManager.AppSettings["Database"];
             }
         }
 
@@ -68,7 +69,7 @@ namespace MYERP_ServerServiceRuner.Base
         {
             get
             {
-                return ConfigurationManager.AppSettings["Title"];
+                return MyConvert.ZH_TW(MyConfig.ApplicationConfig.CompanyTitle); // return ConfigurationManager.AppSettings["Title"];
             }
         }
 
@@ -357,7 +358,7 @@ namespace MYERP_ServerServiceRuner.Base
                 Sender.Port = 25;
                 Sender.UseDefaultCredentials = false;
                 Sender.Credentials = new NetworkCredential("AutoMessage", "HWGV1z86");
-                
+
                 try
                 {
                     Sender.Send(mail);
@@ -381,7 +382,6 @@ namespace MYERP_ServerServiceRuner.Base
         }
 
     }
-
 
     public static class LocalInfo
     {
@@ -743,5 +743,83 @@ namespace MYERP_ServerServiceRuner.Base
             _lclogger.Info(inf);
         }
     }
+
+
+    public static class MyConfig
+    {
+        public static SharpConfig.Section LoadConfig(string SectionKey)
+        {
+            SharpConfig.Configuration cfg = SharpConfig.Configuration.LoadFromFile(string.Format("{0}\\Config.ini", System.Windows.Forms.Application.StartupPath));
+            return cfg[SectionKey];
+        }
+
+        public static Server ServerConfig
+        {
+            get
+            {
+                return LoadConfig("Server").ToObject<Server>();
+            }
+        }
+
+        public static Application ApplicationConfig
+        {
+            get
+            {
+                return LoadConfig("Application").ToObject<Application>();
+            }
+        }
+
+        public static MailAddress GetMailAddress(string SectionKey)
+        {
+            return LoadConfig(SectionKey).ToObject<MailAddress>();
+        }
+
+        public class Server
+        {
+            public string ServerIP { get; set; }
+            public string UID { get; set; }
+            public string PWD { get; set; }
+            public string Database { get; set; }
+
+            public string Password
+            {
+                get
+                {
+                    return Encoding.Default.GetString(Convert.FromBase64String(PWD));
+                }
+            }
+        }
+
+        public class Application
+        {
+            public string Title { get; set; }
+
+            public string CompanyTitle
+            {
+                get
+                {
+                    return Encoding.UTF8.GetString(Convert.FromBase64String(Title));
+                }
+            }
+
+            public string CompanyType { get; set; }
+            public double CheckStockTimers { get; set; }
+            public int CacluatePlanRateDaySpanTimes { get; set; }
+            public int CacluateOEEDaySpanTimes { get; set; }
+            public int CacluateKanbanDaySpanTimes { get; set; }
+            public string DeliveryPlanFinishStaticExceptProdTypes { get; set; }
+            public string DeliverPlanFinishStatisticErrorTempSender { get; set; }
+            public bool CheckStockNoteOnceTime { get; set; }
+            public bool ProdKanbanSaveOnceTime { get; set; }
+        }
+
+        public class MailAddress
+        {
+            public string MailTo { get; set; }
+            public string MailCC { get; set; }
+        }
+    }
+
+
 
 }

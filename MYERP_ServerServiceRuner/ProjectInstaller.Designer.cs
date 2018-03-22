@@ -39,9 +39,9 @@
             // 
             // serviceInstaller1
             // 
-            this.serviceInstaller1.Description = "Automatic Audit Sheet，Automatic Send EMail";
-            this.serviceInstaller1.DisplayName = "苏州明扬纸塑ERP后台服务器";
-            this.serviceInstaller1.ServiceName = "ZSERPServerService";
+            this.serviceInstaller1.Description = "苏州明扬彩印审核库存单据，发邮件。";
+            this.serviceInstaller1.DisplayName = "苏州明扬彩印服务器";
+            this.serviceInstaller1.ServiceName = "MYERPServerService";
             this.serviceInstaller1.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
             this.serviceInstaller1.AfterInstall += new System.Configuration.Install.InstallEventHandler(this.serviceInstaller1_AfterInstall);
             // 

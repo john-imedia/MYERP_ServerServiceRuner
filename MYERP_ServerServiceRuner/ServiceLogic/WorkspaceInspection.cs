@@ -211,11 +211,18 @@ Order by a.InspectDate,a.ClassType,dp.FullSortID
                         fname = ExportExcel.Export(sm, vAttachView, fields, captions, LCStr("纪律稽核得分"));
                     };
 
-                    string mailto = ConfigurationManager.AppSettings["WorkspaceInspectionMailTo"], mailcc = ConfigurationManager.AppSettings["WorkspaceInspectionMailCC"];
-                    MyRecord.Say(string.Format("MailTO:{0}    MailCC:{1}", mailto, mailcc));
-                    sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
-                    sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
+                    //string mailto = ConfigurationManager.AppSettings["WorkspaceInspectionMailTo"], mailcc = ConfigurationManager.AppSettings["WorkspaceInspectionMailCC"];
+                    //MyRecord.Say(string.Format("MailTO:{0}    MailCC:{1}", mailto, mailcc));
+                    //sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
+                    //sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
+                    ////sm.MailTo = "my80@my.imedia.com.tw";
+
+                    MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("WorkspaceInspection");
+                    MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+                    sm.MailTo = mAddress.MailTo;
+                    sm.MailCC = mAddress.MailCC;
                     //sm.MailTo = "my80@my.imedia.com.tw";
+
                     MyRecord.Say("发送邮件。");
                     sm.SendOut();
                     sm.mail.Dispose();

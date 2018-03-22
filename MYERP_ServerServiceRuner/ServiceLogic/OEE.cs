@@ -228,9 +228,9 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
 					{
 						BDD = vd.Min(x => x.Bdd);
 						EDD = vd.Max(x => x.Edd);
-                        double LossTime = vd.Sum(x => x.AdjustTime + x.PrepTime), AllTime = vd.Sum(x => x.ReqTime);
-                        PlanActivationTime = (AllTime - LossTime) / 60.00;
-                        PlanAdjustmentTime = LossTime / 60.00;
+						double LossTime = vd.Sum(x => x.AdjustTime + x.PrepTime), AllTime = vd.Sum(x => x.ReqTime);
+						PlanActivationTime = (AllTime - LossTime) / 60.00;
+						PlanAdjustmentTime = LossTime / 60.00;
 
 						if (curItem.ProcessCode == "2000")
 						{
@@ -321,7 +321,7 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
 			public double RejectSheetNumb { get; set; }
 			public double RejectProdNumb { get; set; }
 			public double PlanActivationTime { get; set; }
-            public double PlanAdjustmentTime { get; set; }
+			public double PlanAdjustmentTime { get; set; }
 		}
 
 		class Plan_GroupKey : IComparable
@@ -633,9 +633,9 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
 
 				var vf = from a in Plan_FinishLists
 						 where a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID && a.Side == item.Side && a.ProcessCode == "2000" && a.MachineCode == item.MachineCode
-                            && a.InputDate >= fTimeBegin && a.InputDate <= fTimeEnd
+							&& a.InputDate >= fTimeBegin && a.InputDate <= fTimeEnd
 							&& a.StartTime >= StartTime.AddMinutes(-1) && a.EndTime <= EndTime.AddMinutes(5)
-                            && a.StartTime <= a.InputDate //完工单不能提前输入，开始时间必须小于输入时间 
+							&& a.StartTime <= a.InputDate //完工单不能提前输入，开始时间必须小于输入时间 
 						 select a;
 				double finishProdNumb = vf.Sum(x => x.FinishProdNumb), finishNumb = vf.Sum(x => x.FinishNumb);
 				if (item.StaticMeasurement == 1)
@@ -740,9 +740,9 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
 
 				var vf = from a in Plan_FinishLists
 						 where a.ProduceRdsNo == item.ProduceRdsNo && a.PartID == item.PartID && a.ProcessCode == item.ProcessCode && a.MachineCode == item.MachineCode
-                               && a.InputDate >= fTimeBegin && a.InputDate <= fTimeEnd
+							   && a.InputDate >= fTimeBegin && a.InputDate <= fTimeEnd
 							   && a.StartTime >= StartTime.AddMinutes(-1) && a.EndTime <= EndTime.AddMinutes(15)
-                               && a.StartTime <= a.InputDate //完工单不能提前输入，开始时间必须小于输入时间
+							   && a.StartTime <= a.InputDate //完工单不能提前输入，开始时间必须小于输入时间
 						 select a;
 				double finishProdNumb = vf.Sum(x => x.FinishProdNumb), finishNumb = vf.Sum(x => x.FinishNumb);
 
@@ -1019,11 +1019,18 @@ Select ProcessID as ProcessCode,Numb1,MachinID as MachineCode,StartTime,EndTime,
 					MyRecord.Say("加载邮件内容。");
 					sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, NowTime, byb, xbd, DateTime.Now, MyBase.CompanyTitle));
 					sm.Subject = MyConvert.ZH_TW(string.Format("{2}{0:yy年MM月dd日}{1}排程及达成率", NowTime, byb, MyBase.CompanyTitle));
-					string MailTo = ConfigurationManager.AppSettings["PlanMailTo"], MailCC = ConfigurationManager.AppSettings["PlanMailCC"];
-					MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", MailTo, MailCC));
-					sm.MailTo = MailTo;
-					sm.MailCC = MailCC;
-					//sm.MailTo = "my80@my.imedia.com.tw";
+                    //string MailTo = ConfigurationManager.AppSettings["PlanMailTo"], MailCC = ConfigurationManager.AppSettings["PlanMailCC"];
+                    //MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", MailTo, MailCC));
+                    //sm.MailTo = MailTo;
+                    //sm.MailCC = MailCC;
+                    ////sm.MailTo = "my80@my.imedia.com.tw";
+
+                    MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("Plan");
+                    MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+                    sm.MailTo = mAddress.MailTo;
+                    sm.MailCC = mAddress.MailCC;
+                    //sm.MailTo = "my80@my.imedia.com.tw";
+
 					MyRecord.Say("发送邮件。");
 					sm.SendOut();
 					MyRecord.Say("已经发送。");
@@ -1242,7 +1249,7 @@ Insert Into [_PMC_ProdPlan_YieldRate](PlanRdsNo,PlanType,PlanBegin,PlanEnd,Input
 						 select a;
 				double finishProdNumb = vf.Sum(x => x.FinishProdNumb), finishNumb = vf.Sum(x => x.FinishNumb),
 					   rejectNumb = vf.Sum(x => x.RejectProdNumb / x.PaperColNumb + x.LossProdNumb / x.PaperColNumb), 
-                       rejectProdNumb = vf.Sum(x => x.RejectProdNumb + x.LossProdNumb);
+					   rejectProdNumb = vf.Sum(x => x.RejectProdNumb + x.LossProdNumb);
 				finishProdNumb = vf.Sum(x => (x.FinishProdNumb + x.RejectProdNumb + x.LossProdNumb));
 				finishNumb = vf.Sum(x => x.FinishProdNumb / x.PaperColNumb + x.RejectProdNumb / x.PaperColNumb + x.LossProdNumb / x.PaperColNumb);
 
@@ -1467,10 +1474,10 @@ Insert Into [_PMC_ProdPlan_YieldRate](PlanRdsNo,PlanType,PlanBegin,PlanEnd,Input
 		void OEE_ForSaveRunner(object NowTime)
 		{
 			MyRecord.Say("--------------OEE计算------------------------------------------");
-			MyRecord.Say(string.Format("向前推：{0}日。", CacluatePlanRateDaySpanTimes));
-			DateTime xDate = ((DateTime)NowTime).AddDays(-CacluatePlanRateDaySpanTimes).Date;
+			MyRecord.Say(string.Format("向前推：{0}日。", CacluateOEEDaySpanTimes));
+			DateTime xDate = ((DateTime)NowTime).AddDays(-CacluateOEEDaySpanTimes).Date;
 			MyRecord.Say(string.Format("当前时间：{0}，计算开始时间：{1}", NowTime, xDate));
-			for (int i = 0; i <= CacluatePlanRateDaySpanTimes; i++)
+			for (int i = 0; i <= CacluateOEEDaySpanTimes; i++)
 			{
 				if (_Stop_OEE_ForSaved) return;
 				DateTime iDate = xDate.AddDays(i).Date;
@@ -1544,7 +1551,7 @@ Insert Into [_PMC_ProdPlan_OEE](PlanRdsNo,PlanType,PlanBegin,PlanEnd,DepartmentI
 							new MyData.MyDataParameter("@RejectProdNumb",item.RejectProdNumb, MyData.MyDataParameter.MyDataType.Numeric),
 							new MyData.MyDataParameter("@WorkLevel",item.WorkLevel, MyData.MyDataParameter.MyDataType.Numeric),
 							new MyData.MyDataParameter("@PlanActivationTime",item.PlanActivationTime, MyData.MyDataParameter.MyDataType.Numeric),
-                            new MyData.MyDataParameter("@PlanAdjustmentTime",item.PlanAdjustmentTime, MyData.MyDataParameter.MyDataType.Numeric)
+							new MyData.MyDataParameter("@PlanAdjustmentTime",item.PlanAdjustmentTime, MyData.MyDataParameter.MyDataType.Numeric)
 						};
 						xmcd.Add(SQLSave, string.Format("X_Insert_{0}", iRow), amps);
 						MyRecord.Say(string.Format("4.3-第{0}行，部门：{1}，工序：{2}，机台：{3}，笔数达成率：{4:0.00%}，产量达成率：{5:0.00%}", iRow, item.DepartmentName, item.ProcessName, item.MachineName, item.FinishCount / item.PlanCount, item.FinishSheetNumb / item.PlanSheetNumb));
@@ -2044,12 +2051,19 @@ from [_PMC_ProdPlan_YieldRate] a Left Outer Join [pbDept] p On a.DeaprtmentID = 
 					MyRecord.Say("加载邮件内容。");
 					sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, dtBegin, dtEnd, gds, DateTime.Now, MyBase.CompanyTitle));
 					sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yyyy年MM月}达成率高分统计表(测试)", dtBegin, MyBase.CompanyTitle));
-					string MailTo = ConfigurationManager.AppSettings["Kanban_Performance_MailTo"], MailCC = ConfigurationManager.AppSettings["Kanban_Performance_MailCC"];
-					//string MailTo = "my80@my.imedia.com.tw", MailCC = "";
-					MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", MailTo, MailCC));
-					sm.MailTo = MailTo;
-					sm.MailCC = MailCC;
-					//sm.MailTo = "my80@my.imedia.com.tw";
+                    //string MailTo = ConfigurationManager.AppSettings["Kanban_Performance_MailTo"], MailCC = ConfigurationManager.AppSettings["Kanban_Performance_MailCC"];
+                    ////string MailTo = "my80@my.imedia.com.tw", MailCC = "";
+                    //MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", MailTo, MailCC));
+                    //sm.MailTo = MailTo;
+                    //sm.MailCC = MailCC;
+                    ////sm.MailTo = "my80@my.imedia.com.tw";
+
+                    MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("Kanban_Performance");
+                    MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+                    sm.MailTo = mAddress.MailTo;
+                    sm.MailCC = mAddress.MailCC;
+                    //sm.MailTo = "my80@my.imedia.com.tw";
+
 					MyRecord.Say("发送邮件。");
 					sm.SendOut();
 					MyRecord.Say("已经发送。");
@@ -2193,11 +2207,18 @@ from [_PMC_ProdPlan_YieldRate] a Left Outer Join [pbDept] p On a.DeaprtmentID = 
 					MyRecord.Say("加载邮件内容。");
 					sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, dtBegin, dtEnd, gds, DateTime.Now, MyBase.CompanyTitle));
 					sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yyyy年MM月}纪律稽核检查低分提醒(测试)", dtBegin, MyBase.CompanyTitle));
-					string MailTo = ConfigurationManager.AppSettings["Kanban_Inspect_MailTo"], MailCC = ConfigurationManager.AppSettings["Kanban_Inspect_MailCC"];
-					MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", MailTo, MailCC));
-					sm.MailTo = MailTo;
-					sm.MailCC = MailCC;
-					//sm.MailTo = "my80@my.imedia.com.tw";
+                    //string MailTo = ConfigurationManager.AppSettings["Kanban_Inspect_MailTo"], MailCC = ConfigurationManager.AppSettings["Kanban_Inspect_MailCC"];
+                    //MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", MailTo, MailCC));
+                    //sm.MailTo = MailTo;
+                    //sm.MailCC = MailCC;
+                    ////sm.MailTo = "my80@my.imedia.com.tw";
+
+                    MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("Kanban_Inspect");
+                    MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+                    sm.MailTo = mAddress.MailTo;
+                    sm.MailCC = mAddress.MailCC;
+                    //sm.MailTo = "my80@my.imedia.com.tw";
+
 					MyRecord.Say("发送邮件。");
 					sm.SendOut();
 					MyRecord.Say("已经发送。");

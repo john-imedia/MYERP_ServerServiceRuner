@@ -702,6 +702,7 @@ namespace MYERP_ServerServiceRuner
 				}
 			}
 
+
 			/// <summary>
 			/// 工序工价
 			/// </summary>
@@ -2687,6 +2688,76 @@ Select * from _PMC_Process_Price_Loss";
 				MyRecord.Say("设定计算价格。");
 				LoadPrice();
 			}
+
+
+			public void Calculate()
+			{
+				//base.Calculate();
+				LoadPrice();
+				Price1 = GotPrice();
+			}
+
+
+			public bool SavePrice()
+			{
+				MyData.MyCommand mcd = new MyData.MyCommand();
+				if (Process.IsNotNull() && Process.Count() > 0)
+				{
+					var vProcess = from a in Process
+								   orderby a.Sort_ID descending
+								   select a;
+					foreach (var item in vProcess)
+					{
+						string SQL1 = @"UPDATE [moProdProcedure] SET [Amount] = @Amount,[Price] = @Price,[PriceNumb] = @PriceNumb WHERE zbid = @ID AND id = @PID";
+						MyData.MyDataParameter[] mdps1 = new MyData.MyDataParameter[]
+						{
+							new MyData.MyDataParameter("@Amount", item.Amount, MyData.MyDataParameter.MyDataType.Numeric),
+							new MyData.MyDataParameter("@Price", item.UnitPrice, MyData.MyDataParameter.MyDataType.Numeric),
+							new MyData.MyDataParameter("@PriceNumb", item.Numb2, MyData.MyDataParameter.MyDataType.Numeric),
+							new MyData.MyDataParameter("@PID", item.id, MyData.MyDataParameter.MyDataType.Int),
+							new MyData.MyDataParameter("@ID",  ProduceNote.ID, MyData.MyDataParameter.MyDataType.Int),
+						};
+						mcd.Add(SQL1, string.Format("X_{0}", item.id), mdps1);
+					}
+				}
+				if (Material.IsNotNull() && Material.Count() > 0)
+				{
+					foreach (var item in Material)
+					{
+						string SQL2;
+						if (item.Type == EstimateMaterialItem.MaterialTypeEnum.Type_Material)
+						{
+							SQL2 = @"UPDATE [moProdMaterial] SET [Amount] = @Amount,[Price] = @Price,[PriceNumb] = @PriceNumb WHERE zbid = @ID AND id = @PID";
+						}
+						else
+						{
+							SQL2 = @"UPDATE [moProdPaper] SET [Amount] = @Amount,[Price] = @Price,[PriceNumb] = @PriceNumb WHERE zbid = @ID AND id = @PID";
+						}
+
+						MyData.MyDataParameter[] mdps2 = new MyData.MyDataParameter[]
+						{
+							new MyData.MyDataParameter("@Amount", item.Amount, MyData.MyDataParameter.MyDataType.Numeric),
+							new MyData.MyDataParameter("@Price", item.UnitPrice, MyData.MyDataParameter.MyDataType.Numeric),
+							new MyData.MyDataParameter("@PriceNumb", item.Numb2, MyData.MyDataParameter.MyDataType.Numeric),
+							new MyData.MyDataParameter("@PID", item.id, MyData.MyDataParameter.MyDataType.Int),
+							new MyData.MyDataParameter("@ID", ProduceNote.ID, MyData.MyDataParameter.MyDataType.Int),
+						};
+						mcd.Add(SQL2, string.Format("M_{0}", item.id), mdps2);
+					}
+				}
+
+				string SQL = "Update moProduce Set EstimatePrice = @Price,Amount = @Amount Where RdsNo = @RdsNo ";
+				MyData.MyDataParameter[] mdps = new MyData.MyDataParameter[]
+					{
+						new MyData.MyDataParameter("@Price", Price1, MyData.MyDataParameter.MyDataType.Numeric),
+						new MyData.MyDataParameter("@Amount", Price1 * Numb, MyData.MyDataParameter.MyDataType.Numeric),
+						new MyData.MyDataParameter("@RdsNo", ProduceNote.RdsNo)
+					};
+				mcd.Add(SQL, "Main", mdps);
+				return mcd.Execute();
+			}
+
+
 		}
 
 
@@ -2850,7 +2921,7 @@ Select * from _PMC_Process_Price_Loss";
 			{
 				string SQL = "";
 				MyRecord.Say("---------------------启动定时计算工单成本计算。------------------------------");
-				DateTime NowTime = DateTime.Now, StartTime = ProduceEstimateLastRunTime.AddDays(-3);
+				DateTime NowTime = DateTime.Now, StartTime = ProduceEstimateLastRunTime.AddDays(-3).Date;
 				ProduceEstimateLastRunTime = NowTime;
 				MyRecord.Say("1.重新加载所有产品表");
 				Products.reLoad();
@@ -2920,15 +2991,11 @@ Select * from _PMC_Process_Price_Loss";
 				MyRecord.Say(string.Format("{0}。读取工单结构，完工数。", CurrentRdsNO));
 				pe.LoadFromProduce();
 				MyRecord.Say(string.Format("{0}。计算价格。", CurrentRdsNO));
-				double Price = pe.Price1 = pe.GotPrice();
+				pe.Calculate();
 				MyRecord.Say(string.Format("{0}。输出计算结果。", CurrentRdsNO));
 				FillDetial(pe);
 				MyRecord.Say(string.Format("{0}。保存价格到工单。", CurrentRdsNO));
-				string SQL = "Update moProduce Set EstimatePrice = @Price Where RdsNo = @RdsNo ";
-				MyData.MyDataParameter mdp = new MyData.MyDataParameter("@Price", Price, MyData.MyDataParameter.MyDataType.Numeric);
-				MyData.MyDataParameter mdr = new MyData.MyDataParameter("@RdsNo", CurrentRdsNO);
-				MyData.MyCommand mcd = new MyData.MyCommand();
-				return mcd.Execute(SQL, mdp, mdr);
+				return pe.SavePrice();
 			}
 			catch (Exception ex)
 			{
@@ -3250,11 +3317,16 @@ Select a.id,a.RdsNo,a.CustID as CustCode,a.Code,b.Name,b.Size,b.UnfoldSize,a.[_i
 						MyRecord.Say("加载邮件内容。");
 						sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, dt1, dt2, brs, NowTime, MyBase.CompanyTitle, LocalInfo.GetLocalIp()));
 						sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_工单成本计算。", NowTime, MyBase.CompanyTitle));
-						string mailto = ConfigurationManager.AppSettings["ProduceEstimateMailTo"], mailcc = ConfigurationManager.AppSettings["ProduceEstimateMailCC"];
-						MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
-						sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
-						sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
+                        //string mailto = ConfigurationManager.AppSettings["ProduceEstimateMailTo"], mailcc = ConfigurationManager.AppSettings["ProduceEstimateMailCC"];
+                        //MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+                        //sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
+                        //sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
 						//sm.MailTo = "my80@my.imedia.com.tw";
+                        MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("ProduceEstimate");
+                        MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+                        sm.MailTo = mAddress.MailTo;
+                        sm.MailCC = mAddress.MailCC;
+                        //sm.MailTo = "my80@my.imedia.com.tw";
 						MyRecord.Say("发送邮件。");
 						sm.SendOut();
 						MyRecord.Say("已经发送。");

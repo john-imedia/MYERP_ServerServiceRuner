@@ -110,6 +110,10 @@
       <HintPath>..\packages\PGK.Extensions.Windows.Forms.2011.3\lib\PGK.Extensions.Windows.Forms.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="SharpConfig, Version=3.2.7.0, Culture=neutral, PublicKeyToken=c1deedac91bd7724, processorArchitecture=MSIL">
+      <HintPath>..\packages\sharpconfig.3.2.6.1\lib\net20\SharpConfig.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Configuration.Install" />

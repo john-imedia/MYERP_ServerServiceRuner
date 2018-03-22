@@ -43,7 +43,8 @@ namespace MYERP_ServerServiceRuner
 		/// 计算达成率，向前计算多少天的设置。
 		/// </summary>
 		public int CacluatePlanRateDaySpanTimes = 6,
-				   CacluateKanbanDaySpanTimes = 6;
+				   CacluateKanbanDaySpanTimes = 6,
+				   CacluateOEEDaySpanTimes = 6;
 
 		public bool FirstStart = false,
 					CheckStockNoteOnceTimeSwitch = false,
@@ -54,6 +55,7 @@ namespace MYERP_ServerServiceRuner
 			MainTimer.Interval = 1000;
 			MainTimer.Elapsed += MainTimer_Elapsed;
 			MyRecord.Say(MyBase.ConnectionString);
+            MyRecord.Say( MyBase.CompanyTitle);
 			CheckStockStartTime = DateTime.Now.Date;
 			ProduceFeedBackLastRunTime = CalculatePruchaseStartTime = CalculateOrderStartTime = CheckPlanConfirmStartTime = KickOutSPUserStartTime = DateTime.Now;
 			//ProduceFeedBackLastRunTime = new DateTime(2000, 1, 1);
@@ -67,32 +69,36 @@ namespace MYERP_ServerServiceRuner
 		{
 			try
 			{
-				ConfigurationManager.RefreshSection("appSettings");
+				//ConfigurationManager.RefreshSection("appSettings");
 
-				if (ConfigurationManager.AppSettings.AllKeys.Contains("CompanyType"))
-					CompanyType = ConfigurationManager.AppSettings.Get("CompanyType");
-				else
-					CompanyType = "MY";
+				CompanyType = MyConfig.ApplicationConfig.CompanyType;
+				CheckStockTimers = MyConfig.ApplicationConfig.CheckStockTimers;
+				CacluatePlanRateDaySpanTimes = MyConfig.ApplicationConfig.CacluatePlanRateDaySpanTimes;
+				CacluateOEEDaySpanTimes = MyConfig.ApplicationConfig.CacluateOEEDaySpanTimes;
+				CacluateKanbanDaySpanTimes = MyConfig.ApplicationConfig.CacluateKanbanDaySpanTimes;
 
+				//if (ConfigurationManager.AppSettings.AllKeys.Contains("CompanyType"))
+				//    CompanyType = ConfigurationManager.AppSettings.Get("CompanyType");
+				//else
+				//    CompanyType = "MY";
 				//MyRecord.Say(string.Format("CompanyType = {0}", CompanyType));
-
-				if (ConfigurationManager.AppSettings.AllKeys.Contains("CheckStockTimers"))
-					CheckStockTimers = ConfigurationManager.AppSettings.Get("CheckStockTimers").ConvertTo<double>(3, true);
-				else
-					CheckStockTimers = 3.25;
-
+				//if (ConfigurationManager.AppSettings.AllKeys.Contains("CheckStockTimers"))
+				//    CheckStockTimers = ConfigurationManager.AppSettings.Get("CheckStockTimers").ConvertTo<double>(3, true);
+				//else
+				//    CheckStockTimers = 3.25;
 				//MyRecord.Say(string.Format("CheckStockTimers = {0}", CacluatePlanRateDaySpanTimes));
-
-				if (ConfigurationManager.AppSettings.AllKeys.Contains("CacluatePlanRateDaySpanTimes"))
-					CacluatePlanRateDaySpanTimes = ConfigurationManager.AppSettings.Get("CacluatePlanRateDaySpanTimes").ConvertTo<int>(6, true);
-				else
-					CacluatePlanRateDaySpanTimes = 6;
-
-				if (ConfigurationManager.AppSettings.AllKeys.Contains("CacluateKanbanDaySpanTimes"))
-					CacluateKanbanDaySpanTimes = ConfigurationManager.AppSettings.Get("CacluateKanbanDaySpanTimes").ConvertTo<int>(6, true);
-				else
-					CacluateKanbanDaySpanTimes = 6;
-
+				//if (ConfigurationManager.AppSettings.AllKeys.Contains("CacluatePlanRateDaySpanTimes"))
+				//    CacluatePlanRateDaySpanTimes = ConfigurationManager.AppSettings.Get("CacluatePlanRateDaySpanTimes").ConvertTo<int>(6, true);
+				//else
+				//    CacluatePlanRateDaySpanTimes = 6;
+				//if (ConfigurationManager.AppSettings.AllKeys.Contains("CacluateOEEDaySpanTimes"))
+				//    CacluateOEEDaySpanTimes = ConfigurationManager.AppSettings.Get("CacluateOEEDaySpanTimes").ConvertTo<int>(6, true);
+				//else
+				//    CacluateOEEDaySpanTimes = 6;
+				//if (ConfigurationManager.AppSettings.AllKeys.Contains("CacluateKanbanDaySpanTimes"))
+				//    CacluateKanbanDaySpanTimes = ConfigurationManager.AppSettings.Get("CacluateKanbanDaySpanTimes").ConvertTo<int>(6, true);
+				//else
+				//    CacluateKanbanDaySpanTimes = 6;
 				//MyRecord.Say(string.Format("CacluatePlanRateDaySpanTimes = {0}", CacluatePlanRateDaySpanTimes));
 
 				DateTime NowTime = DateTime.Now;
@@ -106,53 +112,41 @@ namespace MYERP_ServerServiceRuner
 					MyRecord.Say("首次启动，时间循环已经开启。");
 					CheckStockStartTime = ProduceEstimateLastRunTime = NowTime;
 					ProduceFeedBackLastRunTime = NowTime.AddDays(-5);
+					CheckStockStartTime = NowTime.Date;
 					MyRecord.Say(string.Format("设定时间成功：CheckStockStartTime={0} ProduceFeedBackLastRunTime = {1} ", CheckStockStartTime, ProduceFeedBackLastRunTime));
 					#region 暂停
-					if (CompanyType == "MY") SendProduceEstimateLoder();
-					//SendWorkspaceInspectionLoder();
+
 					#endregion
 				}
 
-				if (ConfigurationManager.AppSettings.AllKeys.Contains("CheckStockNoteOnceTime"))
+				CheckStockNoteOnceTimeSwitch = MyConfig.ApplicationConfig.CheckStockNoteOnceTime;
+				if (!CheckStockRecordRunning && CheckStockNoteOnceTimeSwitch)
 				{
-					string CheckStockNoteOnceTime = ConfigurationManager.AppSettings.Get("CheckStockNoteOnceTime").ConvertTo<string>("false", true).ToUpper().Trim();
-					//MyRecord.Say(string.Format("临时启动审核库存单据，CheckStockNoteOnceTime = {0}", CheckStockNoteOnceTime));
-					if (CheckStockNoteOnceTime == "TRUE" || CheckStockNoteOnceTime == "1" || CheckStockNoteOnceTime == "T")
-					{
-						if (!CheckStockRecordRunning && CheckStockNoteOnceTimeSwitch)
-						{
-							CheckStockStartTime = NowTime;
-							//MyRecord.Say(string.Format("临时审核库存启动：CheckStockNoteOnceTime={0}  CheckStockStartTime={1}", CheckStockNoteOnceTime, CheckStockStartTime));
-							MyRecord.Say("临时启动审核库存单据，已经启动");
-							CheckStockRecordRunning = true;
-							CheckStockRecordLoder();   //審核出入庫單。
-							Thread.Sleep(500);
-						}
-						CheckStockNoteOnceTimeSwitch = false;
-					}
-					else
-					{
-						CheckStockNoteOnceTimeSwitch = true;
-					}
+					CheckStockStartTime = NowTime;
+					MyRecord.Say("临时启动审核库存单据，已经启动");
+					CheckStockRecordRunning = true;
+					CheckStockRecordLoder();   //審核出入庫單。
+					Thread.Sleep(500);
+					string fileName = string.Format("{0}\\Config.ini", System.Windows.Forms.Application.StartupPath);
+					SharpConfig.Configuration cfg = SharpConfig.Configuration.LoadFromFile(fileName);
+					cfg["Application"]["CheckStockNoteOnceTime"].BoolValue = false;
+					cfg.SaveToFile(fileName);
 				}
-				//临时计算月达成率和看板。计算限度根据设定。
-				if (ConfigurationManager.AppSettings.AllKeys.Contains("ProdKanbanSaveOnceTime"))
-				{
-					string ProdKanbanSaveOnceTime = ConfigurationManager.AppSettings.Get("ProdKanbanSaveOnceTime").ConvertTo<string>("false", true).ToUpper().Trim();
+				CheckStockNoteOnceTimeSwitch = false;
 
-					if (ProdKanbanSaveOnceTime == "TRUE" || ProdKanbanSaveOnceTime == "1" || ProdKanbanSaveOnceTime == "T")
-					{
-						if (ProdKanbanSaveOnceTimeSwitch)
-						{
-							ProdKanbanSaveOnceLoader(NowTime);
-						}
-						ProdKanbanSaveOnceTimeSwitch = false;
-					}
-					else
-					{
-						ProdKanbanSaveOnceTimeSwitch = true;
-					}
+				ProdKanbanSaveOnceTimeSwitch = MyConfig.ApplicationConfig.ProdKanbanSaveOnceTime;
+
+				//临时计算月达成率和看板。计算限度根据设定。
+				if (ProdKanbanSaveOnceTimeSwitch)
+				{
+					ProdKanbanSaveOnceLoader(NowTime);
+					string fileName = string.Format("{0}\\Config.ini", System.Windows.Forms.Application.StartupPath);
+					SharpConfig.Configuration cfg = SharpConfig.Configuration.LoadFromFile(fileName);
+					cfg["Application"]["ProdKanbanSaveOnceTime"].BoolValue = false;
+					cfg.SaveToFile(fileName);
 				}
+				ProdKanbanSaveOnceTimeSwitch = false;
+
 				//计时器归零
 				if (h == 0 && m == 0 & s == 0)
 				{   ///每天0点对表，计时器归零。
@@ -205,7 +199,7 @@ namespace MYERP_ServerServiceRuner
 					Thread.Sleep(200);
 				}
 
-				if (h == 17 || h == 5 || h == 8 || h == 11)  //保存达成率和计算看板
+				if (h == 5 || h == 8 || h == 10 || h == 11 || h == 14 || h == 17 || h == 19 || h == 22)  //保存达成率和计算看板
 				{
 					if (m == 9 && s == 14)
 					{
@@ -221,10 +215,13 @@ namespace MYERP_ServerServiceRuner
 						KanbanRecorderLoader();
 					}
 				}
-				if ((h == 13 || h == 22) && m == 15 && s == 15) //计算OEE
+				if ((h == 6 || h == 9 || h == 13 || h == 15 || h == 19 || h == 22)) //计算OEE
 				{
-					MyRecord.Say("开启计算OEE线程");
-					OEE_ForSaveLoader(NowTime);
+					if (m == 15 && s == 15)
+					{
+						MyRecord.Say("开启计算OEE线程");
+						OEE_ForSaveLoader(NowTime);
+					}
 				}
 				if ((h == 8 && m == 45 && s == 15) || (h == 21 && m == 05 && s == 15)) //审核排程
 				{
@@ -304,8 +301,16 @@ namespace MYERP_ServerServiceRuner
 						}
 					}
 					else if (h == 8)  //发送品保纪律稽核
-					{ 
-						if (m== 50 && s== 10)
+					{
+						if (m == 15 && s == 15)
+						{
+							if (CompanyType == "MY")
+							{
+								MyRecord.Say("发送OQC");
+								SendOQCEmailLoder();
+							}
+						}
+						if (m == 50 && s == 10)
 						{
 							if (CompanyType == "MY")
 							{
@@ -434,8 +439,15 @@ namespace MYERP_ServerServiceRuner
 			DateTime rxtime = DateTime.Now;
 			while (ProduceFeedBackRuning)
 			{
-				if ((DateTime.Now - rxtime).TotalMinutes > 20) return;
-				Thread.Sleep(5000);
+				try
+				{
+					if ((DateTime.Now - rxtime).TotalMinutes > 20) return;
+					Thread.Sleep(5000);
+				}
+				finally
+				{
+					CheckStockRecordRunning = false;
+				}
 			};
 			string SQL = "";
 			MyRecord.Say("---------------------启动定时审核出入库单据。------------------------------");
@@ -1101,12 +1113,18 @@ Order by a.ProcessID,a.MachinID
 						MyRecord.Say("加载邮件内容。");
 						sm.MailBodyText = string.Format(body, NowTime.AddDays(-1).Date, brs, DateTime.Now, MyBase.CompanyTitle);
 						sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}完工单不良率100%统计表", NowTime.AddDays(-1).Date, MyBase.CompanyTitle));
-						string mailto = ConfigurationManager.AppSettings["RejectMailTo"], mailcc = ConfigurationManager.AppSettings["RejectMailCC"];
-						MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
-						sm.MailTo = mailto;
-						//"jane123@my.imedia.com.tw,lwy@my.imedia.com.tw";
-						sm.MailCC = mailcc; //"jenny@imedia.com.tw,sparktsai@my.imedia.com.tw,my80@my.imedia.com.tw";
+						//string mailto = ConfigurationManager.AppSettings["RejectMailTo"], mailcc = ConfigurationManager.AppSettings["RejectMailCC"];
+						//MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+						//sm.MailTo = mailto;
+						//sm.MailCC = mailcc;
+						////sm.MailTo = "my80@my.imedia.com.tw";
+
+						MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("Reject");
+						MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+						sm.MailTo = mAddress.MailTo;
+						sm.MailCC = mAddress.MailCC;
 						//sm.MailTo = "my80@my.imedia.com.tw";
+
 						MyRecord.Say("发送邮件。");
 						sm.SendOut();
 						MyRecord.Say("已经发送。");
@@ -1333,10 +1351,15 @@ Drop Table #T
 						MyRecord.Say("加载邮件内容。");
 						sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, NowTime.AddDays(-2), brs, NowTime, MyBase.CompanyTitle));
 						sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_未结工单提醒。", NowTime, MyBase.CompanyTitle));
-						string mailto = ConfigurationManager.AppSettings["TenDayMailTo"], mailcc = ConfigurationManager.AppSettings["TenDayMailCC"];
-						MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
-						sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
-						sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
+						//string mailto = ConfigurationManager.AppSettings["TenDayMailTo"], mailcc = ConfigurationManager.AppSettings["TenDayMailCC"];
+						//MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+						//sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
+						//sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
+						////sm.MailTo = "my80@my.imedia.com.tw";
+						MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("TenDay");
+						MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+						sm.MailTo = mAddress.MailTo;
+						sm.MailCC = mAddress.MailCC;
 						//sm.MailTo = "my80@my.imedia.com.tw";
 						MyRecord.Say("发送邮件。");
 						sm.SendOut();
@@ -1552,11 +1575,18 @@ Drop Table #T
 						MyRecord.Say(string.Format("表格一共：{0}行，表格已经生成。", md.Rows.Count));
 
 
-						string mailto = ConfigurationManager.AppSettings["InStockFollowUPMailTo"], mailcc = ConfigurationManager.AppSettings["InStockFollowUPMailCC"];
-						MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
-						sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
-						sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
+						//string mailto = ConfigurationManager.AppSettings["InStockFollowUPMailTo"], mailcc = ConfigurationManager.AppSettings["InStockFollowUPMailCC"];
+						//MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+						//sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
+						//sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
+						////sm.MailTo = "my80@my.imedia.com.tw";
+
+						MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("InStockFollowUP");
+						MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+						sm.MailTo = mAddress.MailTo;
+						sm.MailCC = mAddress.MailCC;
 						//sm.MailTo = "my80@my.imedia.com.tw";
+
 						MyRecord.Say("发送邮件。");
 						sm.SendOut();
 						sm.mail.Dispose();
@@ -1573,12 +1603,20 @@ Drop Table #T
 						sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, string.Format(bx2, xbTime), NowTime, MyBase.CompanyTitle));
 						sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_入库跟催表。", NowTime, MyBase.CompanyTitle));
 
-						string mailto = ConfigurationManager.AppSettings["InStockFollowUPMailTo"], mailcc = ConfigurationManager.AppSettings["InStockFollowUPMailCC"];
-						MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
-						sm.MailTo = mailto;
-						sm.MailCC = mailcc;
+						//string mailto = ConfigurationManager.AppSettings["InStockFollowUPMailTo"], mailcc = ConfigurationManager.AppSettings["InStockFollowUPMailCC"];
+						//MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+						//sm.MailTo = mailto;
+						//sm.MailCC = mailcc;
+						////sm.MailTo = "my80@my.imedia.com.tw";
+						////sm.MailCC = "my80@my.imedia.com.tw";
+
+						MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("InStockFollowUP");
+						MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+						sm.MailTo = mAddress.MailTo;
+						sm.MailCC = mAddress.MailCC;
 						//sm.MailTo = "my80@my.imedia.com.tw";
-						//sm.MailCC = "my80@my.imedia.com.tw";
+
+
 						MyRecord.Say("发送邮件。");
 						sm.SendOut();
 						sm.mail.Dispose();
@@ -2430,11 +2468,18 @@ Drop Table #T
 					}
 					sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, xBodyString, NowTime, MyBase.CompanyTitle));
 					sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}結單差異數提醒。", NowTime, MyBase.CompanyTitle));
-					string mailto = ConfigurationManager.AppSettings["FinishMailTo"], mailcc = ConfigurationManager.AppSettings["FinishMailCC"];
-					MyRecord.Say(string.Format("发送邮件地址：\r\n MailTO:{0} \r\n MailCC:{1}", mailto, mailcc));
-					sm.MailTo = mailto;
-					sm.MailCC = mailcc;
+					//string mailto = ConfigurationManager.AppSettings["FinishMailTo"], mailcc = ConfigurationManager.AppSettings["FinishMailCC"];
+					//MyRecord.Say(string.Format("发送邮件地址：\r\n MailTO:{0} \r\n MailCC:{1}", mailto, mailcc));
+					//sm.MailTo = mailto;
+					//sm.MailCC = mailcc;
+					////sm.MailTo = "my80@my.imedia.com.tw";
+
+					MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("Finish");
+					MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+					sm.MailTo = mAddress.MailTo;
+					sm.MailCC = mAddress.MailCC;
 					//sm.MailTo = "my80@my.imedia.com.tw";
+
 					MyRecord.Say("发送邮件。");
 					NowTime = DateTime.Now;
 					sm.SendOut();
@@ -2958,11 +3003,18 @@ Where isNull(Status,0) = 0 And StockDate is Null And FinishDate is Null
 						MyRecord.Say("加载邮件内容。");
 						sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, BDate, EDate, brs, NowTime, MyBase.CompanyTitle));
 						sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_昨日未审核工单提醒。", NowTime, MyBase.CompanyTitle));
-						string mailto = ConfigurationManager.AppSettings["ProduceMailTo"], mailcc = ConfigurationManager.AppSettings["ProduceMailCC"];
-						MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
-						sm.MailTo = mailto; //"my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
-						sm.MailCC = mailcc; //"jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
+						//string mailto = ConfigurationManager.AppSettings["ProduceMailTo"], mailcc = ConfigurationManager.AppSettings["ProduceMailCC"];
+						//MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+						//sm.MailTo = mailto; //"my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
+						//sm.MailCC = mailcc; //"jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
+						////sm.MailTo = "my80@my.imedia.com.tw";
+
+						MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("Produce");
+						MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+						sm.MailTo = mAddress.MailTo;
+						sm.MailCC = mAddress.MailCC;
 						//sm.MailTo = "my80@my.imedia.com.tw";
+
 						MyRecord.Say("发送邮件。");
 						sm.SendOut();
 						MyRecord.Say("已经发送。");
@@ -3440,11 +3492,18 @@ from [_QE_ProblemSolving8D] a Where FinalizDate is Null And InputDate <= @DateEn
 						string sb3 = brs != null && brt.Length > 0 ? string.Format(body3, brt) : string.Empty;
 						sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, sb1, sb2, sb3, NowTime, MyBase.CompanyTitle));
 						sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_8D报告回覆进度追踪统计。", NowTime, MyBase.CompanyTitle));
-						string mailto = ConfigurationManager.AppSettings["8DMailTo"], mailcc = ConfigurationManager.AppSettings["8DMailCC"];
-						MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
-						sm.MailTo = mailto;
-						sm.MailCC = mailcc;
+						//string mailto = ConfigurationManager.AppSettings["8DMailTo"], mailcc = ConfigurationManager.AppSettings["8DMailCC"];
+						//MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+						//sm.MailTo = mailto;
+						//sm.MailCC = mailcc;
+						////sm.MailTo = "my80@my.imedia.com.tw";
+
+						MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("8D");
+						MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+						sm.MailTo = mAddress.MailTo;
+						sm.MailCC = mAddress.MailCC;
 						//sm.MailTo = "my80@my.imedia.com.tw";
+
 						MyRecord.Say("发送邮件。");
 						sm.SendOut();
 						MyRecord.Say("已经发送。");
@@ -3458,11 +3517,19 @@ from [_QE_ProblemSolving8D] a Where FinalizDate is Null And InputDate <= @DateEn
 						string sb3 = MyConvert.ZH_TW(@"<DIV><FONT color=#FFF90051 size=4 face=PMingLiU><STRONG>&nbsp;&nbsp;没有未回复的8D报告，非常棒！</STRONG></FONT></DIV>");
 						sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, "", "", sb3, NowTime, MyBase.CompanyTitle));
 						sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_8D报告回覆进度追踪统计。", NowTime, MyBase.CompanyTitle));
-						string mailto = ConfigurationManager.AppSettings["8DMailTo"], mailcc = ConfigurationManager.AppSettings["8DMailCC"];
-						MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
-						sm.MailTo = mailto;
-						sm.MailCC = mailcc;
+
+						//string mailto = ConfigurationManager.AppSettings["8DMailTo"], mailcc = ConfigurationManager.AppSettings["8DMailCC"];
+						//MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+						//sm.MailTo = mailto;
+						//sm.MailCC = mailcc;
+						////sm.MailTo = "my80@my.imedia.com.tw";
+
+						MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("8D");
+						MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+						sm.MailTo = mAddress.MailTo;
+						sm.MailCC = mAddress.MailCC;
 						//sm.MailTo = "my80@my.imedia.com.tw";
+
 						MyRecord.Say("发送邮件。");
 						sm.SendOut();
 						MyRecord.Say("已经发送。");
@@ -3733,11 +3800,18 @@ Order by a.[_id]
 						MyRecord.Say("加载邮件内容。");
 						sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, EDate, brs, NowTime, MyBase.CompanyTitle));
 						sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_设备维修申请单进度追踪统计。", NowTime, MyBase.CompanyTitle));
-						string mailto = ConfigurationManager.AppSettings["MachineMailTo"], mailcc = ConfigurationManager.AppSettings["MachineMailCC"];
-						MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
-						sm.MailTo = mailto;
-						sm.MailCC = mailcc;
+						//string mailto = ConfigurationManager.AppSettings["MachineMailTo"], mailcc = ConfigurationManager.AppSettings["MachineMailCC"];
+						//MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+						//sm.MailTo = mailto;
+						//sm.MailCC = mailcc;
+						////sm.MailTo = "my80@my.imedia.com.tw";
+
+						MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("Machine");
+						MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+						sm.MailTo = mAddress.MailTo;
+						sm.MailCC = mAddress.MailCC;
 						//sm.MailTo = "my80@my.imedia.com.tw";
+
 						MyRecord.Say("发送邮件。");
 						sm.SendOut();
 						MyRecord.Say("已经发送。");

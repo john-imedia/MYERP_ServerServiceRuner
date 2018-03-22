@@ -197,10 +197,15 @@ Order by a.ProdNo
 
                 sm.MailBodyText = string.Format(body, MyBase.CompanyTitle, DateTime.Now, NowTime, mailBodyMainSentence, brs);
                 sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}出货计划量", NowTime.Date, MyBase.CompanyTitle));
-                string mailto = ConfigurationManager.AppSettings["DeliveryPlanNumberMailTo"], mailcc = ConfigurationManager.AppSettings["DeliveryPlanNumberMailCC"];
-                MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mailto, mailcc));
-                sm.MailTo = mailto;
-                sm.MailCC = mailcc;
+                //string mailto = ConfigurationManager.AppSettings["DeliveryPlanNumberMailTo"], mailcc = ConfigurationManager.AppSettings["DeliveryPlanNumberMailCC"];
+                //MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mailto, mailcc));
+                //sm.MailTo = mailto;
+                //sm.MailCC = mailcc;
+                //sm.MailTo = "my80@my.imedia.com.tw";
+                MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("DeliveryPlanNumber");
+                MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+                sm.MailTo = mAddress.MailTo;
+                sm.MailCC = mAddress.MailCC;
                 //sm.MailTo = "my80@my.imedia.com.tw";
                 MyRecord.Say("发送邮件。");
                 sm.SendOut();
