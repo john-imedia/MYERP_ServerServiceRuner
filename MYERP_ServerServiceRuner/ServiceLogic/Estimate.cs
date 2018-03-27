@@ -1680,7 +1680,10 @@ namespace MYERP_ServerServiceRuner
 			{
 				get
 				{
-					return Amount / ProductNumb;
+                    if (ProductNumb > 0)
+                        return Amount / ProductNumb;
+                    else
+                        return 0;
 				}
 			}
 
@@ -3317,16 +3320,16 @@ Select a.id,a.RdsNo,a.CustID as CustCode,a.Code,b.Name,b.Size,b.UnfoldSize,a.[_i
 						MyRecord.Say("加载邮件内容。");
 						sm.MailBodyText = MyConvert.ZH_TW(string.Format(body, dt1, dt2, brs, NowTime, MyBase.CompanyTitle, LocalInfo.GetLocalIp()));
 						sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}_工单成本计算。", NowTime, MyBase.CompanyTitle));
-                        //string mailto = ConfigurationManager.AppSettings["ProduceEstimateMailTo"], mailcc = ConfigurationManager.AppSettings["ProduceEstimateMailCC"];
-                        //MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
-                        //sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
-                        //sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
+						//string mailto = ConfigurationManager.AppSettings["ProduceEstimateMailTo"], mailcc = ConfigurationManager.AppSettings["ProduceEstimateMailCC"];
+						//MyRecord.Say(string.Format("MailTO:{0}\nMailCC:{1}", mailto, mailcc));
+						//sm.MailTo = mailto; // "my18@my.imedia.com.tw,xang@my.imedia.com.tw,lghua@my.imedia.com.tw,my64@my.imedia.com.tw";
+						//sm.MailCC = mailcc; // "jane123@my.imedia.com.tw,lwy@my.imedia.com.tw,my80@my.imedia.com.tw";
 						//sm.MailTo = "my80@my.imedia.com.tw";
-                        MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("ProduceEstimate");
-                        MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
-                        sm.MailTo = mAddress.MailTo;
-                        sm.MailCC = mAddress.MailCC;
-                        //sm.MailTo = "my80@my.imedia.com.tw";
+						MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("ProduceEstimate");
+						MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+						sm.MailTo = mAddress.MailTo;
+						sm.MailCC = mAddress.MailCC;
+						//sm.MailTo = "my80@my.imedia.com.tw";
 						MyRecord.Say("发送邮件。");
 						sm.SendOut();
 						MyRecord.Say("已经发送。");
