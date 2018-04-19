@@ -811,6 +811,7 @@ namespace MYERP_ServerServiceRuner.Base
             public string DeliverPlanFinishStatisticErrorTempSender { get; set; }
             public bool CheckStockNoteOnceTime { get; set; }
             public bool ProdKanbanSaveOnceTime { get; set; }
+            public int CacluateProduceFeedBackTimes { get; set; }
         }
 
         public class MailAddress

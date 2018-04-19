@@ -28,23 +28,14 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.MainTimer = new System.Timers.Timer();
-            ((System.ComponentModel.ISupportInitialize)(this.MainTimer)).BeginInit();
-            // 
-            // MainTimer
-            // 
-            this.MainTimer.Enabled = true;
             // 
             // MainService
             // 
             this.ServiceName = "MYERPServerService";
-            ((System.ComponentModel.ISupportInitialize)(this.MainTimer)).EndInit();
 
         }
 
         #endregion
-
-        private System.Timers.Timer MainTimer;
 
     }
 }
