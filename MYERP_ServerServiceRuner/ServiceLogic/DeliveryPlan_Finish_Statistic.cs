@@ -80,6 +80,9 @@ namespace MYERP_ServerServiceRuner
 	<TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
 	问题描述
 	</TD>
+	<TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
+	交期备注
+	</TD>
 	</TR>
 	{0}
 </TBODY></TABLE></FONT>
@@ -100,6 +103,9 @@ namespace MYERP_ServerServiceRuner
 	</TD>
 	<TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=center >
 	{4}
+	</TD>
+	<TD class=xl63 style=""BORDER-TOP: windowtext 0.5pt solid; BORDER-RIGHT: windowtext 0.5pt solid; BORDER-BOTTOM: windowtext 0.5pt solid; BORDER-LEFT: windowtext 0.5pt solid; BACKGROUND-COLOR: transparent"" align=left >
+	{5}
 	</TD>
 	</TR>";
 
@@ -122,7 +128,7 @@ namespace MYERP_ServerServiceRuner
 
 				var viss = from a in AllProcessItemList
 						   where a.isError
-						   orderby a.DepartmentName
+						   orderby a.DepartmentFullSortID, a.ProcessCode
 						   select a;
 
 				int xProduceGridCount = viss.Count();
@@ -151,7 +157,7 @@ namespace MYERP_ServerServiceRuner
 					MyRecord.Say("加载到附件");
 					foreach (var item in viss)
 					{
-						brs += string.Format(br, item.DepartmentName, item.ProcessName, item.ProductName, item.ProduceRdsNo, item.IssuesMemo);
+						brs += string.Format(br, item.DepartmentName, item.ProcessName, item.ProductName, item.ProduceRdsNo, item.IssuesMemo, item.SRemark);
 					}
 					brs = string.Format(gridTitle, brs);
 					MyRecord.Say("生成邮件内容。");
@@ -167,11 +173,11 @@ namespace MYERP_ServerServiceRuner
 				sm.MailBodyText = string.Format(body, NowTime, mailBodyMainSentence, DateTime.Now, MyBase.CompanyTitle, brs);
 				sm.Subject = MyConvert.ZH_TW(string.Format("{1}{0:yy年MM月dd日}三日出货计划和排程异常表", NowTime.AddDays(-1).Date, MyBase.CompanyTitle));
 				//string mailto = ConfigurationManager.AppSettings["DeliveryPlanMailTo"], 
-                //       mailcc = ConfigurationManager.AppSettings["DeliveryPlanMailCC"];
-                MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("DeliveryPlan");
-                MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
-                sm.MailTo = mAddress.MailTo;
-                sm.MailCC = mAddress.MailCC;
+				//       mailcc = ConfigurationManager.AppSettings["DeliveryPlanMailCC"];
+				MyConfig.MailAddress mAddress = MyConfig.GetMailAddress("DeliveryPlan");
+				MyRecord.Say(string.Format("MailTO:{0}\r\nMailCC:{1}", mAddress.MailTo, mAddress.MailCC));
+				sm.MailTo = mAddress.MailTo;
+				sm.MailCC = mAddress.MailCC;
 				//sm.MailTo = "my80@my.imedia.com.tw";
 				MyRecord.Say("发送邮件。");
 				sm.SendOut();
@@ -191,7 +197,7 @@ namespace MYERP_ServerServiceRuner
 		}
 
 
-		protected List<Plan_ProduceNoteItem> maindata, mainFinishData, MainPlanData;
+		protected List<Plan_ProduceNoteItem> MainData, FinishData, PlanData;
 
 		List<GridProduceNoteItem> GridList;
 
@@ -205,72 +211,109 @@ namespace MYERP_ServerServiceRuner
 		{
 			///工单内容
 			string SQL = @"
-Set NoCount On
+SET NOCOUNT ON
 
-select a.ProdNo as ProdRdsNo,a.ProdID as ProductID,a.SendDate,a.pNumb,a.Inputer
-Into #SendList
-from _PMC_DeliverPlan_SendList a Inner Join moProduce b On a.ProdId=b.id
-								 Inner Join pbProduct c On b.Code=c.Code
-Where isNull(b.Status,0) >0 And b.CloseDate is Null And b.Finalized is Null And b.StockDate is Null And b.FinishDate is Null And
-	  (c.Type Not in ({0})) And a.SendDate Between @ProdBegin And @ProdEnd And b.InputDate < @ProdBegin And
-	  (c.Type=@ProdType or isNull(@ProdType,'')='') And
-	  (a.ProdNo= @ProductRdsNo or isNull(@ProductRdsNo,'')='') And
-	  (charindex(@ProdName,c.Name)>0 or isNull(@ProdName,'')='') And
-	  (b.CustID= @CustID or isNull(@CustID,'')='')
-Create Index _Ix_SendList_ProdRdsNo on #SendList (ProdRdsNo)
-Select a.*,b.CustID as CustCode,b.Code as ProdCode,ProdName=Convert(nVarchar(100),Null),
-	   PartID=(Case When c.PartID='' Then '--' Else c.PartID End),
-	   c.ProcNo as ProcessCode,b.pNumb as ProductNumb,
-	   ProcessName=Convert(nVarchar(40),Null),
-	   c.FinishNumb,c.RejectNumb,c.LossedNumb,c.OverDate,
-	   SortID=Case When isNull(c.PartID,'')='' Then 110 else 100 End,
-	   SName=isNull((Select Name from moProdProperty Where Code=b.Property),'') + '，' +
-			 isNull((Select txt from ProdStatusView Where id=b.Status),'') + '，' +
-			 isNull((Select txt from ProdStockStatusView Where id=b.StockStatus),'未入库'),
-	   b.FinishRemark,c.CloseDate,c.Closer,m.Code as MachineCode,m.name as MachineName,
-	   DepartmentName = (Select Name from pbDept Where [_id] = m.DepartmentID)
-Into #ProdList
-from #SendList a Inner Join moProduce b ON a.ProductID=b.id
-				 Inner Join moProdProcedure c ON b.id=c.zbid
-				 Left Outer Join moMachine m On c.MachinID = m.Code
-Where isNull(b.Status,0) >0 And b.CloseDate is Null And b.Finalized is Null And b.StockDate is Null And b.FinishDate is Null And
-	  (c.ProcNo = @Process or isNull(@Process,'')='') And
-	  (m.DepartmentID = @DeptID or isNull(@DeptID,0)=0)
+DECLARE @T Table ([ProdRdsNo] NVarchar(40),
+				  [ProductID] Int,
+				  [SENDDATE] DateTime,
+				  [PNUMB] Numeric(38, 2),
+				  [Inputer] NVarchar(40),
+				  [Inputdate] DateTime,
+				  [CustCode] Varchar(16),
+				  [ProdCode] Varchar(50),
+				  [ProdName] NVarchar(800),
+				  [PartID] NVarchar(400),
+				  [ProcessCode] Varchar(10) NOT NULL,
+				  [ProductNumb] Numeric(8, 0),
+				  [ProcessName] Varchar(30),
+				  [FinishNumb] Decimal(20, 6),
+				  [RejectNumb] Decimal(20, 6),
+				  [LossedNumb] Decimal(20, 6),
+				  [OverDate] DateTime,
+				  [SortID] Varchar(40),
+				  [SName] NVarchar(400),
+				  [FinishRemark] NVarchar(2000),
+				  [CloseDate] DateTime,
+				  [Closer] NVarchar(20),
+				  [MachineCode] Varchar(40),
+				  [MachineName] NVarchar(100),
+				  [DepartmentName] Varchar(20),
+				  [Property] Int,
+				  [Status] Int,
+				  [StockStats] Int,
+				  [SRemark] nvarchar(2000),
+				  [DepartmentFullSortID] VarChar(40)
+);
+INSERT INTO @T ([ProdRdsNo], [ProductID], [SENDDATE], [PNUMB], [Inputer], [Inputdate], [CustCode], [ProdCode], [ProdName], [PartID], [ProcessCode],
+				[ProductNumb], [ProcessName], [FinishNumb], [RejectNumb], [LossedNumb], [OverDate], [SortID], [FinishRemark], [CloseDate], [Closer],
+				[MachineCode], [MachineName], [DepartmentName], [Property], [Status], [StockStats], [SRemark], [DepartmentFullSortID])
+SELECT [a].[PRODNO] AS [ProdRdsNo], [a].[PRODID] AS [ProductID], [a].[SENDDATE], [a].[PNUMB], [a].[Inputer], [a].[Inputdate], [b].[custid] AS [CustCode],
+	   [b].[code] AS [ProdCode], [e].[Name] AS [ProdName], (CASE WHEN [c].[PartID] = '' THEN '--' ELSE [c].[PartID] END) AS [PartID],
+	   [c].[procno] AS [ProcessCode], [b].[pnumb] AS [ProductNumb], [f].[name] AS [ProcessName], [c].[FinishNumb], [c].[RejectNumb], [c].[LossedNumb],
+	   [c].[OverDate], (CASE WHEN ISNULL(c.PartID, '') = '' THEN 110 ELSE 100 END) AS [SortID], [b].[FinishRemark], [c].[CloseDate], [c].[Closer],
+	   [m].[code] AS [MachineCode], [m].[name] AS [MachineName], [p].[name] AS [DepartmentName], [b].[property], [b].[status], [b].[StockStatus],[b].[SRemark],
+	   [p].[FullSortID]
+  FROM [_PMC_DeliverPlan_Sendlist] [a]
+	   INNER JOIN [moProduce] [b] ON [a].[PRODNO] = [b].[rdsno]
+	   INNER JOIN [moProdProcedure] [c] ON [c].[zbid] = [b].[id]
+	   INNER JOIN [AllMaterialView] [e] ON [b].[code] = [e].[code]
+	   INNER JOIN [moProcedure] [f] ON [c].[procno] = [f].[code]
+	   INNER JOIN [moMachine] [m] ON [c].[machinID] = [m].[code]
+	   INNER JOIN [pbDept] [p] ON [m].[DepartmentID] = [p].[_ID]
+ WHERE ISNULL([b].[status], 0) > 0
+	   AND [b].[CloseDate] IS NULL
+	   AND [b].[finishdate] IS NULL
+	   AND [b].[StockDate] IS NULL
+	   AND ISNULL([b].[finalized], 0) = 0
+	   AND ([e].[type] NOT IN ({0}))
+	   AND [a].[SENDDATE] BETWEEN @ProdBegin AND @ProdEnd
+	   AND [b].[inputdate] < @ProdBegin
 
-Create Index _Ix_ProdList_ProdRdsNo on #ProdList (ProdRdsNo,SortID)
-update a set a.ProcessName=x.Name from #ProdList a,moProcedure x Where a.ProcessCode=x.Code and SortID between 100 and 110
+INSERT INTO @T ([ProdRdsNo], [ProductID], [SENDDATE], [PNUMB], [Inputer], [Inputdate], [CustCode], [ProdCode], [ProdName], [PartID], [ProductNumb],
+				[FinishNumb], [OverDate], [SortID], [FinishRemark], [ProcessCode], [ProcessName], [DepartmentName], [Property], [Status], [StockStats],[SRemark])
+SELECT [a].[PRODNO] AS [ProdRdsNo], [a].[PRODID] AS [ProductID], [a].[SENDDATE], [a].[PNUMB], [a].[Inputer], [a].[Inputdate], [b].[custid] AS [CustCode],
+	   [b].[code] AS [ProdCode], [e].[Name] AS [ProdName], '--' AS [PartID], [b].[pnumb] AS [ProductNumb], [b].[InStockFinishNumb], [b].[finishdate],
+	   120 AS [SortID], [b].[FinishRemark], '9999', '成品入庫', '倉庫', [b].[property], [b].[status], [b].[StockStatus],[b].[SRemark]
+  FROM [_PMC_DeliverPlan_Sendlist] [a]
+	   INNER JOIN [moProduce] [b] ON [a].[PRODNO] = [b].[rdsno]
+	   INNER JOIN [AllMaterialView] [e] ON [b].[code] = [e].[code]
+ WHERE ISNULL([b].[StopStock], 0) = 0
+	   AND ISNULL([b].[status], 0) > 0
+	   AND [b].[CloseDate] IS NULL
+	   AND [b].[finishdate] IS NULL
+	   AND [b].[StockDate] IS NULL
+	   AND ISNULL([b].[finalized], 0) = 0
+	   AND ([e].[type] NOT IN ({0}))
+	   AND [a].[SENDDATE] BETWEEN @ProdBegin AND @ProdEnd
+	   AND [b].[inputdate] < @ProdBegin
 
-Insert Into #ProdList(ProdRdsNo,ProcessCode,ProcessName,FinishNumb,SendDate,SortID,PartID,CustCode,ProdCode,ProductNumb,SName,FinishRemark,pNumb)
-Select  a.ProdRdsNo,'9999','成品入库',0,a.SendDate,500,'--' as PartID,b.CustID as CustCode,
-		b.Code as ProdCode,b.pNumb as ProductNumb,
-		SName=isNull((Select Name from moProdProperty Where Code=b.Property),'') + '，' +
-			 isNull((Select txt from ProdStatusView Where id=b.Status),'') + '，' +
-			 isNull((Select txt from ProdStockStatusView Where id=b.StockStatus),'未入库'),
-		b.FinishRemark,a.pNumb
-From #SendList a,moProduce b Where a.ProductID=b.id And a.ProdRdsNo in (Select ProdRdsNo from #ProdList)
+UPDATE a
+   SET [a].[SName] = ISNULL([P1].[Name], '') + ',' + ISNULL([P2].[Name], '') + ',' + ISNULL([P3].[Name], '')
+  FROM @T a
+	   LEFT OUTER JOIN
+	   (SELECT [sy1].[Name], [sy1].[StatusID]
+		  FROM [_SY_Status] [sy1]
+		 WHERE [sy1].[Type] = 'POProperty') [P1] ON [P1].[StatusID] = [a].[Property]
+	   LEFT OUTER JOIN
+	   (SELECT [sy2].[Name], [sy2].[StatusID]
+		  FROM [_SY_Status] [sy2]
+		 WHERE [sy2].[Type] = 'PO') [P2] ON [P2].[StatusID] = [a].[Status]
+	   LEFT OUTER JOIN
+	   (SELECT [sy3].[Name], [sy3].[StatusID]
+		  FROM [_SY_Status] [sy3]
+		 WHERE [sy3].[Type] = 'POStatus') [P3] ON [P3].[StatusID] = [a].[StockStats];
 
-Update a set FinishNumb=T.Numb from #ProdList a,(Select Sum(Numb) as Numb,b.ProductNo From stprdstocklst b Group by b.ProductNo) T where T.ProductNo=a.ProdRdsNo and a.SortID=500
-Update a Set a.ProdName=x.Name From #ProdList a,pbProduct x Where a.ProdCode=x.Code
-Select *,b.Name as ProdName,c.StockNumb From #ProdList a Left Outer Join AllMaterialView b ON a.ProdCode=b.Code
-											 Left Outer Join [_ST_StockListByCodeView] c On a.ProdCode = c.Code
-
-Drop Table #SendList
-Drop Table #ProdList
-Set NoCount Off
+SELECT *
+  FROM @T
+ ORDER BY [SENDDATE],[ProdRdsNo], [SortID], [PartID];
 ";
 			//SQL = string.Format(SQL, ConfigurationManager.AppSettings["DeliveryPlanFinishStaticExceptProdTypes"]);
-            string xFilterString = MyConfig.ApplicationConfig.DeliveryPlanFinishStaticExceptProdTypes;
-            SQL = string.Format(SQL, xFilterString);
+			string xFilterString = MyConfig.ApplicationConfig.DeliveryPlanFinishStaticExceptProdTypes;
+			SQL = string.Format(SQL, xFilterString);
 			MyData.MyDataParameter[] mp = new MyData.MyDataParameter[]
 			{
 				new MyData.MyDataParameter("@ProdBegin",DateBegin, MyData.MyDataParameter.MyDataType.DateTime),
-				new MyData.MyDataParameter("@ProdEnd",DateEnd, MyData.MyDataParameter.MyDataType.DateTime),
-				new MyData.MyDataParameter("@Process",null),
-				new MyData.MyDataParameter("@DeptID",0, MyData.MyDataParameter.MyDataType.Int),
-				new MyData.MyDataParameter("@ProductRdsNo",null),
-				new MyData.MyDataParameter("@CustID",null),
-				new MyData.MyDataParameter("@ProdType",null),
-				new MyData.MyDataParameter("@ProdName",null)
+				new MyData.MyDataParameter("@ProdEnd",DateEnd, MyData.MyDataParameter.MyDataType.DateTime)
 			};
 			DateTime StartTime = DateTime.Now;
 			MyRecord.Say("1.0 准备开始...");
@@ -278,30 +321,32 @@ Set NoCount Off
 			{
 				var v = from a in mdata.MyRows
 						select new Plan_ProduceNoteItem(a);
-				maindata = v.ToList();
+				MainData = v.ToList();
 			}
 			MyRecord.Say(string.Format("1.1 读取工单，耗时：{0}秒。", (DateTime.Now - StartTime).TotalSeconds));
 			StartTime = DateTime.Now;
 			///完工内容
 
 			SQL = @"
-Select ProduceNo as ProdRdsNo,ProdCode=ProductCode,PartID=Case When PartID='' Then '--' Else PartID End,
-	   ProductID=0,TolNumb as pNumb,m.Name as MachineName,DepartmentName=(Select Name From pbDept p Where p.[_ID]=m.DepartmentID),
-	   FinishNumb = Numb1,RejectNumb=Numb2,LossedNumb=AdjustNumb + SampleNumb,
-	   ProcessCode=ProcessID,CustCode,SendDate=a.StartTime
-from  ProdDailyReport a Inner Join moMachine m On a.MachinID = m.Code
-Where a.ProduceNo in (Select ProdNo From _PMC_DeliverPlan_SendList) And a.EndTime Between @ProdBegin And @ProdEnd And
-	  (CharIndex('-' + @ProdType +'-',ProductCode)>0 or isNull(@ProdType,'')='') And
-	  (ProduceNo= @ProductRdsNo or isNull(@ProductRdsNo,'')='') And
-	  (CustCode= @CustID or isNull(@CustID,'')='') And
-	  (ProcessID = @Process or isNull(@Process,'')='') And
-	  (m.DepartmentID = @DeptID or isNull(@DeptID,0)=0)
+SELECT [a].[ProduceNo] AS [ProdRdsNo], [a].[ProductCode] AS [ProdCode], (CASE WHEN [a].[PartID] = '' THEN '--' ELSE [a].[PartID] END) AS [PartID],
+	   [mp].[id] AS [ProductID], [mpp].[reqnumb] AS [pNumb], [m].[name] AS [MachineName], [p].[name] AS [DepartmentName], [a].[Numb1] AS [FinishNumb],
+	   [a].[Numb2] AS [RejectNumb], [a].[AdjustNumb] + [a].[SampleNumb] AS [LossedNumb], [a].[ProcessID] AS ProcessCode, [a].[CustCode],
+	   [a].[StartTime] AS [BDD], [a].[EndTime] AS [EDD],[c].[Name] AS [ProdName]
+  FROM [ProdDailyReport] [a]
+	   INNER JOIN [_PMC_DeliverPlan_Sendlist] [b] ON [a].[ProduceNo] = [b].[PRODNO]
+	   INNER JOIN [AllMaterialView] [c] ON [c].[code] = [a].[ProductCode]
+	   INNER JOIN [moMachine] [m] ON [a].[MachinID] = [m].[code]
+	   INNER JOIN [pbDept] [p] ON [m].[DepartmentID] = [p].[_ID]
+	   INNER JOIN [moProduce] [mp] ON [mp].[rdsno] = [a].[ProduceNo]
+	   INNER JOIN [moProdProcedure] [mpp] ON [mp].[id] = [mpp].[zbid]
+											 AND [mpp].[id] = [a].[PrdID]
+ WHERE [b].[SENDDATE] BETWEEN @ProdBegin AND @ProdEnd
 ";
 			using (MyData.MyDataTable mdata = new MyData.MyDataTable(SQL, mp))
 			{
 				var v = from a in mdata.MyRows
 						select new Plan_ProduceNoteItem(a);
-				mainFinishData = v.ToList();
+				FinishData = v.ToList();
 			}
 
 			MyRecord.Say(string.Format("1.2 读取完工单，耗时：{0}秒。", (DateTime.Now - StartTime).TotalSeconds));
@@ -336,22 +381,19 @@ Set NoCount OFF
 
 			#endregion
 			SQL = @"
-Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' Else a.PartNo End,a.DepartmentName,a.MachineName,
-	   ProductID = b.PRODID,pNumb=a.PlanReqNumb,ProcessCode=a.ProcNo,a.CustCode,SendDate=a.Bdd,a.Closer,a.CloseDate,ProdName=c.Name
-  from [_PMC_DeliverPlan_SendList] b Inner Join [_PMC_PlanProgressList_View] a ON a.zbid = b.PRODID
-									 Inner Join AllMaterialView c On a.ProdCode = c.Code
- Where (a.ProcNo = @Process or isNull(@Process,'')='') And
-	   (a.DepartmentID =@DeptID or isNull(@DeptID,0)=0) And
-	   (CharIndex('-' + @ProdType +'-',a.ProdCode)>0 or isNull(@ProdType,'')='') And
-	   (b.ProdNo= @ProductRdsNo or isNull(@ProductRdsNo,'')='') And
-	   (a.CustCode= @CustID or isNull(@CustID,'')='')
+SELECT [b].[PRODNO] AS [ProdRdsNo], [a].[ProdCode], (CASE WHEN [a].[PartNo] = '' THEN '--' ELSE [a].[PartNo] END) AS [PartID], [a].[DepartmentName],
+	   [a].[MachineName], [b].[PRODID] AS [ProductID], [a].[PlanReqNumb] AS [pNumb], [a].[procno] AS [ProcessCode], [a].[CustCode], [a].[BDD], [a].[EDD],
+	   [a].[Closer], [a].[CloseDate], [c].[Name] AS [ProdName], [a].[RdsNo] AS [PlanRdsNo], [b].[SENDDATE]
+  FROM [_PMC_PlanProgressList_View] [a]
+	   INNER JOIN [_PMC_DeliverPlan_Sendlist] [b] ON [a].zbid = [b].PRODID
+	   INNER JOIN [AllMaterialView] [c] ON [a].ProdCode = [c].[code]
 ";
 
 			using (MyData.MyDataTable mdata = new MyData.MyDataTable(SQL, mp))
 			{
 				var v = from a in mdata.MyRows
 						select new Plan_ProduceNoteItem(a);
-				MainPlanData = v.ToList();
+				PlanData = v.ToList();
 			}
 
 			MyRecord.Say(string.Format("1.3 读取分批交货，耗时：{0}秒。", (DateTime.Now - StartTime).TotalSeconds));
@@ -366,7 +408,7 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
 			try
 			{
 				DateTime sDBegin = DateBegin, sDEnd = DateEnd;
-				var v = from a in maindata
+				var v = from a in MainData
 						orderby a.ProduceNote, a.SendDate, a.SortID, a.PartID
 						where a.SendDate >= sDBegin && a.SendDate <= sDEnd
 						group a by new { a.ProduceNote, a.PartID, a.SendDate } into g
@@ -387,7 +429,7 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
 							g.FirstOrDefault().DepartmentName,
 							g.FirstOrDefault().StockNumb
 						};
-				var v2 = from a in maindata
+				var v2 = from a in MainData
 						 where a.SendDate >= sDBegin && a.SendDate <= sDEnd
 						 group a by a.ProcessCode into g
 						 orderby g.Key
@@ -404,63 +446,71 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
 
 				GridList = new List<GridProduceNoteItem>();
 				int uIndex = 0;
-				foreach (var vitem in v)
+				foreach (var vRowItem in v)
 				{
 					uIndex++;
-					MyRecord.Say(string.Format("计算第{0}条，共{1}条，{2}。", uIndex, v.Count(), vitem.ProduceNote));
+					MyRecord.Say(string.Format("计算第{0}条，共{1}条，{2}。", uIndex, v.Count(), vRowItem.ProduceNote));
 					GridProduceNoteItem GridProdItem = new GridProduceNoteItem();
 					GridList.Add(GridProdItem);
 					GridProdItem.ID = uIndex;
-					GridProdItem.ProduceRdsNo = vitem.ProduceNote;
-					GridProdItem.ProduceNote = string.Format("{0}\r\n({1})\r\n{2}", vitem.ProduceNote, vitem.StatusName, vitem.FinishRemark);
-					GridProdItem.ProductCode = vitem.ProdCode;
-					GridProdItem.ProductName = vitem.ProdName;
-					GridProdItem.ProductNumb = vitem.ProductNumb;
-					GridProdItem.SendDate = vitem.SendDate;
-					GridProdItem.pNumb = vitem.pNumb;
-					GridProdItem.PartID = vitem.PartID;
-					GridProdItem.StockNumb = vitem.StockNumb;
+					GridProdItem.ProduceRdsNo = vRowItem.ProduceNote;
+					GridProdItem.ProduceNote = string.Format("{0}\r\n({1})\r\n{2}", vRowItem.ProduceNote, vRowItem.StatusName, vRowItem.FinishRemark);
+					GridProdItem.ProductCode = vRowItem.ProdCode;
+					GridProdItem.ProductName = vRowItem.ProdName;
+					GridProdItem.ProductNumb = vRowItem.ProductNumb;
+					GridProdItem.SendDate = vRowItem.SendDate;
+					GridProdItem.pNumb = vRowItem.pNumb;
+					GridProdItem.PartID = vRowItem.PartID;
+					GridProdItem.StockNumb = vRowItem.StockNumb;
 					GridProdItem.GridProcess = new List<GridProcessItem>();
-					foreach (var v2Item in v2)
+					foreach (var vColItem in v2)
 					{
-						var vn = from a in maindata
-								 where a.ProduceNote == vitem.ProduceNote && a.ProcessCode == v2Item.ProcessCode && a.PartID == vitem.PartID
+						var vn = from a in MainData
+								 where a.ProduceNote == vRowItem.ProduceNote && a.ProcessCode == vColItem.ProcessCode && a.PartID == vRowItem.PartID
 								 select new
 								 {
 									 Numb1 = a.FinishNumb,
 									 Numb2 = a.RejectNumb + a.LossedNumb,
 									 Overdate = a.OverDate,
 									 CloseDate = a.CloseDate,
-									 Closer = a.Closer
+									 Closer = a.Closer,
+									 SRemark = a.SRemark,
+									 DepartmentFullSortID = a.DepartmentFullSortID
 								 };
-						var vp = from a in MainPlanData
-								 where a.ProduceNote == vitem.ProduceNote && a.ProcessCode == v2Item.ProcessCode && a.PartID == vitem.PartID
+						var vp = from a in PlanData
+								 where a.ProduceNote == vRowItem.ProduceNote && a.ProcessCode == vColItem.ProcessCode && a.PartID == vRowItem.PartID
 								 select new
 								 {
 									 Numb1 = a.pNumb,
-									 BDD = a.SendDate,
+									 BDD = a.BDD,
 									 MachineName = a.MachineName,
-									 DepartmentName = a.DepartmentName
+									 DepartmentName = a.DepartmentName,
+									 RdsNo = a.PlanRdsNo
 								 };
-						var vpc = from a in MainPlanData
-								  where a.ProduceNote == vitem.ProduceNote && a.ProcessCode == v2Item.ProcessCode && a.PartID == vitem.PartID &&
-										a.SendDate > DateTime.MinValue && a.SendDate <= vitem.SendDate
+						DateTime xPlanDateBegin = DateTime.Now.Hour > 20 ? DateTime.Now.Date.AddHours(19).AddMinutes(59) : DateTime.Now.Date.AddHours(7).AddMinutes(59);
+						var vpc = from a in PlanData
+								  where a.ProduceNote == vRowItem.ProduceNote && a.ProcessCode == vColItem.ProcessCode && a.PartID == vRowItem.PartID &&
+										a.BDD > DateTime.MinValue &&
+										((a.BDD - vRowItem.SendDate).TotalHours < 0 && (a.BDD - xPlanDateBegin).TotalHours > 0)
 								  select new
 								  {
 									  Numb1 = a.pNumb,
-									  BDD = a.SendDate,
+									  BDD = a.BDD,
 									  MachineName = a.MachineName,
-									  DepartmentName = a.DepartmentName
+									  DepartmentName = a.DepartmentName,
+									  RdsNo = a.PlanRdsNo
 								  };
 						if (vn.Count() > 0)
 						{
 							GridProcessItem gpi = new GridProcessItem();
 							GridProdItem.GridProcess.Add(gpi);
-							gpi.TotalFinishNumb = vn.Average(a => a.Numb1);
-							gpi.ProcessCode = v2Item.ProcessCode;
-							gpi.ProcessName = v2Item.ProcessName;
+							gpi.TotalFinishNumb = vn.FirstOrDefault().Numb1;
+							gpi.ProcessCode = vColItem.ProcessCode;
+							gpi.ProcessName = vColItem.ProcessName;
 							gpi.ProduceRdsNo = GridProdItem.ProduceRdsNo;
 							gpi.ProductName = GridProdItem.ProductName;
+							gpi.SRemark = vn.FirstOrDefault().SRemark;
+							gpi.DepartmentFullSortID = vn.FirstOrDefault().DepartmentFullSortID;
 
 							DateTime ov = vn.Max(a => a.Overdate);
 							DateTime xDate = DateTime.MinValue;
@@ -475,28 +525,69 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
 										if (vpc.Count() <= 0)
 										{
 											gpi.PlanNumb = string.Format("{0:0}", vp.OrderBy(a => a.BDD).FirstOrDefault().Numb1);
-											xDate = vp.Min(a => a.BDD);
-											if (xDate > DateTime.Parse("2000-01-01"))
+											if (gpi.TotalFinishNumb > vRowItem.pNumb)
 											{
-												gpi.GridStyle = GridProdItem.ErrorRowStyle = "ErrorPlan";
-												gpi.isError = GridProdItem.isError = true;
-												gpi.PlanDate = LCStr(string.Format("{0:MM/dd HH:mm}(错误)", xDate));
-												xMachineName = vp.FirstOrDefault().MachineName;
-												if (rgxMachineName.IsMatch(xMachineName)) xMachineName = rgxMachineName.Match(xMachineName).Value;
-												gpi.PlanMachine = string.Format("{0}({1})", xMachineName, vp.FirstOrDefault().DepartmentName);
-												gpi.DepartmentName = vp.FirstOrDefault().DepartmentName;
-												gpi.IssuesMemo = LCStr("排程时间错误");
+												gpi.PlanNumb = gpi.PlanDate = gpi.PlanMachine = LCStr("完工数满足需求");
+												gpi.GridStyle = GridProdItem.ErrorRowStyle = "Finished";
 											}
 											else
 											{
-												if (v2Item.ProcessCode != "9999")
+												xDate = vp.Min(a => a.BDD);
+												if (xDate > DateTime.Parse("2000-01-01"))
 												{
+													gpi.GridStyle = GridProdItem.ErrorRowStyle = "ErrorPlan";
 													gpi.isError = GridProdItem.isError = true;
-													gpi.PlanDate = gpi.PlanNumb = LCStr("未排期");
-													gpi.PlanMachine = string.Format("({0})", vp.FirstOrDefault().DepartmentName);
-													gpi.GridStyle = GridProdItem.ErrorRowStyle = "NoPlan";
+													DateTime xNowDate = DateTime.Now;
+													DateTime xSendDate = vRowItem.SendDate; /// 工單的交期。
+													DateTime sPlanBegin = xNowDate.Date.AddHours(8);
+													if (xSendDate.Hour > 22) sPlanBegin = xNowDate.Date.AddHours(20);
+
+													double hSend = (xDate - xSendDate).TotalHours, hPlanBegin = (xDate - sPlanBegin).TotalHours, hNow = (xDate - xNowDate).TotalHours;
+
+													if (hSend > -2 && hSend < 0)
+													{
+														gpi.IssuesMemo = LCStr("交期2H以内");
+														gpi.PlanDate = LCStr(string.Format("{0:MM/dd HH:mm}(交期2H以内)", xDate));
+													}
+													else if (hSend > 0)
+													{
+														gpi.IssuesMemo = LCStr("超出交期");
+														gpi.PlanDate = LCStr(string.Format("{0:MM/dd HH:mm}(超出交期)", xDate));
+													}
+													else if (hPlanBegin < 0)
+													{
+														gpi.IssuesMemo = LCStr("当班未排");
+														gpi.PlanDate = LCStr(string.Format("{0:MM/dd HH:mm}(当班未排)", xDate));
+														gpi.GridStyle = GridProdItem.ErrorRowStyle = "NoPlan";
+													}
+													else if (hNow < -3)
+													{
+														gpi.IssuesMemo = LCStr("当班已排未结");
+														gpi.PlanDate = LCStr(string.Format("{0:MM/dd HH:mm}(当班已排未结3H)", xDate));
+													}
+													else
+													{
+														gpi.IssuesMemo = LCStr("排程时间错误");
+														gpi.IssuesMemo = gpi.PlanDate = LCStr(string.Format("{0:MM/dd HH:mm}(错误)", xDate));
+													}
+
+													xMachineName = vp.FirstOrDefault().MachineName;
+													if (rgxMachineName.IsMatch(xMachineName)) xMachineName = rgxMachineName.Match(xMachineName).Value;
+													gpi.PlanMachine = string.Format("{0}({1})", xMachineName, vp.FirstOrDefault().DepartmentName);
 													gpi.DepartmentName = vp.FirstOrDefault().DepartmentName;
-													gpi.IssuesMemo = LCStr("未排期");
+
+												}
+												else
+												{
+													if (vColItem.ProcessCode != "9999")
+													{
+														gpi.isError = GridProdItem.isError = true;
+														gpi.PlanDate = gpi.PlanNumb = LCStr("未排期");
+														gpi.PlanMachine = string.Format("({0})", vp.FirstOrDefault().DepartmentName);
+														gpi.GridStyle = GridProdItem.ErrorRowStyle = "NoPlan";
+														gpi.DepartmentName = vp.FirstOrDefault().DepartmentName;
+														gpi.IssuesMemo = LCStr("未排期");
+													}
 												}
 											}
 										}
@@ -513,7 +604,7 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
 									}
 									else
 									{
-										if (v2Item.ProcessCode != "9999")
+										if (vColItem.ProcessCode != "9999")
 										{
 											gpi.isError = GridProdItem.isError = true;
 											gpi.PlanNumb = gpi.PlanDate = LCStr("未排期");
@@ -553,7 +644,7 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
 		/// <param name="e"></param>
 		void ExportToExcelDeliveryPlan(string FileName)
 		{
-			if (maindata.IsNotEmptySet() && GridList.IsNotEmptySet())
+			if (MainData.IsNotEmptySet() && GridList.IsNotEmptySet())
 			{
 				var vListGridRow = from a in GridList
 								   where a.isError
@@ -854,24 +945,28 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
 				PartID = mmdr.Value("PartID");
 				ProductID = mmdr.IntValue("ProductID");
 				pNumb = mmdr.IntValue("pNumb");
-				FinishNumb = Convert.ToInt32(mmdr["FinishNumb"]);
-				RejectNumb = Convert.ToInt32(mmdr["RejectNumb"]);
-				LossedNumb = Convert.ToInt32(mmdr["LossedNumb"]);
-				SendDate = Convert.ToDateTime(mmdr["SendDate"]);
-				Inputer = Convert.ToString(mmdr["Inputer"]);
-				CustCode = Convert.ToString(mmdr["CustCode"]);
-				ProcessCode = Convert.ToString(mmdr["ProcessCode"]);
-				ProcessName = Convert.ToString(mmdr["ProcessName"]);
-				ProductNumb = Convert.ToInt32(mmdr["ProductNumb"]);
-				SortID = Convert.ToInt32(mmdr["SortID"]);
-				OverDate = Convert.ToDateTime(mmdr["OverDate"]);
-				StatusName = Convert.ToString(mmdr["SName"]);
-				FinishRemark = Convert.ToString(mmdr["FinishRemark"]);
-				Closer = Convert.ToString(mmdr["Closer"]);
-				CloseDate = Convert.ToDateTime(mmdr["CloseDate"]);
-				DepartmentName = Convert.ToString(mmdr["DepartmentName"]);
-				MachineName = Convert.ToString(mmdr["MachineName"]);
-				StockNumb = mmdr.Value<double>("StockNumb");
+				FinishNumb = mmdr.IntValue("FinishNumb");
+				RejectNumb = mmdr.IntValue("RejectNumb");
+				LossedNumb = mmdr.IntValue("LossedNumb");
+				SendDate = mmdr.DateTimeValue("SendDate");
+				Inputer = mmdr.Value("Inputer");
+				CustCode = mmdr.Value("CustCode");
+				ProcessCode = mmdr.Value("ProcessCode");
+				ProcessName = mmdr.Value("ProcessName");
+				ProductNumb = mmdr.IntValue("ProductNumb");
+				SortID = mmdr.IntValue("SortID");
+				OverDate = mmdr.DateTimeValue("OverDate");
+				StatusName = mmdr.Value("SName");
+				FinishRemark = mmdr.Value("FinishRemark");
+				Closer = mmdr.Value("Closer");
+				CloseDate = mmdr.DateTimeValue("CloseDate");
+				DepartmentName = mmdr.Value("DepartmentName");
+				MachineName = mmdr.Value("MachineName");
+				PlanRdsNo = mmdr.Value("PlanRdsNo");
+				BDD = mmdr.DateTimeValue("BDD");
+				Edd = mmdr.DateTimeValue("EDD");
+				SRemark = mmdr.Value("SRemark");
+				DepartmentFullSortID = mmdr.Value("DepartmentFullSortID");
 			}
 
 			/// <summary>
@@ -943,6 +1038,10 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
 			/// 上机日期
 			/// </summary>
 			public DateTime BDD { get; private set; }
+			/// <summary>
+			/// 下机日期
+			/// </summary>
+			public DateTime Edd { get; private set; }
 
 			/// <summary>
 			/// 完成日期
@@ -975,8 +1074,11 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
 			public string DepartmentName { get; private set; }
 
 			public string MachineName { get; private set; }
-
 			public double StockNumb { get; set; }
+			public string PlanRdsNo { get; private set; }
+
+			public string SRemark { get; private set; }
+			public string DepartmentFullSortID { get; private set; }
 		}
 
 		public class GridProduceNoteItem
@@ -1059,11 +1161,15 @@ Select b.PRODNO as ProdRdsNo,a.ProdCode,PartID=Case When a.PartNo='' Then '--' E
 
 			public string DepartmentName { get; set; }
 
+			public string DepartmentFullSortID { get; set; }
+
 			public bool isError { get; set; }
 
 			public string IssuesMemo { get; set; }
 			public string ProduceRdsNo { get; set; }
 			public string ProductName { get; set; }
+
+			public string SRemark { get; set; }
 		}
 
 

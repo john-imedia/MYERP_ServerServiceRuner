@@ -808,10 +808,13 @@ namespace MYERP_ServerServiceRuner.Base
             public int CacluateOEEDaySpanTimes { get; set; }
             public int CacluateKanbanDaySpanTimes { get; set; }
             public string DeliveryPlanFinishStaticExceptProdTypes { get; set; }
-            public string DeliverPlanFinishStatisticErrorTempSender { get; set; }
             public bool CheckStockNoteOnceTime { get; set; }
             public bool ProdKanbanSaveOnceTime { get; set; }
             public int CacluateProduceFeedBackTimes { get; set; }
+            public bool SendProduceDiffNumbEmailOnce { get; set; }
+            public bool SendDeliverPlanFinishStatisticErrorOnce { get; set; }
+            public bool SendECRECNOnce { get; set; }
+            public bool SendProduceUnFinishInStockOnce { get; set; }
         }
 
         public class MailAddress

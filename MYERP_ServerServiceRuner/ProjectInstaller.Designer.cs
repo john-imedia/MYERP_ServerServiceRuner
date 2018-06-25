@@ -39,8 +39,8 @@
             // 
             // serviceInstaller1
             // 
-            this.serviceInstaller1.Description = "苏州明扬彩印审核出入库单据，发邮件。";
-            this.serviceInstaller1.DisplayName = "苏州明扬彩印服务器";
+            this.serviceInstaller1.Description = "苏州明扬彩印ERP服务器，自动审核出入库单，自动发送邮件";
+            this.serviceInstaller1.DisplayName = "苏州明扬彩印ERP服务器";
             this.serviceInstaller1.ServiceName = "MYERPServerService";
             this.serviceInstaller1.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
             this.serviceInstaller1.AfterInstall += new System.Configuration.Install.InstallEventHandler(this.serviceInstaller1_AfterInstall);
