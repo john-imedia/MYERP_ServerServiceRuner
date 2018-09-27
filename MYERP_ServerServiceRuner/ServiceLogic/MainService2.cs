@@ -1030,7 +1030,6 @@ from #T Group by MachinCode,ProcessID,PrdID,ProduceNo,DepartmentID,PlanType
 		}
 		#endregion
 
-
 		#region 发送昨日OQC报表
 
 		void SendOQCEmailLoder()
@@ -1260,13 +1259,6 @@ WHERE [x].[InspectDate] BETWEEN DATEADD(HOUR,8,CAST(CONVERT(Varchar(10),DATEADD(
 		}
 
 		#endregion
-
-
-
-
-
-
-
 
 	}
 }

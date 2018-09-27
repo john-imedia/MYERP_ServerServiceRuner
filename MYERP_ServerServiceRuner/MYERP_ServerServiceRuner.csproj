@@ -167,6 +167,9 @@
     <Compile Include="ServiceLogic\Persistence.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ServiceLogic\IPQC.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ServiceLogic\WorkspaceInspection.cs">
       <SubType>Component</SubType>
     </Compile>

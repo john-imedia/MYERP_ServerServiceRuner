@@ -6633,7 +6633,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
 
             public void reLoadDetial()
             {
-                MyRecord.Say(string.Format("{0},读取BOM详细信息。",Code));
+                MyRecord.Say(string.Format("-----{0},读取BOM详细信息。",Code));
                 if (Parent.IsNull())
                 {
                     LoadBom(this.Code);
@@ -6653,7 +6653,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
                     {
                         ID = id;
                         isNewBom = false;
-                        MyRecord.Say("读取BOM工艺和物料信息");
+                        MyRecord.Say("------读取BOM工艺和物料信息");
                         #region 加载物料
                         int xBomMaterialListCount = BomMaterialListCount;
                         if (xBomMaterialListCount > 0)
@@ -6666,7 +6666,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
                         }
                         else
                         {
-                            MyRecord.Say("读取BOM工艺。");
+                            MyRecord.Say("------读取BOM工艺。");
                             List<BomMaterial> xSource = GetBomMaterialList(this.ID);
                             if (xSource.IsNotEmptySet())
                             {
@@ -6698,7 +6698,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
                         }
                         else
                         {
-                            MyRecord.Say("读取BOM物料。");
+                            MyRecord.Say("------读取BOM物料。");
                             List<BomProcess> xSource = GetBomProcessList(this.ID);
                             if (xSource.IsNotEmptySet())
                             {
@@ -6738,7 +6738,7 @@ Select Code,id,_id,setdate From coVender a Where a.CGUID=@CGUID
                         //this.Materials = vM.ToList();
                         //if (Materials != null) Materials.ForEach(new Action<BomMaterial>(x => x.Parent = this));
                         #endregion
-                        MyRecord.Say("生成BOM。");
+                        MyRecord.Say("------生成BOM。");
                         LoadBomParts();
                     }
                 }

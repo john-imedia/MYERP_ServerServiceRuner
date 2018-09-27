@@ -1680,10 +1680,10 @@ namespace MYERP_ServerServiceRuner
 			{
 				get
 				{
-                    if (ProductNumb > 0)
-                        return Amount / ProductNumb;
-                    else
-                        return 0;
+					if (ProductNumb > 0)
+						return Amount / ProductNumb;
+					else
+						return 0;
 				}
 			}
 
@@ -2595,15 +2595,16 @@ Select * from _PMC_Process_Price_Loss";
 		{
 			public ProduceEstimate(string ProduceRdsNo)
 			{
-				MyRecord.Say(string.Format("{0}，创建估价单类。", ProduceRdsNo));
+				MyRecord.Say(string.Format("{0}，A.1.创建估价单类。", ProduceRdsNo));
 				Parent = new EstimateNote();
-				MyRecord.Say(string.Format("{0}，创建工单类。", ProduceRdsNo));
+				MyRecord.Say(string.Format("{0}，A.2.创建工单类。", ProduceRdsNo));
 				ProduceNote = new ProduceNote(ProduceRdsNo);
-				MyRecord.Say(string.Format("{0}，从工单设定估价基本内容。", ProduceRdsNo));
+				MyRecord.Say(string.Format("{0}，A.3.从工单设定估价基本内容。", ProduceRdsNo));
 				Code = ProduceNote.Product.Code;
 				Name = ProduceNote.Product.Name;
 				UnflodSize = ProduceNote.Product.UnfoldSize;
 				Size = ProduceNote.Product.Size;
+				EstimateRdsNo = ProduceRdsNo;
 			}
 
 			public ProduceNote ProduceNote { get; set; }
@@ -2611,7 +2612,7 @@ Select * from _PMC_Process_Price_Loss";
 			public void LoadFromProduce()
 			{
 				if (ProduceNote.IsNull()) return;
-				MyRecord.Say(string.Format("1.获取产品信息{0}，和BOM", this.Code));
+				MyRecord.Say(string.Format("{1}，B.1.获取产品信息{0}，和BOM", this.Code, this.EstimateRdsNo));
 
 				Numb1 = ProduceNote.StockNumber;
 
@@ -2626,7 +2627,7 @@ Select * from _PMC_Process_Price_Loss";
 				b.reLoadDetial();
 
 
-				MyRecord.Say("3.加载工序信息。");
+				MyRecord.Say(string.Format("{0}，B.2.加载工序信息。", this.EstimateRdsNo));
 				this.Process.Clear();
 
 				if (N.Processes.IsNotNull() && N.Processes.Count > 0)
@@ -2640,7 +2641,7 @@ Select * from _PMC_Process_Price_Loss";
 					foreach (EstimateProcessItem item in this.Process)
 					{
 						iIndex++;
-						MyRecord.Say(string.Format("3.{0}.{1}获取价格。", iIndex, item.ProcessName));
+						MyRecord.Say(string.Format("{2}，B.3.{0}.{1}获取价格。", iIndex, item.ProcessName, this.EstimateRdsNo));
 						if (item.Process.isPrint)
 						{
 							var vPlate = from a in N.Materials
@@ -2679,7 +2680,7 @@ Select * from _PMC_Process_Price_Loss";
 						}
 					}
 				}
-				MyRecord.Say("4.加载物料信息。");
+				MyRecord.Say(string.Format("{0}，B.4.加载物料信息。", this.EstimateRdsNo));
 				this.Material.Clear();
 				if (N.Materials.IsNotNull() && N.Materials.Count > 0)
 				{
@@ -2688,7 +2689,7 @@ Select * from _PMC_Process_Price_Loss";
 									select new EstimateMaterialItem(this, a);
 					this.Material.AddRange(vMaterial.ToArray());
 				}
-				MyRecord.Say("设定计算价格。");
+				MyRecord.Say(string.Format("{0}，B.5.设定计算价格。", this.EstimateRdsNo));
 				LoadPrice();
 			}
 
@@ -2714,9 +2715,9 @@ Select * from _PMC_Process_Price_Loss";
 						string SQL1 = @"UPDATE [moProdProcedure] SET [Amount] = @Amount,[Price] = @Price,[PriceNumb] = @PriceNumb WHERE zbid = @ID AND id = @PID";
 						MyData.MyDataParameter[] mdps1 = new MyData.MyDataParameter[]
 						{
-							new MyData.MyDataParameter("@Amount", item.Amount, MyData.MyDataParameter.MyDataType.Numeric),
-							new MyData.MyDataParameter("@Price", item.UnitPrice, MyData.MyDataParameter.MyDataType.Numeric),
-							new MyData.MyDataParameter("@PriceNumb", item.Numb2, MyData.MyDataParameter.MyDataType.Numeric),
+							new MyData.MyDataParameter("@Amount", Math.Round(item.Amount,8), MyData.MyDataParameter.MyDataType.Numeric),
+							new MyData.MyDataParameter("@Price", Math.Round(item.UnitPrice,12), MyData.MyDataParameter.MyDataType.Numeric),
+							new MyData.MyDataParameter("@PriceNumb", Math.Round(item.Numb2,4), MyData.MyDataParameter.MyDataType.Numeric),
 							new MyData.MyDataParameter("@PID", item.id, MyData.MyDataParameter.MyDataType.Int),
 							new MyData.MyDataParameter("@ID",  ProduceNote.ID, MyData.MyDataParameter.MyDataType.Int),
 						};
@@ -2739,9 +2740,9 @@ Select * from _PMC_Process_Price_Loss";
 
 						MyData.MyDataParameter[] mdps2 = new MyData.MyDataParameter[]
 						{
-							new MyData.MyDataParameter("@Amount", item.Amount, MyData.MyDataParameter.MyDataType.Numeric),
-							new MyData.MyDataParameter("@Price", item.UnitPrice, MyData.MyDataParameter.MyDataType.Numeric),
-							new MyData.MyDataParameter("@PriceNumb", item.Numb2, MyData.MyDataParameter.MyDataType.Numeric),
+							new MyData.MyDataParameter("@Amount", Math.Round(item.Amount,8), MyData.MyDataParameter.MyDataType.Numeric),
+							new MyData.MyDataParameter("@Price", Math.Round(item.UnitPrice,12), MyData.MyDataParameter.MyDataType.Numeric),
+							new MyData.MyDataParameter("@PriceNumb", Math.Round(item.Numb2,4), MyData.MyDataParameter.MyDataType.Numeric),
 							new MyData.MyDataParameter("@PID", item.id, MyData.MyDataParameter.MyDataType.Int),
 							new MyData.MyDataParameter("@ID", ProduceNote.ID, MyData.MyDataParameter.MyDataType.Int),
 						};
@@ -2752,8 +2753,8 @@ Select * from _PMC_Process_Price_Loss";
 				string SQL = "Update moProduce Set EstimatePrice = @Price,Amount = @Amount Where RdsNo = @RdsNo ";
 				MyData.MyDataParameter[] mdps = new MyData.MyDataParameter[]
 					{
-						new MyData.MyDataParameter("@Price", Price1, MyData.MyDataParameter.MyDataType.Numeric),
-						new MyData.MyDataParameter("@Amount", Price1 * Numb, MyData.MyDataParameter.MyDataType.Numeric),
+						new MyData.MyDataParameter("@Price", Math.Round(Price1,12), MyData.MyDataParameter.MyDataType.Numeric),
+						new MyData.MyDataParameter("@Amount",Math.Round(Price1 * Numb ,8), MyData.MyDataParameter.MyDataType.Numeric),
 						new MyData.MyDataParameter("@RdsNo", ProduceNote.RdsNo)
 					};
 				mcd.Add(SQL, "Main", mdps);
@@ -2936,37 +2937,51 @@ Select * from _PMC_Process_Price_Loss";
 				Machines.reLoad();
 				MyRecord.Say("5.重新加载估价工序表");
 				LoadEstimateProcessList();
-				MyRecord.Say("重新加载物料价格表");
+				MyRecord.Say("6.重新加载物料价格表");
 				MaterialPrice.Load();
-				MyRecord.Say(string.Format("计算起始时间：{0:yy/MM/dd HH:mm}", StartTime));
-				MyRecord.Say("定时计算——获取计算范围");
-				SQL = @"SELECT a.RdsNo FROM moProduce a Inner Join [AllMaterialView] b On a.Code=b.Code
-								  Inner Join [coOrder] o On a.OrderNo = o.RdsNo
-						 WHERE a.StockDate > @Time And a.RdsNo Like 'PO%' And b.Type <> '110' Order by a.RdsNo ";
+				MyRecord.Say(string.Format("7.计算起始时间：{0:yy/MM/dd HH:mm}", StartTime));
+				MyRecord.Say("7.定时计算——获取计算范围");
+				SQL = @"DECLARE @R TABLE(RdsNo NVARCHAR(40) NULL);
+INSERT @R([RdsNo])
+SELECT a.rdsno
+FROM [dbo].[moProduce] [a]
+WHERE [a].[inputdate]>@Time AND [a].[rdsno] LIKE 'PO%';
+INSERT @R([RdsNo])
+SELECT [b].[ProduceNo]
+FROM [dbo].[ProdDailyReport] [b]
+WHERE [b].[RptDate]>@Time AND b.[ProduceNo] LIKE 'PO%';
+INSERT @R([RdsNo])
+SELECT [c].[productno]
+FROM [dbo].[stPrdStocklst] [c]
+WHERE [c].[InputDate]>@Time AND [c].[productno] LIKE 'PO%';
+SELECT [RdsNo] FROM @R GROUP BY [RdsNo] ORDER BY [RdsNo] DESC;
+";
 				MyData.MyDataTable mTableProduceFinished = new MyData.MyDataTable(SQL, new MyData.MyDataParameter("@Time", StartTime, MyData.MyDataParameter.MyDataType.DateTime));
 				if (_StopAll) return;
 				if (mTableProduceFinished != null && mTableProduceFinished.MyRows.Count > 0)
 				{
-					string memo = string.Format("读取了{0}条记录，下面开始计算....", mTableProduceFinished.MyRows.Count);
+					string memo = string.Format("8.读取了{0}条记录，下面开始计算....", mTableProduceFinished.MyRows.Count);
 					MyRecord.Say(memo);
 					int mTableProduceFinishedCount = 1;
 					var v = from a in mTableProduceFinished.MyRows
-							orderby a.Value("RdsNo")
+							orderby a.Value("RdsNo") descending 
 							select a;
 					foreach (MyData.MyDataRow r in v)
 					{
 						if (_StopAll) return;
 						string RdsNo = Convert.ToString(r["RdsNo"]);
 						DateTime mStartTime = DateTime.Now;
-						if (!ProduceEstimateCalculator(RdsNo))
-						{
-							memo = string.Format("B计算成本第{0}条，工程单号：{1}，不成功，耗时：{2:#,#0.00}秒。", mTableProduceFinishedCount, RdsNo, (DateTime.Now - mStartTime).TotalSeconds);
-						}
-						else
+						MyRecord.Say("--------------------");
+						if (ProduceEstimateCalculator(RdsNo))
 						{
 							memo = string.Format("B计算成本第{0}条，工程单号：{1}，完成，耗时：{2:#,#0.00}秒。", mTableProduceFinishedCount, RdsNo, (DateTime.Now - mStartTime).TotalSeconds);
 						}
+						else
+						{
+							memo = string.Format("B计算成本第{0}条，工程单号：{1}，不成功，耗时：{2:#,#0.00}秒。", mTableProduceFinishedCount, RdsNo, (DateTime.Now - mStartTime).TotalSeconds);
+						}
 						MyRecord.Say(memo);
+						MyRecord.Say("--------------------");
 						mTableProduceFinishedCount++;
 					}
 				}
@@ -2989,15 +3004,16 @@ Select * from _PMC_Process_Price_Loss";
 		{
 			try
 			{
-				MyRecord.Say(string.Format("{0}。创建计算类。", CurrentRdsNO));
+				MyRecord.Say(string.Format("{0}。A.创建计算类。", CurrentRdsNO));
 				ProduceEstimate pe = new ProduceEstimate(CurrentRdsNO);
-				MyRecord.Say(string.Format("{0}。读取工单结构，完工数。", CurrentRdsNO));
+				MyRecord.Say(string.Format("{0}。B.读取工单结构，完工数。", CurrentRdsNO));
 				pe.LoadFromProduce();
-				MyRecord.Say(string.Format("{0}。计算价格。", CurrentRdsNO));
+				MyRecord.Say(string.Format("{0}。C.计算价格。", CurrentRdsNO));
 				pe.Calculate();
-				MyRecord.Say(string.Format("{0}。输出计算结果。", CurrentRdsNO));
+				MyRecord.Say(string.Format("{0}。D.输出计算结果。", CurrentRdsNO));
 				FillDetial(pe);
-				MyRecord.Say(string.Format("{0}。保存价格到工单。", CurrentRdsNO));
+				MyRecord.Say("----------------");
+				MyRecord.Say(string.Format("{0}。E.保存价格到工单。", CurrentRdsNO));
 				return pe.SavePrice();
 			}
 			catch (Exception ex)

@@ -408,6 +408,11 @@ namespace MYERP_ServerServiceRuner
                 return Value<DateTime>(ColumnName);
             }
 
+            public double DoubleValue(string ColumnName)
+            {
+                return Value<double>(ColumnName);
+            }
+
             #endregion 索引器
 
             #region 实现ENUM接口

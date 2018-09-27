@@ -28,8 +28,8 @@ namespace MYERP_ServerServiceRuner.Base
         {
             get
             {
-                return string.Format("Data Source={0};Persist Security Info=True;Password={2};User ID={1};Initial Catalog={3};Application Name=ERPSVR_{5}_{4};Connection Timeout=300;Pooling =True;Max Pool Size=100;Min Pool Size=0;Connection Lifetime=55",
-                    ServerAddress, DB_UID, DB_PWD, DB_Name, System.Environment.MachineName, Application.ProductVersion);
+                return string.Format("Data Source={0};Persist Security Info=True;Password={2};User ID={1};Initial Catalog={3};Application Name=ERPSVR{6}_{4}_{5};Connection Timeout=300;Pooling =True;Max Pool Size=100;Min Pool Size=0;Connection Lifetime=75",
+                    ServerAddress, DB_UID, DB_PWD, DB_Name, System.Environment.MachineName, LocalInfo.GetLocalIp(), MyConfig.ApplicationConfig.CompanyType);
             }
         }
 
@@ -815,6 +815,10 @@ namespace MYERP_ServerServiceRuner.Base
             public bool SendDeliverPlanFinishStatisticErrorOnce { get; set; }
             public bool SendECRECNOnce { get; set; }
             public bool SendProduceUnFinishInStockOnce { get; set; }
+
+            public int ProduceEstimateOnceTimes { get; set; }
+            public bool SendProdPlanEmailOnce { get; set; }
+            public bool SendIPQCListStaticOnce { get; set; }
         }
 
         public class MailAddress
